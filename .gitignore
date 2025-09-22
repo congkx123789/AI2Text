@@ -1,0 +1,18 @@
+# Virtual environments
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Data & models (too big for GitHub)
+AI2Text/data/
+AI2Text/models/
+
+# Jupyter notebooks checkpoints
+*.ipynb_checkpoints
+
+# VS Code settings
+.vscode/
