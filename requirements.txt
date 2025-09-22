@@ -1,0 +1,25 @@
+# Core machine learning
+torch
+torchvision
+torchaudio
+
+# Audio processing
+librosa
+pyaudio
+speechrecognition
+vosk
+openai-whisper
+
+# Image processing / OCR
+pillow
+pytesseract
+easyocr
+
+# Utilities
+numpy
+matplotlib
+scipy
+
+
+tensorflow
+    
