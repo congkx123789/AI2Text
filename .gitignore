@@ -8,8 +8,8 @@ __pycache__/
 *.pyo
 
 # Data & models (too big for GitHub)
-AI2Text/data/
-AI2Text/models/
+# AI2Text/data/
+# AI2Text/models/
 
 # Jupyter notebooks checkpoints
 *.ipynb_checkpoints

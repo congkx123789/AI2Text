@@ -1,25 +1,57 @@
-# Core machine learning
+# ==============================
+# Core Machine Learning
+# ==============================
 torch
 torchvision
 torchaudio
+tensorflow
 
-# Audio processing
+# ==============================
+# Audio Processing / Speech
+# ==============================
 librosa
 pyaudio
 speechrecognition
-vosk
-openai-whisper
+vosk==0.3.45
+openai-whisper==20231117
+soundfile==0.12.1
+ffmpeg-python==0.2.0
 
-# Image processing / OCR
-pillow
-pytesseract
-easyocr
+# ==============================
+# Image Processing / OCR
+# ==============================
+Pillow==10.4.0
+pytesseract==0.3.10
+easyocr==1.7.1
 
+# ==============================
+# NLP / Translation / Evaluation
+# ==============================
+transformers==4.44.2
+sentencepiece==0.2.0
+sacremoses==0.1.1
+sacrebleu==2.4.3
+nltk
+scikit-learn==1.5.2
+
+# ==============================
 # Utilities
-numpy
-matplotlib
+# ==============================
+numpy==1.26.4
 scipy
+matplotlib
+tqdm==4.66.5
+joblib==1.4.2
+pipdeptree
 
+# ==============================
+# API / Web
+# ==============================
+fastapi==0.112.2
+uvicorn==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
 
-tensorflow
-    
+faster-whisper
+ffmpeg 
+pydub
