@@ -1,27 +1,7 @@
-// AI2TextApp.jsx (single-file React front end)
-//
-// Features:
-// - Drag & drop or click to upload an audio/image file
-// - Mode select: auto | audio | image
-// - Backend selects for STT (whisper/vosk) and OCR (tesseract/easyocr)
-// - Language hint input (e.g., "en", "vi", "auto")
-// - Calls POST /api/convert and displays returned text + meta
-// - Image/audio preview, progress state, error handling, copy & download buttons
-// - Tailwind classes for a clean UI (works with Vite + Tailwind)
-//
-// Quick start with Vite:
-//   npm create vite@latest ai2text-frontend -- --template react
-//   cd ai2text-frontend
-//   npm install
-//   (optional) npm install --save lucide-react
-//   Add Tailwind (https://tailwindcss.com/docs/guides/vite) or remove classes if you prefer plain CSS
-//   Replace src/App.jsx with this file content. Ensure backend runs on http://localhost:8000.
-//   npm run dev
-//
+
 import React, { useCallback, useMemo, useRef, useState } from "react";
 
-// Optional: If you installed lucide-react, uncomment next line and use icons below
-// import { Upload, FileAudio, Image as ImageIcon, Settings2, Copy, Download, Loader2, Trash2 } from "lucide-react";
+
 
 // Configure your backend base URL here if needed
 const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:8000";
