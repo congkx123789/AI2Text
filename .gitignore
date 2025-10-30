@@ -44,3 +44,5 @@ ai-llm/model/
 *.bin
 *.onnx
 __pycache__/
+.vs/
+*.db
