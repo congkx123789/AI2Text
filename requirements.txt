@@ -55,3 +55,10 @@ pydantic==2.9.2
 faster-whisper
 ffmpeg 
 pydub
+# Needed by make_manifests (reads audio headers)
+soundfile
+
+
+huggingface-hub
+python-dotenv
+sentence-transformers

@@ -1,0 +1,9 @@
+torch
+torchaudio
+numpy
+librosa
+jiwer
+fastapi
+uvicorn
+python-multipart
+pydantic>=2

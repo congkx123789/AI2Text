@@ -1,0 +1,1 @@
+# Design Notes\n\nA minimal ASR pipeline using log-Mel + CRNN + CTC.

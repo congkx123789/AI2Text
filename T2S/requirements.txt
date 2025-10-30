@@ -1,0 +1,16 @@
+# --- Core Text-to-Speech ---
+TTS==0.22.0          # Model XTTS v2 (đa ngôn ngữ, offline)
+
+# --- EPUB & Text Parsing ---
+ebooklib              # Đọc file EPUB
+beautifulsoup4        # Làm sạch HTML
+tqdm                  # Hiển thị thanh tiến trình
+
+# --- Audio & Alignment ---
+numpy<2.0             # Cần trước khi cài aeneas
+soundfile             # Ghi âm thanh WAV
+aeneas                # Forced alignment (đồng bộ audio ↔ text)
+
+# --- Hỗ trợ khác (nếu cần cho một số hệ thống) ---
+setuptools>=68.0.0
+wheel

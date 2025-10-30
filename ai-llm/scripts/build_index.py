@@ -1,43 +1,31 @@
-#include <bits/stdc++.h>
-using namespace std;
+from __future__ import annotations
+import argparse
+from pathlib import Path
+from src.config import EMBEDDING_MODEL, VECTOR_DIR
+from src.rag.ingest import transcripts_to_chunks
+from src.rag.indexer import HybridIndex
 
-int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
 
-    int n, M;
-    cin >> n >> M;
+"""Transcripts JSONL → chunk JSONL → Hybrid index (BM25 + FAISS)"""
 
-    vector<int> w(n), v(n);
-    for (int i = 0; i < n; i++) {
-        cin >> w[i] >> v[i];  
-    }
 
-    vector<vector<int>> dp(n + 1, vector<int>(M + 1, 0));
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--in", dest="transcripts", required=True)
+    ap.add_argument("--out", dest="out_dir", default=str(VECTOR_DIR))
+    args = ap.parse_args()
 
-    for (int i = 1; i <= n; i++) {
-        for (int cap = 0; cap <= M; cap++) {
-            dp[i][cap] = dp[i - 1][cap];
-            if (w[i - 1] <= cap) {
-                dp[i][cap] = max(dp[i][cap],
-                                 dp[i - 1][cap - w[i - 1]] + v[i - 1]);
-            }
-        }
-    }
 
-    vector<int> chosen;
-    int cap = M;
-    for (int i = n; i >= 1; i--) {
-        if (dp[i][cap] != dp[i - 1][cap]) {
-            chosen.push_back(i - 1);
-            cap -= w[i - 1];
-        }
-    }
-    reverse(chosen.begin(), chosen.end());
+    chunks = Path("data/processed/chunks.jsonl")
+    transcripts_to_chunks(Path(args.transcripts), chunks)
 
-    for (int id : chosen) {
-        cout << id << "\n"; 
-    }
 
-    return 0;
-}
+    idx = HybridIndex(EMBEDDING_MODEL)
+    idx.add_jsonl(chunks)
+    idx.build()
+    idx.save(Path(args.out_dir))
+    print("Index built at:", args.out_dir)
+
+
+if __name__ == "__main__":
+    main()

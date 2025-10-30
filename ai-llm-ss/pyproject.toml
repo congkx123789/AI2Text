@@ -1,0 +1,12 @@
+[project]
+name = "ai-llm-ss"
+version = "0.1.0"
+description = "Minimal ASR from scratch (CTC)"
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
