@@ -1,0 +1,44 @@
+# Default configuration for ASR training
+# Optimized for Vietnamese speech recognition on resource-constrained hardware
+
+# Model architecture
+model_name: "VietnameseASR_Base"
+d_model: 256
+num_encoder_layers: 6
+num_heads: 4
+d_ff: 1024
+dropout: 0.1
+
+# Audio processing
+sample_rate: 16000
+n_mels: 80
+n_fft: 400
+hop_length: 160
+win_length: 400
+
+# Training hyperparameters
+batch_size: 16
+num_epochs: 50
+learning_rate: 0.0001
+weight_decay: 0.01
+grad_clip: 1.0
+
+# Optimization for weak hardware
+use_amp: true  # Automatic Mixed Precision
+num_workers: 4
+pin_memory: true
+
+# Data
+database_path: "database/asr_training.db"
+split_version: "v1"
+
+# Checkpointing
+checkpoint_dir: "checkpoints"
+save_every: 5
+
+# Logging
+log_file: "logs/training.log"
+
+# Training run
+run_name: "vietnamese_asr_v1"
+

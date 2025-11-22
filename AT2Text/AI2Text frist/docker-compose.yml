@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  asr-api:
+    build: .
+    container_name: asr-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./checkpoints:/app/checkpoints
+      - ./models:/app/models
+      - ./database:/app/database
+      - ./logs:/app/logs
+      - ./results:/app/results
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    
+  # Optional: Add database service if using PostgreSQL instead of SQLite
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: asr_training
+  #     POSTGRES_USER: asr_user
+  #     POSTGRES_PASSWORD: asr_pass
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data:
+

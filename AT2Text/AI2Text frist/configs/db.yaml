@@ -1,0 +1,26 @@
+# Database configuration
+
+database:
+  path: "database/asr_training.db"
+  backup_path: "database/backups/"
+  
+# Data splits configuration
+splits:
+  train: 0.8
+  val: 0.1
+  test: 0.1
+  
+# Data versioning
+split_version: "v1"
+
+# Audio constraints
+audio:
+  max_duration_seconds: 30
+  min_duration_seconds: 0.5
+  supported_formats: ["wav", "mp3", "flac", "ogg"]
+  
+# Text constraints
+text:
+  max_length: 500
+  min_length: 1
+

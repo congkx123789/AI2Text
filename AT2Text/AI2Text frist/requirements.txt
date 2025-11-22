@@ -1,0 +1,52 @@
+# Core Deep Learning
+torch>=2.0.0
+torchaudio>=2.0.0
+transformers>=4.35.0
+
+# Audio Processing
+librosa>=0.10.0
+soundfile>=0.12.0
+audioread>=3.0.0
+pyworld>=0.3.2
+resampy>=0.4.2  # For high-quality audio resampling (optional but recommended)
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Vietnamese NLP
+underthesea>=6.7.0
+py_vncorenlp>=0.1.0
+
+# Database
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+
+# Configuration
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Logging & Monitoring
+tensorboard>=2.14.0
+wandb>=0.15.0
+tqdm>=4.66.0
+
+# Evaluation Metrics
+jiwer>=3.0.0
+evaluate>=0.4.0
+
+# Utilities
+matplotlib>=3.7.0
+seaborn>=0.12.0
+pillow>=10.0.0
+
+# Development & Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-xdist>=3.5.0
+black>=23.7.0
+flake8>=6.1.0
+jupyter>=1.0.0
+ipykernel>=6.25.0
+

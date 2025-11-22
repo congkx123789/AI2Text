@@ -1,0 +1,17 @@
+# Embeddings config
+output_dir: "models/embeddings"
+min_count: 2
+vector_size: 256
+window: 5
+workers: 4
+epochs: 10
+# For phonetic embeddings (Phon2Vec)
+phonetic:
+  enabled: true
+  tone_token: true     # append tone code to syllables
+  use_telex: true      # use Telex-like tone markers
+  normalize_diacritics: true
+# FAISS index params
+faiss:
+  nlist: 1024          # IVF list size
+  nprobe: 16           # search probes

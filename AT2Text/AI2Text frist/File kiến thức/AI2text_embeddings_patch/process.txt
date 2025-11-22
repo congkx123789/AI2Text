@@ -1,0 +1,114 @@
+mình đã nâng cấp dự án của bạn để bổ sung cả Word2Vec (ngữ nghĩa) và “word2vector cho âm thanh” (Phon2Vec – nhúng ngữ âm/phonetic), kèm sẵn FAISS để tìm kiếm lân cận và thuật toán re‑scoring N‑best trộn điểm âm học với điểm tương đồng ngữ nghĩa + ngữ âm.
+
+Tải gói “embeddings patch” (chỉ cần giải nén vào gốc repo AI2text của bạn):
+Download AI2text_embeddings_patch.zip
+
+Bạn nhận được gì
+
+Word2Vec (semantic embeddings) huấn luyện trực tiếp trên bảng Transcripts → giúp ưu tiên giả thuyết “hợp ngữ cảnh” hơn trong re‑scoring. Việc thêm lớp ngữ nghĩa downstream để sửa lỗi ASR là hướng thực tế đã được nhấn mạnh trong nguồn “kiến thức” (vai trò của embedding ngữ cảnh để chọn giả thuyết hợp lý).
+
+Phon2Vec (phonetic/sound embeddings): mình tạo các token Telex + dấu cho âm tiết tiếng Việt (ví dụ banj cho “bạn”, banh → banhz) rồi huấn luyện Word2Vec trên chuỗi token ngữ âm → mô hình “hiểu” gần‑giống âm (sound‑alike) và có thể thiên vị các từ phát âm giống nhau. Đây là cách nhẹ cân để xử lý thanh điệu/phương ngữ và cả văn bản không dấu (đặc thù tiếng Việt), từ đó giảm lỗi hoán đổi âm gần (s‑x, ch‑tr, d‑r‑gi…) trong ASR.
+
+Gói còn có VnSoundex dạng rút gọn làm fallback.
+
+FAISS (IVF, Inner‑Product) + chỉ mục cho cả semantic & phonetic → tra cứu lân cận cực nhanh khi thiên vị từ hiếm/brand‑name theo danh sách bias.
+
+N‑best re‑scoring: công thức Score = α·AM + β·LM + γ·Sim_semantic + δ·Sim_phonetic, có context bias tùy chọn (câu ngữ cảnh, danh sách từ khóa). Contextual biasing như vậy là hướng SOTA để kéo WER, đặc biệt với cụm từ hiếm (bài báo bạn cung cấp ghi nhận giảm 12.1% WER tương đối cho cụm từ ngữ cảnh).
+
+Lưu ý: Word2Vec là embedding tĩnh; nếu muốn độ phân biệt nghĩa theo ngữ cảnh cao hơn, bạn có thể thêm PhoBERT/XLM‑R cho lớp re‑scoring (feature‑based hoặc fine‑tune). Tài liệu “Nhúng Từ Có Ngữ Cảnh Nâng Cao” giải thích rõ vì sao contextual embeddings vượt trội với đa nghĩa/polysemy.
+
+Nội dung patch (thư mục chính)
+configs/embeddings.yaml
+database/migrations/001_add_embedding_tables.sql
+language_model/rescoring.py
+nlp/phonetic.py                # Telex + tone, VnSoundex, tách token ngữ âm
+nlp/word2vec_trainer.py        # train Word2Vec (ngữ nghĩa) từ Transcripts
+nlp/phon2vec_trainer.py        # train Phon2Vec (ngữ âm) từ Transcripts
+nlp/faiss_index.py             # build/load/query FAISS (IVF + IP)
+scripts/build_embeddings.py    # train + export SQLite + build FAISS
+scripts/rescore_nbest.py       # re-scoring N-best bằng embedding
+requirements-embeddings.txt
+README_EMBEDDINGS.md
+
+
+Schema DB mới (SQLite) để lưu vector (giữ nguyên DB cũ của bạn, thêm bảng):
+
+-- database/migrations/001_add_embedding_tables.sql
+CREATE TABLE IF NOT EXISTS WordEmbeddings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE, vector BLOB, dim INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS PronunciationEmbeddings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token TEXT UNIQUE, vector BLOB, dim INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+Cách tích hợp (3 bước)
+1) Cài thư viện + migrate DB
+pip install -r requirements-embeddings.txt
+sqlite3 database/asr_training.db < database/migrations/001_add_embedding_tables.sql
+
+
+Với máy yếu: ưu tiên Mixed Precision + Gradient Accumulation khi train/finetune (nếu cần), đã được khuyến nghị trong tài liệu “Tối ưu Training AI Máy Yếu”.
+
+2) Huấn luyện embeddings + FAISS
+python scripts/build_embeddings.py --db database/asr_training.db --config configs/embeddings.yaml
+
+
+Sinh ra:
+
+models/embeddings/word2vec.{model,kv,faiss,vocab}
+models/embeddings/phon2vec.{model,kv,faiss,vocab}
+
+
+Phần phonetic dùng token Telex + dấu cho syllable tiếng Việt để mô hình “hiểu” thanh điệu — rất quan trọng do tính đơn âm tiết + thanh điệu của tiếng Việt.
+
+3) Gọi re‑scoring trong evaluate.py (hoặc sau khi decode)
+
+Giả sử bạn đang có nbest từ decoder (mỗi phần tử có text, am_score, tùy chọn lm_score):
+
+# ví dụ tích hợp ngắn gọn
+from gensim.models import KeyedVectors
+from language_model.rescoring import rescore_nbest
+
+kv_sem = KeyedVectors.load("models/embeddings/word2vec.kv", mmap="r")
+kv_ph  = KeyedVectors.load("models/embeddings/phon2vec.kv",  mmap="r")
+
+context_text = "đặt bánh sinh nhật"  # tùy chọn: trạng thái hội thoại / domain
+rescored = rescore_nbest(
+    nbest, kv_sem, kv_ph, context_text=context_text,
+    alpha=1.0, beta=0.0, gamma=0.5, delta=0.5
+)
+best = rescored[0]["text"]
+
+
+Ví dụ nhanh:
+"toi muon dat ban" (AM tốt) vs "toi muon dat banh" (AM kém hơn chút). Với context_text="đặt bánh sinh nhật", semantic + phonetic sẽ tăng điểm “bánh” → hệ thống chọn câu đúng.
+
+Bạn cũng có thể chạy tool rời:
+
+python scripts/rescore_nbest.py --nbest nbest.json \
+  --context "đặt bánh gato sinh nhật" \
+  --alpha 1.0 --beta 0.0 --gamma 0.5 --delta 0.5
+
+Thiên vị cụm từ hiếm / OOV (gợi ý)
+
+Chuẩn bị bias list (tên riêng, thương hiệu…).
+
+Chuyển mỗi mục trong bias list sang token ngữ âm (Telex+tone), rồi truy vấn FAISS phonetic để tìm láng giềng phát âm gần → cộng điểm vào các giả thuyết N‑best chứa từ gần nhất.
+
+Kỹ thuật contextual biasing/rescore bằng embedding như vậy là tuyến phát triển chủ đạo để cải thiện từ hiếm trong ASR E2E hiện đại.
+
+Vì sao cách này hợp tiếng Việt
+
+Tiếng Việt nhạy thanh điệu và dễ sinh văn bản không dấu → cần lớp phonetic bù sai số âm học & sai chính tả/không dấu. Patch này dùng Telex+tone cho mỗi âm tiết (có cả VnSoundex dự phòng) để mô hình “cảm” được tương đồng âm thanh.
+
+Layer semantic (Word2Vec) giúp ngữ nghĩa cấp câu/miền chi phối chọn giả thuyết hợp cảnh (điều đã được tài liệu tổng quan embedding ngữ cảnh phân tích kỹ lưỡng; nếu bạn nâng lên PhoBERT, hiệu quả ngữ cảnh sẽ mạnh hơn nữa).
+
+Mẹo vận hành & mở rộng
+
+Cấu hình: tinh chỉnh gamma/delta (trọng số semantic/phonetic) theo miền dữ liệu trong configs/embeddings.yaml.
+
+Nâng cấp “sound‑exactly”: nếu cần độ chính xác ngữ âm cao hơn, tích hợp G2P/lexicon tiếng Việt (ngoài phạm vi patch) để thay token rule‑based bằng chuỗi âm vị kèm thanh điệu. Phần phân tích trong tài liệu của bạn đã nêu lợi ích của lớp NLP chịu lỗi (phục hồi dấu + sửa chính tả) trước khi NLU.
+
+Contextual embeddings: Sau Word2Vec, có thể thêm PhoBERT/XLM‑R làm embedding ngữ cảnh cho re‑scoring (feature‑based), nhất là khi dữ liệu nhiều văn bản mạng xã hội/không dấu (ViSoBERT được thiết kế cho miền này).
