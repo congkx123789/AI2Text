@@ -18,8 +18,8 @@ import os, stat
 # ========================
 #  CẤU HÌNH (CHỈNH Ở ĐÂY)
 # ========================
-ROOT_DIR = r"D:\AT2Text\AI2Text frist"   # <-- Đặt đường dẫn project của bạn (Windows dùng r"..." hoặc \\)
-OUTPUT_FILE = r"D:\AT2Text\AI2Text frist.txt"  # <-- Đặt đường dẫn file .txt đầu ra
+ROOT_DIR = r"/home/alida/Documents/Cursor/AI2Text/AT2Text/AI2Text"   # <-- Đặt đường dẫn project của bạn (Windows dùng r"..." hoặc \\)
+OUTPUT_FILE = r"/home/alida/Documents/Cursor/AI2Text/AT2Text/AI2Text.txt"  # <-- Đặt đường dẫn file .txt đầu ra
 
 INCLUDE_HIDDEN = False     # True nếu muốn gom cả file/thư mục ẩn (.xxx)
 MAX_FILE_BYTES = 1_000_000 # Giới hạn kích thước 1MB/ file (tránh log/build to)
@@ -40,7 +40,7 @@ EXTRA_KEEP_EXTS = set()
 DEFAULT_EXCLUDE_DIRS = {
     ".git", ".hg", ".svn", ".idea", ".vscode", "node_modules",
     "venv", ".venv", "env", ".env", "dist", "build", ".next",
-    ".cache", "__pycache__", ".pytest_cache", "coverage"
+    ".cache", "__pycache__", ".pytest_cache", "coverage","data"
 }
 
 DEFAULT_EXTS = {
@@ -50,7 +50,7 @@ DEFAULT_EXTS = {
     ".java",".kt",".kts",".groovy",".gradle",
     ".go",".rs",".rb",".php",".c",".h",".cpp",".hpp",".cc",".hh",
     ".sql",".ps1",".bat",".cmd",".sh",".zsh",".fish",".make",".mk","Makefile",
-    ".dockerfile","Dockerfile",".tf",".tfvars"
+    ".dockerfile","Dockerfile",".tf",".tfvars",".war"
 }
 
 BORDER = "=" * 80

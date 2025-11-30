@@ -18,8 +18,8 @@ import os, stat
 # ========================
 #  CẤU HÌNH (CHỈNH Ở ĐÂY)
 # ========================
-ROOT_DIR = r"D:\Learning Python speech to text\ai-llm-ss"   # <-- Đặt đường dẫn project của bạn (Windows dùng r"..." hoặc \\)
-OUTPUT_FILE = r"D:\Learning Python speech to text\ai-llm-ss.txt"  # <-- Đặt đường dẫn file .txt đầu ra
+ROOT_DIR = r"/home/alida/Documents/Cursor/AI2Text/AT2Text/AI2Text frist"   # <-- Đặt đường dẫn project của bạn (Windows dùng r"..." hoặc \\)
+OUTPUT_FILE = r"/home/alida/Documents/Cursor/AI2Text/AT2Text/AI2Text frist"  # <-- Đặt đường dẫn file .txt đầu ra
 
 INCLUDE_HIDDEN = False     # True nếu muốn gom cả file/thư mục ẩn (.xxx)
 MAX_FILE_BYTES = 1_000_000 # Giới hạn kích thước 1MB/ file (tránh log/build to)
