@@ -50,8 +50,8 @@ class ASRModelWithTimestamps(ASRModel):
     """ASR Model with timestamp prediction capability."""
     
     def __init__(self, input_dim: int, vocab_size: int, 
-                 d_model: int = 256, num_encoder_layers: int = 6,
-                 num_heads: int = 4, d_ff: int = 1024, dropout: float = 0.1,
+                 d_model: int = 1024, num_encoder_layers: int = 24,
+                 num_heads: int = 16, d_ff: int = 4096, dropout: float = 0.1,
                  predict_timestamps: bool = True):
         """Initialize ASR model with timestamp support.
         
@@ -230,10 +230,10 @@ if __name__ == "__main__":
     model = ASRModelWithTimestamps(
         input_dim=input_dim,
         vocab_size=vocab_size,
-        d_model=256,
-        num_encoder_layers=4,
-        num_heads=4,
-        d_ff=1024,
+        d_model=1024,
+        num_encoder_layers=24,
+        num_heads=16,
+        d_ff=4096,
         dropout=0.1,
         predict_timestamps=True
     )

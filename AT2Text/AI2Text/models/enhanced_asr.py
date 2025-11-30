@@ -264,10 +264,10 @@ class EnhancedASRModel(nn.Module):
     def __init__(self,
                  input_dim: int,
                  vocab_size: int,
-                 d_model: int = 256,
-                 num_encoder_layers: int = 6,
-                 num_heads: int = 4,
-                 d_ff: int = 1024,
+                 d_model: int = 1024,
+                 num_encoder_layers: int = 24,
+                 num_heads: int = 16,
+                 d_ff: int = 4096,
                  dropout: float = 0.1,
                  use_contextual_embeddings: bool = True,
                  use_cross_modal_attention: bool = True,
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     model = EnhancedASRModel(
         input_dim=80,
         vocab_size=100,
-        d_model=256,
+        d_model=1024,
         use_contextual_embeddings=True,
         use_cross_modal_attention=True,
         use_word2vec_auxiliary=True

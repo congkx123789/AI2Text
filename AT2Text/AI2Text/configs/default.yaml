@@ -1,12 +1,12 @@
 # Default configuration for ASR training
 # Optimized for Vietnamese speech recognition on resource-constrained hardware
 
-# Model architecture
-model_name: "VietnameseASR_Base"
-d_model: 256
-num_encoder_layers: 6
-num_heads: 4
-d_ff: 1024
+# Model architecture (300M parameters)
+model_name: "VietnameseASR_300M"
+d_model: 1024              # Increased from 256 (4x) for 300M model
+num_encoder_layers: 24     # Increased from 6 (4x) for 300M model
+num_heads: 16              # Increased from 4 (4x) for 300M model
+d_ff: 4096                 # Increased from 1024 (4x) for 300M model
 dropout: 0.1
 
 # Audio processing
@@ -21,21 +21,28 @@ tokenizer_type: "bpe"          # "char" for character-level, "bpe" for subword B
 bpe_vocab_path: "models/bilingual_bpe_18k.json"  # Fixed vocabulary for all training stages
 vocab_size: 18000  # Fixed vocabulary size - DO NOT CHANGE
 
-# Training hyperparameters
-batch_size: 8
-num_epochs: 10
-learning_rate: 0.0001
-weight_decay: 0.01
-grad_clip: 1.0
+# Training hyperparameters (adjusted for 300M model)
+batch_size: 4                  # Optimized for RTX 5060 Ti 16GB
+num_epochs: 50                 # More epochs for larger model
+learning_rate: 0.00015          # Optimized for 300M model (1.5e-4)
+weight_decay: 0.01              # L2 regularization
+grad_clip: 1.0                   # Gradient clipping to prevent exploding gradients
+gradient_accumulation_steps: 4  # Effective batch size = 4 * 4 = 16
+warmup_pct: 0.2                 # 20% warmup for large models
 
-# Optimization for weak hardware
-use_amp: true  # Automatic Mixed Precision
-num_workers: 2
+# Optimization for powerful hardware (Ryzen 9 9900X, RTX 5060 Ti)
+use_amp: true                  # Automatic Mixed Precision
+num_workers: 8                 # More workers for Ryzen 9 9900X (24 cores)
 pin_memory: true
+prefetch_factor: 4             # Larger prefetch for better pipelining
 
 # Data
 database_path: "database/asr_training.db"
 split_version: "v1"
+
+# Timestamp training
+use_timestamps: true  # Enable timestamp prediction
+timestamp_loss_weight: 0.1  # Weight for timestamp loss (0.0 to disable)
 
 # Checkpointing
 checkpoint_dir: "checkpoints"
@@ -45,5 +52,5 @@ save_every: 5
 log_file: "logs/training.log"
 
 # Training run
-run_name: "vietnamese_asr_vlsp_vivos_20251125"
+run_name: "vietnamese_asr_300m_20251130"
 

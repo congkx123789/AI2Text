@@ -389,9 +389,15 @@ def collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
     Returns:
         collated_batch: Dictionary with padded tensors
     """
-    # Find max lengths in batch
-    max_audio_len = max(item['audio_length'] for item in batch)
-    max_text_len = max(item['text_length'] for item in batch)
+    # Find max lengths in batch (handle empty batch)
+    if len(batch) == 0:
+        raise ValueError("Empty batch received")
+    
+    max_audio_len = max(item['audio_length'] for item in batch) if batch else 0
+    max_text_len = max(item['text_length'] for item in batch) if batch else 0
+    
+    if max_audio_len == 0 or max_text_len == 0:
+        raise ValueError(f"Invalid batch: max_audio_len={max_audio_len}, max_text_len={max_text_len}")
     
     # Get feature dimension
     freq_dim = batch[0]['audio_features'].size(1)
@@ -430,7 +436,7 @@ def collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
         audio_lengths[i] = audio_len
         text_lengths[i] = text_len
         transcripts.append(item['transcript'])
-        
+    
         # Add word timestamps if available
         if 'word_timestamps' in item and item['word_timestamps'] is not None:
             word_timestamps.append(item['word_timestamps'])
@@ -533,6 +539,10 @@ def get_optimal_prefetch_factor(prefetch_factor: int, num_workers: int, target_r
     max_batches = target_ram_mb / mb_per_batch
     
     # Calculate optimal prefetch_factor per worker
+    if num_workers == 0:
+        # When num_workers=0, prefetch_factor must be None
+        return None
+    
     optimal = max(1, int(max_batches / num_workers))
     
     # Ensure minimum of 2 for good pipelining, but respect RAM limit
@@ -667,6 +677,9 @@ def create_data_loaders(train_df: pd.DataFrame,
     
     # Auto-adjust prefetch_factor to limit RAM usage to 4-8GB
     optimal_prefetch = get_optimal_prefetch_factor(prefetch_factor, num_workers, target_ram_gb=6.0)
+    # When num_workers=0, prefetch_factor must be None
+    if num_workers == 0:
+        optimal_prefetch = None
     
     # Create data loaders with optimizations for multi-core CPUs (e.g., Ryzen 9 9900X)
     # Optimized for: 24 logical cores, optimal worker count (Golden Rule: 4 × GPUs)
@@ -686,9 +699,9 @@ def create_data_loaders(train_df: pd.DataFrame,
         sampler=train_sampler,
         num_workers=num_workers,
         collate_fn=collate_fn,
-        pin_memory=True,  # Faster GPU transfer
+        pin_memory=True if num_workers > 0 else False,  # Faster GPU transfer
         persistent_workers=persistent_workers if num_workers > 0 else False,  # Keep workers alive
-        prefetch_factor=optimal_prefetch if num_workers > 0 else 2,  # Auto-adjusted prefetch
+        prefetch_factor=optimal_prefetch if num_workers > 0 else None,  # Must be None when num_workers=0
         drop_last=True,  # Drop last incomplete batch to avoid dimension errors
         worker_init_fn=worker_init_fn if num_workers > 0 else None  # Balance CPU affinity across all cores
     )
@@ -701,7 +714,7 @@ def create_data_loaders(train_df: pd.DataFrame,
         collate_fn=collate_fn,
         pin_memory=True,
         persistent_workers=persistent_workers if num_workers > 0 else False,
-        prefetch_factor=optimal_prefetch if num_workers > 0 else 2,  # Use same optimal prefetch
+        prefetch_factor=optimal_prefetch if num_workers > 0 else None,  # Must be None when num_workers=0
         drop_last=False,  # Don't drop last batch in validation
         worker_init_fn=worker_init_fn if num_workers > 0 else None  # Balance CPU affinity across all cores
     )

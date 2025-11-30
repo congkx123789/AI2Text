@@ -136,7 +136,7 @@ def load_model(model_path: str, model_type: str = "transformer"):
     
     # 从config或checkpoint中获取参数
     input_dim = config.get('n_mels', 80)
-    d_model = config.get('d_model', 256)
+    d_model = config.get('d_model', 1024)
     
     # 尝试从checkpoint获取vocab_size，否则使用tokenizer的大小
     if 'vocab_size' in checkpoint:

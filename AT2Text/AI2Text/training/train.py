@@ -13,15 +13,13 @@ import yaml
 import argparse
 from tqdm import tqdm
 import sys
-import logging
-import os
 import multiprocessing
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models.asr_base import ASRModel
+from models.asr_with_timestamps import ASRModelWithTimestamps, create_timestamp_targets
 from preprocessing.audio_processing import AudioProcessor, AudioAugmenter
-from preprocessing.text_cleaning import Tokenizer, VietnameseTextNormalizer, BilingualTextNormalizer
+from preprocessing.text_cleaning import Tokenizer, BilingualTextNormalizer
 from database.db_utils import ASRDatabase
 from training.dataset import create_data_loaders
 from training.callbacks import (
@@ -36,7 +34,7 @@ from utils.logger import setup_logger
 
 
 class ASRTrainer:
-    """Trainer class for ASR model with optimizations for weak hardware."""
+    """Trainer class for ASR model with timestamp support and bilingual (English + Vietnamese) training."""
     
     def __init__(self, config: dict, db: ASRDatabase):
         """Initialize trainer.
@@ -49,6 +47,13 @@ class ASRTrainer:
         self.db = db
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.logger = setup_logger('ASRTrainer', config.get('log_file', 'training.log'))
+        
+        # Timestamp training config
+        self.use_timestamps = self.config.get('use_timestamps', True)
+        self.timestamp_loss_weight = self.config.get('timestamp_loss_weight', 0.1)
+        self.subsampling_factor = 4  # Model subsamples by 4x
+        self.sample_rate = self.config.get('sample_rate', 16000)
+        self.hop_length = 160  # Default hop length for mel spectrogram
         
         # Setup components
         self._setup_preprocessing()
@@ -75,6 +80,10 @@ class ASRTrainer:
         
         self.logger.info(f"Training on device: {self.device}")
         self.logger.info(f"Model parameters: {self.model.get_num_trainable_params():,}")
+        self.logger.info(f"Timestamp training: {self.use_timestamps}")
+        self.logger.info(f"Bilingual support: English + Vietnamese")
+        if self.use_timestamps:
+            self.logger.info(f"Timestamp loss weight: {self.timestamp_loss_weight}")
     
     def _setup_callbacks(self):
         """Setup training callbacks following the Training Layer architecture."""
@@ -132,43 +141,42 @@ class ASRTrainer:
         tokenizer_type = self.config.get('tokenizer_type', 'char')
         if tokenizer_type == 'bpe':
             from preprocessing.bpe_tokenizer import BPETokenizer
-            bpe_path = self.config.get('bpe_vocab_path', 'models/bilingual_bpe.json')
+            bpe_path = self.config.get('bpe_vocab_path', 'models/bilingual_bpe_18k.json')
             self.tokenizer = BPETokenizer()
             self.tokenizer.load(bpe_path)
+            self.logger.info(f"✅ Using BPE tokenizer: {bpe_path} ({len(self.tokenizer)} tokens)")
         else:
             self.tokenizer = Tokenizer()
+            self.logger.info(f"✅ Using character-level tokenizer ({len(self.tokenizer)} tokens)")
 
         # Use bilingual normalizer to support Vietnamese + English
         self.normalizer = BilingualTextNormalizer()
     
     def _setup_model(self):
-        """Setup model and move to device."""
-        self.model = ASRModel(
+        """Setup model with timestamp support and move to device."""
+        self.model = ASRModelWithTimestamps(
             input_dim=self.config.get('n_mels', 80),
             vocab_size=len(self.tokenizer),
-            d_model=self.config.get('d_model', 256),
-            num_encoder_layers=self.config.get('num_encoder_layers', 6),
-            num_heads=self.config.get('num_heads', 4),
-            d_ff=self.config.get('d_ff', 1024),
-            dropout=self.config.get('dropout', 0.1)
+            d_model=self.config.get('d_model', 1024),
+            num_encoder_layers=self.config.get('num_encoder_layers', 24),
+            num_heads=self.config.get('num_heads', 16),
+            d_ff=self.config.get('d_ff', 4096),
+            dropout=self.config.get('dropout', 0.1),
+            predict_timestamps=self.use_timestamps
         )
         
         self.model.to(self.device)
         
         # PyTorch 2.0+ torch.compile() for faster training
-        # Compiles model graph for optimal GPU performance
         self.use_compile = self.config.get('use_compile', False) and hasattr(torch, 'compile')
         if self.use_compile:
             compile_mode = self.config.get('compile_mode', 'reduce-overhead')
             try:
                 self.model = torch.compile(self.model, mode=compile_mode)
-                self.logger.info(f"🚀 torch.compile() enabled with mode: {compile_mode}")
-                self.logger.info("   Note: First epoch will be slower due to compilation, subsequent epochs will be faster")
+                self.logger.info(f"torch.compile() enabled with mode: {compile_mode}")
             except Exception as e:
-                self.logger.warning(f"torch.compile() failed: {e}, continuing without compilation")
+                self.logger.warning(f"torch.compile() failed: {e}")
                 self.use_compile = False
-        elif self.config.get('use_compile', False):
-            self.logger.warning("torch.compile() requested but not available (PyTorch < 2.0.0 or no CUDA)")
         
         # Use mixed precision training for efficiency
         self.use_amp = self.config.get('use_amp', True) and torch.cuda.is_available()
@@ -184,66 +192,56 @@ class ASRTrainer:
             eps=1e-9
         )
         
-        # CTC Loss
-        # Explicitly set reduction='mean' to ensure consistent loss calculation
-        # zero_infinity=True replaces inf loss with 0 when input_length < target_length
+        # CTC Loss for transcription
         self.criterion = nn.CTCLoss(
             blank=self.tokenizer.blank_token_id,
             zero_infinity=True,
-            reduction='mean'  # Explicit: mean over batch (default, but make it clear)
+            reduction='mean'
         )
+        
+        # MSE Loss for timestamps
+        self.timestamp_criterion = nn.MSELoss(reduction='mean')
     
     def _setup_scheduler(self, total_steps: int):
-        """Setup learning rate scheduler with proper warmup to prevent gradient explosion."""
+        """Setup learning rate scheduler."""
         max_lr = self.config.get('learning_rate', 1e-4)
-        warmup_pct = self.config.get('warmup_pct', 0.2)  # 20% warmup by default
+        warmup_pct = self.config.get('warmup_pct', 0.2)
         
-        # CRITICAL FIX: Prevent blank token collapse
-        # Model đã bị collapse vào blank token trap (output toàn blank)
-        # Nguyên nhân: Initial LR quá cao → model nhảy vọt vào local minima
-        # Giải pháp: Start với LR rất nhỏ, warmup từ từ
-        div_factor = 100.0  # Start at max_lr/100 (rất nhỏ để tránh blank trap)
-        final_div_factor = 10000.0  # End at max_lr/10000 (rất nhỏ ở cuối)
+        div_factor = 100.0
+        final_div_factor = 10000.0
         
         self.scheduler = OneCycleLR(
             self.optimizer,
             max_lr=max_lr,
             total_steps=total_steps,
-            pct_start=warmup_pct,  # 20% warmup to prevent gradient explosion
+            pct_start=warmup_pct,
             anneal_strategy='cos',
-            div_factor=div_factor,  # Start at max_lr/10 (higher initial LR)
-            final_div_factor=final_div_factor  # End at max_lr/1000
+            div_factor=div_factor,
+            final_div_factor=final_div_factor
         )
         
         initial_lr = max_lr / div_factor
-        self.logger.info(f"📈 Learning rate scheduler (FIXED for blank collapse):")
-        self.logger.info(f"   Max LR: {max_lr}")
-        self.logger.info(f"   Initial LR: {initial_lr:.2e} (warmup {warmup_pct*100:.0f}%)")
-        self.logger.info(f"   ⚠️  Initial LR rất nhỏ để tránh blank token collapse")
-        self.logger.info(f"   ⚠️  Model sẽ học từ từ, không nhảy vọt vào blank trap")
+        self.logger.info(f"Learning rate scheduler: Max={max_lr:.2e}, Initial={initial_lr:.2e}, Warmup={warmup_pct*100:.0f}%")
     
     def train_epoch(self, train_loader) -> float:
-        """Train for one epoch.
+        """Train for one epoch with timestamp support.
         
         Returns:
             avg_loss: Average training loss
         """
         self.model.train()
         total_loss = 0
+        total_ctc_loss = 0
+        total_timestamp_loss = 0
         num_batches = 0
         
         # Get batch size info for progress bar
         config_batch_size = self.config.get('batch_size', 16)
         effective_batch_size = config_batch_size * self.gradient_accumulation_steps
         
-        # Configure tqdm to write to stderr to avoid conflict with logger
-        # Show batch size info in progress bar to clarify confusion
-        # Pipelining: CPU processes data ahead while GPU trains (simultaneous)
         pbar = tqdm(train_loader, 
                    desc=f'Epoch {self.current_epoch} (batch={config_batch_size}, effective={effective_batch_size})', 
                    file=sys.stderr, dynamic_ncols=True)
-        
-        # Pipeline optimization: Use non_blocking transfer to overlap CPU/GPU work
         for batch_idx, batch in enumerate(pbar):
             # Move to device
             audio_features = batch['audio_features'].to(self.device, non_blocking=True)
@@ -251,93 +249,138 @@ class ASRTrainer:
             text_tokens = batch['text_tokens'].to(self.device, non_blocking=True)
             text_lengths = batch['text_lengths'].to(self.device, non_blocking=True)
             
+            # Get word timestamps if available
+            word_timestamps_list = batch.get('word_timestamps', [None] * len(audio_features))
+            
             # Zero gradients only at the start of accumulation cycle
             if batch_idx % self.gradient_accumulation_steps == 0:
                 self.optimizer.zero_grad()
             
-            # Forward pass with automatic mixed precision
+            # Forward pass
             if self.use_amp:
                 with torch.cuda.amp.autocast():
-                    logits, output_lengths = self.model(audio_features, audio_lengths)
+                    logits, output_lengths, timestamps = self.model(
+                        audio_features, audio_lengths, return_timestamps=self.use_timestamps
+                    )
                     
-                    # Validate output_lengths >= text_lengths (required for CTC)
-                    # This check helps catch potential issues early
-                    invalid_mask = output_lengths < text_lengths
-                    if invalid_mask.any():
-                        invalid_count = invalid_mask.sum().item()
-                        self.logger.warning(
-                            f"⚠️  Batch {batch_idx}: {invalid_count} samples with "
-                            f"output_length < text_length. CTC loss may be 0 (zero_infinity=True)."
-                        )
-                        # Log details for first invalid sample
-                        if invalid_count > 0:
-                            first_invalid = invalid_mask.nonzero()[0].item()
-                            self.logger.warning(
-                                f"   Sample {first_invalid}: output_len={output_lengths[first_invalid].item()}, "
-                                f"text_len={text_lengths[first_invalid].item()}"
-                            )
+                    # CTC loss
+                    logits_t = logits.transpose(0, 1)
+                    log_probs = torch.log_softmax(logits_t, dim=-1)
+                    ctc_loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
                     
-                    # CTC loss expects (T, N, C) format
-                    logits = logits.transpose(0, 1)
-                    log_probs = torch.log_softmax(logits, dim=-1)
+                    # Timestamp loss
+                    timestamp_loss = torch.tensor(0.0, device=self.device)
+                    if self.use_timestamps and timestamps is not None:
+                        timestamp_targets = []
+                        valid_samples = []
+                        
+                        for i in range(len(audio_features)):
+                            if word_timestamps_list[i] is not None:
+                                target = create_timestamp_targets(
+                                    word_timestamps_list[i],
+                                    output_lengths[i].item(),
+                                    self.subsampling_factor,
+                                    self.sample_rate,
+                                    self.hop_length
+                                ).to(self.device)
+                                
+                                actual_len = output_lengths[i].item()
+                                if target.shape[0] >= actual_len:
+                                    target = target[:actual_len]
+                                else:
+                                    pad = torch.zeros(actual_len - target.shape[0], 2, device=self.device)
+                                    target = torch.cat([target, pad], dim=0)
+                                
+                                timestamp_targets.append(target)
+                                valid_samples.append(i)
+                        
+                        if len(timestamp_targets) > 0:
+                            max_len = max(t.shape[0] for t in timestamp_targets)
+                            padded_targets = []
+                            for i, target in enumerate(timestamp_targets):
+                                if target.shape[0] < max_len:
+                                    pad = torch.zeros(max_len - target.shape[0], 2, device=self.device)
+                                    target = torch.cat([target, pad], dim=0)
+                                padded_targets.append(target)
+                            
+                            targets_tensor = torch.stack(padded_targets)
+                            pred_timestamps = timestamps[valid_samples, :max_len, :]
+                            timestamp_loss = self.timestamp_criterion(pred_timestamps, targets_tensor)
                     
-                    loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
+                    # Combined loss
+                    loss = ctc_loss + self.timestamp_loss_weight * timestamp_loss
                     
-                    # Check for NaN/Inf loss (shouldn't happen with zero_infinity=True)
                     if torch.isnan(loss) or torch.isinf(loss):
-                        self.logger.error(
-                            f"❌ Batch {batch_idx}: Loss is NaN/Inf! "
-                            f"This should not happen with zero_infinity=True."
-                        )
-                        # Skip this batch
+                        self.logger.error(f"Batch {batch_idx}: Loss is NaN/Inf, skipping")
                         continue
                     
-                    # Scale loss by accumulation steps for gradient accumulation
                     loss = loss / self.gradient_accumulation_steps
                 
                 # Backward pass with gradient scaling
                 self.scaler.scale(loss).backward()
-                
-                # Update weights only after accumulation steps
                 if (batch_idx + 1) % self.gradient_accumulation_steps == 0:
-                    # Gradient clipping
                     self.scaler.unscale_(self.optimizer)
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 
                                                   self.config.get('grad_clip', 1.0))
-                    
                     self.scaler.step(self.optimizer)
                     self.scaler.update()
             else:
-                logits, output_lengths = self.model(audio_features, audio_lengths)
+                # Forward pass without AMP
+                logits, output_lengths, timestamps = self.model(
+                    audio_features, audio_lengths, return_timestamps=self.use_timestamps
+                )
                 
-                # Validate output_lengths >= text_lengths (required for CTC)
-                invalid_mask = output_lengths < text_lengths
-                if invalid_mask.any():
-                    invalid_count = invalid_mask.sum().item()
-                    self.logger.warning(
-                        f"⚠️  Batch {batch_idx}: {invalid_count} samples with "
-                        f"output_length < text_length. CTC loss may be 0 (zero_infinity=True)."
-                    )
+                logits_t = logits.transpose(0, 1)
+                log_probs = torch.log_softmax(logits_t, dim=-1)
+                ctc_loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
                 
-                # CTC loss
-                logits = logits.transpose(0, 1)
-                log_probs = torch.log_softmax(logits, dim=-1)
-                loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
+                timestamp_loss = torch.tensor(0.0, device=self.device)
+                if self.use_timestamps and timestamps is not None:
+                    timestamp_targets = []
+                    valid_samples = []
+                    
+                    for i in range(len(audio_features)):
+                        if word_timestamps_list[i] is not None:
+                            target = create_timestamp_targets(
+                                word_timestamps_list[i],
+                                output_lengths[i].item(),
+                                self.subsampling_factor,
+                                self.sample_rate,
+                                self.hop_length
+                            ).to(self.device)
+                            
+                            actual_len = output_lengths[i].item()
+                            if target.shape[0] >= actual_len:
+                                target = target[:actual_len]
+                            else:
+                                pad = torch.zeros(actual_len - target.shape[0], 2, device=self.device)
+                                target = torch.cat([target, pad], dim=0)
+                            
+                            timestamp_targets.append(target)
+                            valid_samples.append(i)
+                    
+                    if len(timestamp_targets) > 0:
+                        max_len = max(t.shape[0] for t in timestamp_targets)
+                        padded_targets = []
+                        for i, target in enumerate(timestamp_targets):
+                            if target.shape[0] < max_len:
+                                pad = torch.zeros(max_len - target.shape[0], 2, device=self.device)
+                                target = torch.cat([target, pad], dim=0)
+                            padded_targets.append(target)
+                        
+                        targets_tensor = torch.stack(padded_targets)
+                        pred_timestamps = timestamps[valid_samples, :max_len, :]
+                        timestamp_loss = self.timestamp_criterion(pred_timestamps, targets_tensor)
                 
-                # Check for NaN/Inf loss
+                loss = ctc_loss + self.timestamp_loss_weight * timestamp_loss
+                
                 if torch.isnan(loss) or torch.isinf(loss):
-                    self.logger.error(
-                        f"❌ Batch {batch_idx}: Loss is NaN/Inf! "
-                        f"This should not happen with zero_infinity=True."
-                    )
+                    self.logger.error(f"Batch {batch_idx}: Loss is NaN/Inf, skipping")
                     continue
                 
-                # Scale loss by accumulation steps for gradient accumulation
                 loss = loss / self.gradient_accumulation_steps
-                
                 loss.backward()
                 
-                # Update weights only after accumulation steps
                 if (batch_idx + 1) % self.gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 
                                                   self.config.get('grad_clip', 1.0))
@@ -347,19 +390,24 @@ class ASRTrainer:
             if hasattr(self, 'scheduler'):
                 self.scheduler.step()
             
-            # Accumulate loss (multiply back to get true loss)
             true_loss = loss.item() * self.gradient_accumulation_steps
+            true_ctc = ctc_loss.item()
+            true_ts = timestamp_loss.item() if isinstance(timestamp_loss, torch.Tensor) else 0.0
+            
             total_loss += true_loss
+            total_ctc_loss += true_ctc
+            total_timestamp_loss += true_ts
             num_batches += 1
             
-            # Training Layer: Callback on_batch_end (Logging)
             self.callback_manager.on_batch_end(self, num_batches - 1, loss.item())
-            
-            # Update progress bar with TRUE loss (not scaled loss)
-            # This matches the final average loss calculation
-            pbar.set_postfix({'loss': true_loss})
+            pbar.set_postfix({'loss': true_loss, 'ctc': true_ctc, 'ts': true_ts})
         
         avg_loss = total_loss / num_batches
+        avg_ctc = total_ctc_loss / num_batches
+        avg_ts = total_timestamp_loss / num_batches
+        
+        self.logger.info(f"Epoch {self.current_epoch} - Loss: {avg_loss:.4f} (CTC: {avg_ctc:.4f}, TS: {avg_ts:.4f})")
+        
         return avg_loss
     
     @torch.no_grad()
@@ -384,16 +432,9 @@ class ASRTrainer:
             text_tokens = batch['text_tokens'].to(self.device)
             text_lengths = batch['text_lengths'].to(self.device)
             
-            # Forward pass
-            logits, output_lengths = self.model(audio_features, audio_lengths)
-            
-            # Validate output_lengths >= text_lengths (required for CTC)
-            invalid_mask = output_lengths < text_lengths
-            if invalid_mask.any():
-                invalid_count = invalid_mask.sum().item()
-                self.logger.warning(
-                    f"⚠️  Val batch {num_batches}: {invalid_count} samples with "
-                    f"output_length < text_length. CTC loss may be 0 (zero_infinity=True)."
+            # Forward pass with timestamps
+            logits, output_lengths, timestamps = self.model(
+                audio_features, audio_lengths, return_timestamps=self.use_timestamps
                 )
             
             # Calculate loss
@@ -401,12 +442,8 @@ class ASRTrainer:
             log_probs = torch.log_softmax(logits_t, dim=-1)
             loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
             
-            # Check for NaN/Inf loss
             if torch.isnan(loss) or torch.isinf(loss):
-                self.logger.error(
-                    f"❌ Val batch {num_batches}: Loss is NaN/Inf! "
-                    f"This should not happen with zero_infinity=True."
-                )
+                self.logger.error(f"Val batch {num_batches}: Loss is NaN/Inf, skipping")
                 continue
             
             total_loss += loss.item()
@@ -414,122 +451,12 @@ class ASRTrainer:
             # Decode predictions for WER/CER calculation
             predictions = torch.argmax(logits, dim=-1)
             
-            # ============================================================
-            # DEBUG CHECKLIST #1: In thử Output ngay lập tức
-            # ============================================================
-            is_first_batch = (num_batches == 0)
-            if is_first_batch:
-                self.logger.info("=" * 80)
-                self.logger.info("🔍 DEBUG CHECKLIST #1: In thử Output ngay lập tức")
-                self.logger.info("=" * 80)
-                
-                # Decode using tokenizer.batch_decode (as requested in checklist)
-                # Get first sample for immediate inspection
-                first_pred_tokens = predictions[0, :output_lengths[0]].cpu().unsqueeze(0)
-                first_label_tokens = text_tokens[0, :text_lengths[0]].cpu().unsqueeze(0)
-                
-                # Use tokenizer decode (will handle CTC collapse internally)
-                try:
-                    decoded_preds = [self._ctc_decode(predictions[0, :output_lengths[0]].cpu().tolist())]
-                    decoded_labels = [self.tokenizer.decode(text_tokens[0, :text_lengths[0]].cpu().tolist())]
-                    
-                    self.logger.info("")
-                    self.logger.info("🚨 IMMEDIATE OUTPUT CHECK (First Sample):")
-                    self.logger.info(f"  Pred: '{decoded_preds[0]}'")
-                    self.logger.info(f"  True: '{decoded_labels[0]}'")
-                    self.logger.info("")
-                    
-                    # Check for empty prediction (Trường hợp 1)
-                    if len(decoded_preds[0].strip()) == 0:
-                        self.logger.error("  ❌ TRƯỜNG HỢP 1: Pred rỗng tuếch!")
-                        self.logger.error("     → Lỗi do CTC Loss (input quá ngắn) hoặc Learning Rate sai")
-                        self.logger.error("     → Hoặc Tokenizer bị sai index")
-                    
-                    # Check for <unk> tokens (Trường hợp 2)
-                    pred_tokens_list = predictions[0, :output_lengths[0]].cpu().tolist()
-                    if hasattr(self.tokenizer, 'unk_token_id') and self.tokenizer.unk_token_id is not None:
-                        unk_count = sum(1 for t in pred_tokens_list if t == self.tokenizer.unk_token_id)
-                        if unk_count > len(pred_tokens_list) * 0.5:  # >50% are <unk>
-                            self.logger.error("  ❌ TRƯỜNG HỢP 2: Pred chứa nhiều <unk> tokens!")
-                            self.logger.error("     → Tokenizer chưa cover được bộ từ vựng (Vocab)")
-                    
-                except Exception as e:
-                    self.logger.error(f"  ❌ Error decoding: {e}")
-            
-            # ============================================================
-            # DEBUG CHECKLIST #2: Kiểm tra "Độ dài Audio sau khi nén"
-            # ============================================================
-            if is_first_batch:
-                self.logger.info("")
-                self.logger.info("=" * 80)
-                self.logger.info("🔍 DEBUG CHECKLIST #2: Kiểm tra Độ dài Audio sau khi nén")
-                self.logger.info("=" * 80)
-                self.logger.info("Model ASR dùng CNN subsampling 4x (2 conv stride 2)")
-                self.logger.info("")
-            
             for i in range(predictions.size(0)):
                 pred_tokens = predictions[i, :output_lengths[i]].cpu().tolist()
                 ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
                 
-                # Decode using CTC collapse (remove blanks and duplicates)
                 pred_text = self._ctc_decode(pred_tokens)
                 ref_text = self.tokenizer.decode(ref_tokens)
-                
-                # CRITICAL: Check subsampling ratio
-                audio_len_original = audio_lengths[i].item()  # Original audio length (spectrogram frames)
-                audio_len_after_subsample = output_lengths[i].item()  # After 4x subsampling
-                text_len = text_lengths[i].item()
-                
-                # Calculate expected subsampling
-                expected_subsample = audio_len_original // 4  # Model subsamples by 4x
-                actual_subsample = audio_len_after_subsample
-                
-                if is_first_batch:
-                    self.logger.info(f"\n{'='*80}")
-                    self.logger.info(f"Sample {i+1}/{predictions.size(0)}:")
-                    self.logger.info(f"{'='*80}")
-                    self.logger.info(f"  📝 Reference:")
-                    self.logger.info(f"     Text: '{ref_text}'")
-                    self.logger.info(f"     Tokens: {ref_tokens[:30]}..." if len(ref_tokens) > 30 else f"     Tokens: {ref_tokens}")
-                    self.logger.info(f"     Length: {len(ref_tokens)} tokens")
-                    self.logger.info(f"  🤖 Prediction:")
-                    self.logger.info(f"     Text: '{pred_text}'")
-                    self.logger.info(f"     Tokens: {pred_tokens[:30]}..." if len(pred_tokens) > 30 else f"     Tokens: {pred_tokens}")
-                    self.logger.info(f"     Length: {len(pred_tokens)} tokens")
-                    self.logger.info(f"  📊 Audio Length Analysis (CRITICAL):")
-                    self.logger.info(f"     Original audio length (spectrogram): {audio_len_original} frames")
-                    self.logger.info(f"     Expected after 4x subsampling: ~{expected_subsample} frames")
-                    self.logger.info(f"     Actual output length: {actual_subsample} frames")
-                    self.logger.info(f"     Text length: {text_len} tokens")
-                    self.logger.info(f"     Output/Text ratio: {actual_subsample/text_len:.2f}x" if text_len > 0 else "     Output/Text ratio: N/A")
-                    
-                    # CRITICAL CHECK: Input (output_length) > Output (text_length)
-                    if actual_subsample < text_len:
-                        self.logger.error(f"     🚨 LỖI CTC: Input ({actual_subsample}) < Output ({text_len})!")
-                        self.logger.error(f"        → CTC Loss sẽ ra vô cực (Infinity) hoặc model output rỗng")
-                        self.logger.error(f"        → Giải pháp: Lọc bỏ audio quá ngắn (< 1s) hoặc text quá dài")
-                    elif actual_subsample < text_len * 1.2:  # Warning if ratio is too close
-                        self.logger.warning(f"     ⚠️  CẢNH BÁO: Ratio quá gần ({actual_subsample/text_len:.2f}x)")
-                        self.logger.warning(f"        → Nên có ít nhất 1.5x để CTC hoạt động tốt")
-                    else:
-                        self.logger.info(f"     ✅ OK: Input ({actual_subsample}) > Output ({text_len})")
-                    
-                    self.logger.info(f"     Blank token ID: {self.tokenizer.blank_token_id}")
-                    
-                    # Check if all predictions are blank
-                    unique_preds = set(pred_tokens)
-                    self.logger.info(f"     Unique pred tokens: {unique_preds}")
-                    self.logger.info(f"     Number of unique tokens: {len(unique_preds)}")
-                    
-                    # Critical checks
-                    if len(pred_text.strip()) == 0:
-                        self.logger.error(f"     🚨 PREDICTION IS EMPTY STRING!")
-                    elif len(unique_preds) == 1 and list(unique_preds)[0] == self.tokenizer.blank_token_id:
-                        self.logger.error(f"     🚨 ALL PREDICTIONS ARE BLANK TOKEN!")
-                    elif len(unique_preds) <= 3:
-                        self.logger.warning(f"     ⚠️  VERY FEW UNIQUE TOKENS ({len(unique_preds)}) - Model may be collapsing")
-                    else:
-                        self.logger.info(f"     ✅ Prediction has {len(unique_preds)} unique tokens")
                 
                 all_predictions.append(pred_text)
                 all_references.append(ref_text)
@@ -541,39 +468,13 @@ class ASRTrainer:
         wer = calculate_wer(all_references, all_predictions)
         cer = calculate_cer(all_references, all_predictions)
         
-        # CRITICAL: Log summary of predictions for debugging WER=1.0
-        self.logger.info("=" * 80)
-        self.logger.info("📊 VALIDATION SUMMARY (Debug WER/CER)")
-        self.logger.info("=" * 80)
-        
-        # Count empty predictions
+        # Log summary
         empty_preds = sum(1 for p in all_predictions if len(p.strip()) == 0)
-        blank_only = sum(1 for p in all_predictions if len(set(self.tokenizer.encode(p))) <= 1)
-        
-        self.logger.info(f"Total samples: {len(all_predictions)}")
-        self.logger.info(f"Empty predictions: {empty_preds} ({empty_preds/len(all_predictions)*100:.1f}%)")
-        self.logger.info(f"Blank-only predictions: {blank_only} ({blank_only/len(all_predictions)*100:.1f}%)")
-        
-        # Show first few predictions vs references
-        self.logger.info(f"\nFirst 5 predictions vs references:")
-        for i in range(min(5, len(all_predictions))):
-            self.logger.info(f"  [{i+1}] Ref: '{all_references[i][:50]}...' | Pred: '{all_predictions[i][:50]}...'")
+        if empty_preds > 0:
+            self.logger.warning(f"Validation: {empty_preds}/{len(all_predictions)} empty predictions")
         
         if wer >= 0.95:
-            self.logger.error("=" * 80)
-            self.logger.error("🚨 CRITICAL: WER >= 0.95 (Model not learning!)")
-            self.logger.error("=" * 80)
-            self.logger.error("Possible causes:")
-            self.logger.error("  1. Model output is all blank/empty")
-            self.logger.error("  2. Learning rate too low (stuck in local minima)")
-            self.logger.error("  3. output_lengths < text_lengths (CTC alignment issue)")
-            self.logger.error("  4. Tokenizer mismatch or encoding issue")
-            self.logger.error("")
-            self.logger.error("Action required:")
-            self.logger.error("  - Check prediction samples above")
-            self.logger.error("  - Verify output_lengths >= text_lengths")
-            self.logger.error("  - Consider increasing learning rate")
-            self.logger.error("  - Check tokenizer encoding/decoding")
+            self.logger.error(f"WER >= 0.95 (Model not learning!) - Check predictions")
         
         return avg_loss, wer, cer
     
@@ -742,14 +643,53 @@ class ASRTrainer:
     def load_checkpoint(self, checkpoint_path: str):
         """Load model checkpoint.
         
+        Supports seamless continuation across different datasets (47k -> 257k).
         When resuming for fine-tuning, the scheduler will be recreated with new
         total_steps based on the new dataset size. This is intentional for
         curriculum learning scenarios.
         """
         # PyTorch 2.6+ requires weights_only=False for checkpoints with numpy objects
         checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Load model state (handles missing keys gracefully for architecture changes)
+        model_state = checkpoint['model_state_dict']
+        current_model_state = self.model.state_dict()
+        
+        # Filter out keys that don't exist in current model (e.g., if timestamp head was added/removed)
+        filtered_state = {}
+        missing_keys = []
+        unexpected_keys = []
+        
+        for key, value in model_state.items():
+            if key in current_model_state:
+                if current_model_state[key].shape == value.shape:
+                    filtered_state[key] = value
+                else:
+                    unexpected_keys.append(f"{key} (shape mismatch: {current_model_state[key].shape} vs {value.shape})")
+            else:
+                missing_keys.append(key)
+        
+        # Load the filtered state
+        self.model.load_state_dict(filtered_state, strict=False)
+        
+        if missing_keys:
+            self.logger.info(f"⚠️  Missing keys (will use random init): {len(missing_keys)} keys")
+            if len(missing_keys) <= 5:
+                for key in missing_keys:
+                    self.logger.info(f"   - {key}")
+        
+        if unexpected_keys:
+            self.logger.info(f"⚠️  Shape mismatches (will use random init): {len(unexpected_keys)} keys")
+            if len(unexpected_keys) <= 5:
+                for key in unexpected_keys:
+                    self.logger.info(f"   - {key}")
+        
+        # Load optimizer state (may have different shapes if dataset size changed)
+        try:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        except Exception as e:
+            self.logger.warning(f"⚠️  Could not load optimizer state (will use fresh optimizer): {e}")
+            self.logger.info("   This is normal when switching datasets - optimizer will reinitialize")
         
         # CRITICAL FIX: Resume from the next epoch, not epoch 0
         checkpoint_epoch = checkpoint.get('epoch', 0)
@@ -757,9 +697,11 @@ class ASRTrainer:
         self.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         self.best_wer = checkpoint.get('best_wer', float('inf'))
         
-        self.logger.info(f"Loaded checkpoint from epoch {checkpoint_epoch}")
-        self.logger.info(f"Resuming training from epoch {self.current_epoch}")
-        self.logger.info(f"Best validation loss from checkpoint: {self.best_val_loss:.4f}")
+        self.logger.info(f"✅ Loaded checkpoint from epoch {checkpoint_epoch}")
+        self.logger.info(f"   Resuming training from epoch {self.current_epoch}")
+        self.logger.info(f"   Best validation loss: {self.best_val_loss:.4f}")
+        self.logger.info(f"   Best WER: {self.best_wer:.4f}")
+        self.logger.info(f"   ✅ Can continue training with new dataset size (47k -> 257k)")
         
         # Note: Scheduler will be recreated in train() method with correct total_steps
         # This ensures proper LR scheduling for the remaining epochs
@@ -775,19 +717,33 @@ def main():
             # Already set, continue
             pass
     
-    parser = argparse.ArgumentParser(description='Train ASR model')
+    parser = argparse.ArgumentParser(description='Train ASR model with timestamp support and bilingual (English + Vietnamese) training')
     parser.add_argument('--config', type=str, default='configs/default.yaml',
                        help='Path to config file')
     parser.add_argument('--resume', type=str, default=None,
                        help='Path to checkpoint to resume from')
     parser.add_argument('--language', type=str, default=None,
                        help='Filter training data by language (e.g., "en" or "vi"). '
-                            'Useful for sequential training: train English first, then Vietnamese.')
+                            'Useful for sequential training: train English first, then Vietnamese. '
+                            'If not specified, trains on both English and Vietnamese.')
+    parser.add_argument('--use_timestamps', action='store_true', default=None,
+                       help='Enable timestamp training (overrides config)')
+    parser.add_argument('--no_timestamps', action='store_true',
+                       help='Disable timestamp training (overrides config)')
     args = parser.parse_args()
     
     # Load config
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
+    
+    # Override timestamp config from command line
+    if args.use_timestamps:
+        config['use_timestamps'] = True
+    elif args.no_timestamps:
+        config['use_timestamps'] = False
+    # If not specified, use config default (defaults to True)
+    if 'use_timestamps' not in config:
+        config['use_timestamps'] = True
     
     # Initialize database
     db = ASRDatabase(config.get('database_path', 'database/asr_training.db'))
@@ -801,8 +757,21 @@ def main():
         print(f"Training samples ({language}): {len(train_df)}")
         print(f"Validation samples ({language}): {len(val_df)}")
     else:
-        print(f"Training samples (all languages): {len(train_df)}")
-        print(f"Validation samples (all languages): {len(val_df)}")
+        print(f"Training samples (all languages - English + Vietnamese): {len(train_df)}")
+        print(f"Validation samples (all languages - English + Vietnamese): {len(val_df)}")
+    
+    # Log timestamp configuration
+    use_timestamps = config.get('use_timestamps', True)
+    print(f"\n{'='*80}")
+    print(f"📊 TRAINING CONFIGURATION")
+    print(f"{'='*80}")
+    print(f"Timestamp training: {'✅ Enabled' if use_timestamps else '❌ Disabled'}")
+    if use_timestamps:
+        print(f"Timestamp loss weight: {config.get('timestamp_loss_weight', 0.1)}")
+    print(f"Dataset: {len(train_df)} train, {len(val_df)} val samples")
+    print(f"Batch size: {config.get('batch_size', 16)}")
+    print(f"Epochs: {config.get('num_epochs', 50)}")
+    print(f"{'='*80}\n")
     
     # Create data loaders
     audio_processor = AudioProcessor(
@@ -814,11 +783,13 @@ def main():
     tokenizer_type = config.get('tokenizer_type', 'char')
     if tokenizer_type == 'bpe':
         from preprocessing.bpe_tokenizer import BPETokenizer
-        bpe_path = config.get('bpe_vocab_path', 'models/bilingual_bpe.json')
+        bpe_path = config.get('bpe_vocab_path', 'models/bilingual_bpe_18k.json')
         tokenizer = BPETokenizer()
         tokenizer.load(bpe_path)
+        print(f"✅ Using BPE tokenizer: {bpe_path} ({len(tokenizer)} tokens)")
     else:
         tokenizer = Tokenizer()
+        print(f"✅ Using character-level tokenizer ({len(tokenizer)} tokens)")
     
     train_loader, val_loader = create_data_loaders(
         train_df=train_df,

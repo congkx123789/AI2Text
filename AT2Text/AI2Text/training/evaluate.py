@@ -46,10 +46,10 @@ class ASREvaluator:
         self.model = ASRModel(
             input_dim=config.get('n_mels', 80),
             vocab_size=len(self.tokenizer),
-            d_model=config.get('d_model', 256),
-            num_encoder_layers=config.get('num_encoder_layers', 6),
-            num_heads=config.get('num_heads', 4),
-            d_ff=config.get('d_ff', 1024),
+            d_model=config.get('d_model', 1024),
+            num_encoder_layers=config.get('num_encoder_layers', 24),
+            num_heads=config.get('num_heads', 16),
+            d_ff=config.get('d_ff', 4096),
             dropout=0.0  # No dropout during inference
         )
         

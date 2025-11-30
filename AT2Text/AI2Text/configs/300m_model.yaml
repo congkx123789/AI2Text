@@ -1,0 +1,55 @@
+# Configuration for 300M parameter ASR model
+# Optimized for high-performance training on powerful hardware (Ryzen 9 9900X, RTX 5060 Ti)
+
+# Model architecture (300M parameters)
+model_name: "VietnameseASR_300M"
+d_model: 1024              # Increased from 256 (4x)
+num_encoder_layers: 24     # Increased from 6 (4x)
+num_heads: 16              # Increased from 4 (4x)
+d_ff: 4096                 # Increased from 1024 (4x)
+dropout: 0.1
+
+# Audio processing
+sample_rate: 16000
+n_mels: 80
+n_fft: 400
+hop_length: 160
+win_length: 400
+
+# Tokenization
+tokenizer_type: "bpe"          # "char" for character-level, "bpe" for subword BPE
+bpe_vocab_path: "models/bilingual_bpe_18k.json"  # Base vocabulary (18k tokens)
+vocab_size: 18000  # Fixed vocabulary size - DO NOT CHANGE
+
+# Training hyperparameters (adjusted for larger model)
+batch_size: 4                  # Reduced from 8 (larger model needs more memory)
+num_epochs: 50                 # More epochs for larger model
+learning_rate: 0.0001
+weight_decay: 0.01
+grad_clip: 1.0
+gradient_accumulation_steps: 4  # Effective batch size = 4 * 4 = 16
+
+# Optimization for powerful hardware
+use_amp: true                  # Automatic Mixed Precision
+num_workers: 8                 # More workers for Ryzen 9 9900X (24 cores)
+pin_memory: true
+prefetch_factor: 4             # Larger prefetch for better pipelining
+
+# Data
+database_path: "database/asr_training.db"
+split_version: "v1"
+
+# Timestamp training
+use_timestamps: true           # Enable timestamp prediction
+timestamp_loss_weight: 0.1     # Weight for timestamp loss
+
+# Checkpointing
+checkpoint_dir: "checkpoints"
+save_every: 5
+
+# Logging
+log_file: "logs/training_300m.log"
+
+# Training run
+run_name: "vietnamese_asr_300m_20251130"
+
