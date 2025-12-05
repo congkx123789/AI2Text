@@ -169,12 +169,20 @@ AI2Text/data/processed/**/audio/
 *.pickle
 *.joblib
 
-# Large text/csv files (if > 100MB, uncomment these)
-# *.csv
-# *.tsv
-# *.txt
-# *.json
-# *.jsonl
+# Large CSV/JSON files in processed data (often > 50MB)
+# Ignore large CSV files in processed directories
+**/data/processed/**/*.csv
+**/data/processed/**/manifest*.csv
+**/data/processed/**/manifest_sliced.csv
+**/data/processed/**/manifest_sorted.csv
+
+# Ignore large JSON files in processed directories (timestamps, etc.)
+**/data/processed/**/timestamps.json
+**/data/processed/**/*.json
+# But keep small config JSON files
+!**/config/*.json
+!**/configs/*.json
+!**/*config*.json
 
 # Dataset directories
 datasets/
@@ -183,6 +191,13 @@ raw_data/
 training_data/
 test_data/
 validation_data/
+
+# Specifically ignore large processed data files
+ai-llm-ss/data/processed/**/*.csv
+ai-llm-ss/data/processed/**/timestamps.json
+ai-llm-ss/data/processed/**/manifest*.csv
+AI2Text/data/processed/**/*.csv
+AI2Text/data/processed/**/timestamps.json
 
 # ==============================
 # Logs
