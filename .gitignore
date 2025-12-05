@@ -1,54 +1,6 @@
-# Virtual environments
-.venv/
-env/
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-
-# Data & models (too big for GitHub)
-# AI2Text/data/
-# AI2Text/models/
-
-# Jupyter notebooks checkpoints
-*.ipynb_checkpoints
-
-# VS Code settings
-.vscode/
-
-# Node.js
-.node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-
-# Environment files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-
-# OS files
-.DS_Store
-.Thumbs.db
-
-
-ai-llm/model/
-ai-llm/models/
-ai-llm/model/
-*.safetensors
-*.bin
-*.onnx
-__pycache__/
-.vs/
-*.db
-
-
+# ==============================
 # Python
+# ==============================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -66,54 +18,45 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
-pip-log.txt
-pip-delete-this-directory.txt
 
-# Virtual environments
+# ==============================
+# Virtual Environments
+# ==============================
 venv/
 env/
 ENV/
-.venv
 env.bak/
 venv.bak/
+.venv/
+virtualenv/
 
-# IDEs
+# ==============================
+# IDEs and Editors
+# ==============================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.project
-.pydevproject
-.settings/
+.DS_Store
 *.sublime-project
 *.sublime-workspace
 
-# Jupyter Notebook
+# ==============================
+# Jupyter Notebooks
+# ==============================
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Data
-data/raw/*
-data/processed/*
-data/external/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-!data/external/.gitkeep
-
-# Database
-*.db
-*.db-journal
-*.sqlite
-*.sqlite3
-database/backups/*
-
-# Model checkpoints
-checkpoints/
+# ==============================
+# Machine Learning / Models
+# ==============================
 *.pt
 *.pth
 *.ckpt
@@ -121,62 +64,154 @@ checkpoints/
 *.pb
 *.onnx
 *.tflite
+*.bin
+*.safetensors
+*.msgpack
+checkpoints/
 models/*.pt
 models/*.pth
 models/*.ckpt
-
-# Logs
-logs/
-*.log
-runs/
+models/*.bin
+models/*.safetensors
+ai-llm/models/base/**/*.bin
+ai-llm/models/base/**/*.safetensors
+ai-llm/models/base/**/*.pt
+ai-llm/models/base/**/*.pth
+*.faiss
+*.index
 wandb/
-tensorboard/
+.wandb/
+tensorboard_logs/
+tb_logs/
 mlruns/
-.neptune/
+.mlflow/
 
-# Results
+# ==============================
+# Data and Cache
+# ==============================
+cache/
+.cache/
+*.cache
+dataset_cache/
+vectorstore/
+# Note: *.faiss already in ML Models section
+*.ids
+*.jsonl
+data/processed/
+data/interim/
+data/external/
+data/results/
+experiments/reports/
 results/
-outputs/
-experiments/
 
-# Audio/Media files
-*.m4a
-*.mp3
+# ==============================
+# Large Training Data Files
+# ==============================
+# Audio files (typically large)
 *.wav
+*.mp3
 *.flac
-*.aac
 *.ogg
+*.m4a
 *.wma
-sound/*.m4a
-sound/*.mp3
-sound/*.wav
+*.aac
+*.opus
+*.amr
+*.au
+*.aiff
+*.mp2
 
-# Generated config files (training runs)
-configs/training_*.yaml
-!configs/training_*.yaml.example
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.flv
+*.wmv
+*.m4v
+*.3gp
 
-# Node.js / Frontend
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-yarn.lock
-frontend/node_modules/
-frontend/dist/
-frontend/build/
+# Archive files (datasets often come as archives)
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.7z
+*.rar
+*.bz2
+*.xz
 
-# Environment variables
+# Raw data directories (contain large audio/video files)
+data/raw/**/audio/
+data/raw/**/video/
+data/raw/**/images/
+data/raw/**/audio_files/
+data/processed/**/audio/
+data/processed/**/video/
+data/processed/**/images/
+ai-llm/data/raw/audio/
+ai-llm/data/raw/video/
+ai-llm-ss/data/raw/
+AI2Text/data/raw/**/audio/
+AI2Text/data/processed/**/audio/
+
+# Large dataset files
+*.parquet
+*.arrow
+*.feather
+*.hdf5
+# Note: *.h5 already in ML Models section
+*.npz
+*.npy
+*.pkl
+*.pickle
+*.joblib
+
+# Large text/csv files (if > 100MB, uncomment these)
+# *.csv
+# *.tsv
+# *.txt
+# *.json
+# *.jsonl
+
+# Dataset directories
+datasets/
+dataset/
+raw_data/
+training_data/
+test_data/
+validation_data/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+*.out
+*.err
+training_output.log
+
+# ==============================
+# Database
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+database/*.db
+
+# ==============================
+# Environment Variables
+# ==============================
 .env
 .env.local
 .env.*.local
 *.env
 
-# Docker
-docker-compose.override.yml
-.dockerignore
-
-# OS
+# ==============================
+# OS Files
+# ==============================
 .DS_Store
 .DS_Store?
 ._*
@@ -184,38 +219,117 @@ docker-compose.override.yml
 .Trashes
 ehthumbs.db
 Thumbs.db
-Desktop.ini
+*.exe
+*.dll
+*.dylib
 
-# Temporary files
+# ==============================
+# Compiled Files
+# ==============================
+*.o
+*.a
+*.so
+*.exe
+*.out
+*.app
+
+# ==============================
+# Temporary Files
+# ==============================
 *.tmp
+*.temp
 *.bak
-*.cache
+*.backup
 *.swp
 *.swo
 *~
-.cache/
-.pytest_cache/
+*.orig
+
+# ==============================
+# Docker
+# ==============================
+.dockerignore
+
+# ==============================
+# Hugging Face
+# ==============================
+.huggingface/
+transformers_cache/
+
+# ==============================
+# Project Specific
+# ==============================
+# Keep manifests in data/manifests/ but ignore processed data
+data/processed/
+data/interim/
+data/external/
+data/results/
+
+# Ignore uploaded files
+uploads/
+temp_uploads/
+
+# Ignore test outputs
+test_outputs/
+*.test
+
+# Ignore coverage reports
 .coverage
 htmlcov/
+.pytest_cache/
 .tox/
-.hypothesis/
 
-# ML/AI specific
-*.pkl
-*.pickle
-*.joblib
-*.hdf5
-*.h5
-faiss_index/
-embeddings/
-*.index
-*.vec
+# Ignore mypy cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# Documentation builds
-docs/_build/
-site/
-
-# Profiling
+# Ignore profiling data
 *.prof
-*.lprof
+*.pstats
 
+# ==============================
+# Report and Output Files
+# ==============================
+*_report.txt
+*_links_report.txt
+comprehensive_*.txt
+database_*.txt
+bad_files*.txt
+*.report
+*.output
+
+# ==============================
+# Model Weights and Configs (Large)
+# ==============================
+# Ignore large model directories
+ai-llm/models/base/
+models/checkpoints/
+models/pretrained/
+pretrained_models/
+saved_models/
+
+# ==============================
+# Experiment Tracking (Additional)
+# ==============================
+# Note: wandb/, tensorboard_logs/, mlruns/ already in ML Models section
+neptune/
+.comet/
+allennlp/
+
+# ==============================
+# Shell Script Outputs
+# ==============================
+*.sh.log
+*.sh.out
+*.sh.err
+
+# ==============================
+# Large Text Files (Reports, Logs)
+# ==============================
+# Uncomment if you want to ignore all large text files
+# *.txt
+# But keep important ones like README.md, requirements.txt
+!README.md
+!requirements.txt
+!*.md

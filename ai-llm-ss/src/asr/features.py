@@ -12,5 +12,8 @@ def wav_to_logmelspec(waveform, sr=16000, n_fft=400, hop=160, n_mels=80):
     mel = torchaudio.transforms.MelSpectrogram(
         sample_rate=sr, n_fft=n_fft, hop_length=hop, n_mels=n_mels
     )(waveform)
+    # mel shape: (channels, n_mels, frames); expect mono so squeeze channel
+    if mel.dim() == 3 and mel.size(0) == 1:
+        mel = mel.squeeze(0)
     logmel = torch.log(mel + 1e-6)       # (n_mels, frames)
     return logmel.transpose(0,1)         # (frames, n_mels)
