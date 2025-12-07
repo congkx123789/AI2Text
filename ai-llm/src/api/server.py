@@ -60,9 +60,18 @@ def root():
 @app.get("/health", response_model=HealthResponse)
 def health_check():
     """Health check endpoint - check if models and index are loaded"""
-    index_available = Path(VECTOR_DIR).exists()
-    models_loaded = _check_pipeline_status()
-    status = "healthy" if (index_available and models_loaded) else "degraded"
+    index_available = Path(VECTOR_DIR).exists() if VECTOR_DIR else False
+    
+    # Test if Whisper model can be loaded
+    try:
+        from src.tools.ai2text_bridge import _get_model
+        test_model = _get_model("small", None, None)
+        models_loaded = test_model is not None
+    except Exception as e:
+        print(f"[ai-llm] Health check warning: {e}")
+        models_loaded = False
+    
+    status = "healthy" if models_loaded else "degraded"
     return HealthResponse(
         status=status,
         models_loaded=models_loaded,
@@ -110,9 +119,7 @@ def api_transcribe(req: TranscribeRequest):
             p = (Path.cwd() / p).resolve()
         if not p.exists():
             raise HTTPException(status_code=400, detail=f"Audio file not found: {p}")
-        # Force CPU defaults if env not set (Windows-safe)
-        os.environ.setdefault("CT2_FORCE_CPU", "1")
-        os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+        # Transcribe (auto-detect CUDA/CPU)
         result = transcribe(str(p))
         return TranscribeResponse(**result)
     except HTTPException:
@@ -121,11 +128,21 @@ def api_transcribe(req: TranscribeRequest):
         raise HTTPException(status_code=500, detail=f"Transcription error: {type(e).__name__}: {e}")
 
 @app.post("/transcribe/upload", response_model=TranscribeResponse)
-async def api_transcribe_upload(file: UploadFile = File(...)):
+async def api_transcribe_upload(
+    file: UploadFile = File(...),
+    language: Optional[str] = Form(None),
+    model_size: Optional[str] = Form("small")
+):
     """
-    Upload and transcribe audio file.
+    Upload and transcribe audio file using Whisper model.
     
     Supports common audio formats: wav, mp3, m4a, flac, etc.
+    Audio will be automatically preprocessed (noise reduction, filtering, normalization).
+    
+    Args:
+        file: Audio file to transcribe
+        language: Language code (e.g., 'vi', 'en', None for auto-detect)
+        model_size: Whisper model size ('tiny', 'base', 'small', 'medium', 'large'), default: 'small'
     """
     try:
         # Save uploaded file to temp location
@@ -135,22 +152,49 @@ async def api_transcribe_upload(file: UploadFile = File(...)):
             tmp.write(content)
             tmp_path = tmp.name
         
-        # Force CPU defaults
-        os.environ.setdefault("CT2_FORCE_CPU", "1")
-        os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+        # Auto preprocess audio (làm sạch tự động và đảm bảo format đúng)
+        # faster-whisper yêu cầu: 16kHz mono (tự động xử lý, nhưng tốt nhất là WAV)
+        try:
+            import sys
+            audio_processing_path = Path(__file__).parent.parent.parent.parent / "audio_processing"
+            if audio_processing_path.exists():
+                sys.path.insert(0, str(audio_processing_path.parent))
+                from audio_processing import auto_preprocess_audio
+                print(f"[ai-llm] Auto preprocessing audio: {tmp_path}")
+                # Preprocess và đảm bảo format: 16kHz mono WAV, PCM 16-bit
+                tmp_path = auto_preprocess_audio(
+                    tmp_path, 
+                    sample_rate=16000,
+                    model_type='ai-llm'  # Format cho faster-whisper
+                )
+                print(f"[ai-llm] Preprocessed audio: {tmp_path} (16kHz mono WAV, compatible with faster-whisper)")
+        except Exception as e:
+            print(f"[ai-llm] Warning: Auto preprocessing failed: {e}, using original audio")
         
-        # Transcribe
-        result = transcribe(tmp_path)
+        # Transcribe with Whisper (auto-detect CUDA/CPU)
+        result = transcribe(
+            tmp_path,
+            size=model_size,
+            lang=language,
+            device=None,  # Auto-detect
+            compute=None  # Auto-select (float16 for CUDA, int8 for CPU)
+        )
         
         # Cleanup temp file
         Path(tmp_path).unlink(missing_ok=True)
         
         return TranscribeResponse(**result)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=f"Audio file not found: {e}")
     except Exception as e:
         # Cleanup on error
         if 'tmp_path' in locals():
             Path(tmp_path).unlink(missing_ok=True)
-        raise HTTPException(status_code=500, detail=f"Transcription error: {type(e).__name__}: {e}")
+        import traceback
+        error_detail = f"Transcription error: {type(e).__name__}: {str(e)}"
+        print(f"[ai-llm] Error: {error_detail}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=error_detail)
 
 @app.post("/ask", response_model=AskResponse)
 def api_ask(req: AskRequest):

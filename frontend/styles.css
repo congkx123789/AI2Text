@@ -359,6 +359,10 @@ input[type="number"].form-control::-webkit-outer-spin-button {
     transition: var(--transition);
     background: var(--bg-color);
     cursor: pointer;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .file-input-wrapper:hover {
@@ -390,6 +394,13 @@ input[type="number"].form-control::-webkit-outer-spin-button {
 .checkbox-group {
     flex-direction: row;
     align-items: center;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .checkbox-label {
@@ -496,6 +507,12 @@ input[type="number"].form-control::-webkit-outer-spin-button {
     font-size: 0.9rem;
 }
 
+/* Image Preview */
+#imagePreview {
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header h1 {
@@ -511,6 +528,10 @@ input[type="number"].form-control::-webkit-outer-spin-button {
     }
 
     .model-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .checkbox-grid {
         grid-template-columns: 1fr;
     }
 }

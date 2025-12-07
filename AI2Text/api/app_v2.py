@@ -177,6 +177,25 @@ async def transcribe_audio(
             content = await audio.read()
             tmp_path.write_bytes(content)
         
+        # Auto preprocess audio (làm sạch tự động và đảm bảo format đúng)
+        # AI2Text yêu cầu: 16kHz mono WAV, sau đó convert sang mel spectrogram (n_fft=400, hop=160, n_mels=80)
+        try:
+            import sys
+            audio_processing_path = Path(__file__).parent.parent.parent / "audio_processing"
+            if audio_processing_path.exists():
+                sys.path.insert(0, str(audio_processing_path.parent))
+                from audio_processing import auto_preprocess_audio
+                logger.info(f"[AI2Text] Auto preprocessing audio: {tmp_path}")
+                # Preprocess và đảm bảo format: 16kHz mono WAV, PCM 16-bit
+                tmp_path = Path(auto_preprocess_audio(
+                    str(tmp_path), 
+                    sample_rate=16000,
+                    model_type='ai2text'  # Format cho transformer ASR
+                ))
+                logger.info(f"[AI2Text] Preprocessed audio: {tmp_path} (16kHz mono WAV, ready for mel spec)")
+        except Exception as e:
+            logger.warning(f"[AI2Text] Auto preprocessing failed: {e}, using original audio")
+        
         # Transcribe
         result = service.transcribe(
             str(tmp_path),

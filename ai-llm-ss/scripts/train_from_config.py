@@ -17,7 +17,7 @@ def main():
         # keep ordering roughly stable for readability
         if k in ("manifest","audio_root","timestamps","vocab"):
             add_flag(args, k, v)
-    for k in ("trim_segments","device","amp","batch_size","num_workers","epochs","log_interval","lr","checkpoint_dir","resume","out"):
+    for k in ("trim_segments","device","amp","batch_size","gradient_accumulation_steps","max_grad_norm","empty_cache","num_workers","epochs","log_interval","lr","checkpoint_dir","resume","out"):
         if k in cfg:
             add_flag(args, k, cfg[k])
 

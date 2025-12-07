@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI2Text - Speech-to-Text & Image-to-Text System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎤 AI2Text System</h1>
+            <p class="subtitle">Speech-to-Text & Image-to-Text Conversion System</p>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Checking connection...</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- API Selection -->
+            <section class="card api-section">
+                <h2>🔌 API Selection</h2>
+                <div class="form-group">
+                    <label for="apiSelect">Select API</label>
+                    <select id="apiSelect" class="form-control">
+                        <option value="server">Server API (Port 8000) - Whisper/Vosk/Tesseract/EasyOCR</option>
+                        <option value="ai2text">AI2Text API (Port 8002) - Trained Models</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Model Management Section (for AI2Text API) -->
+            <section class="card model-section" id="modelSection" style="display: none;">
+                <h2>📦 Model Management</h2>
+                <div class="model-controls">
+                    <button class="btn btn-primary" id="refreshModelsBtn">Refresh Model List</button>
+                    <button class="btn btn-secondary" id="checkHealthBtn">Check Service Status</button>
+                </div>
+                <div class="model-info" id="modelInfo" style="display: none;">
+                    <div class="info-item">
+                        <label>Trained Models:</label>
+                        <span id="trainedModelsCount">0</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Loaded Models:</label>
+                        <span id="loadedModelsCount">0</span>
+                    </div>
+                </div>
+                <div class="model-list" id="modelList">
+                    <p class="loading-text">Select AI2Text API to load models</p>
+                </div>
+            </section>
+
+            <!-- Conversion Section -->
+            <section class="card conversion-section">
+                <h2>🔄 File Conversion</h2>
+                <form id="conversionForm" class="conversion-form">
+                    <!-- Mode Selection -->
+                    <div class="form-group">
+                        <label for="modeSelect">Conversion Mode</label>
+                        <select id="modeSelect" class="form-control">
+                            <option value="auto">Auto Detect</option>
+                            <option value="audio">Audio to Text (STT)</option>
+                            <option value="image">Image to Text (OCR)</option>
+                        </select>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <label for="fileInput">Select File</label>
+                        <div class="file-input-wrapper" id="fileInputWrapper">
+                            <input type="file" id="fileInput" accept="audio/*,image/*" required>
+                            <span class="file-input-label" id="fileLabel">Click to select or drag and drop file here</span>
+                        </div>
+                        <!-- Audio Preview -->
+                        <audio id="audioPreview" controls style="display: none; width: 100%; margin-top: 10px;"></audio>
+                        <!-- Image Preview -->
+                        <img id="imagePreview" style="display: none; max-width: 100%; max-height: 300px; margin-top: 10px; border-radius: 8px;"></img>
+                    </div>
+
+                    <!-- Audio STT Options -->
+                    <div id="audioOptions" style="display: none;">
+                        <!-- Model Selection (for AI2Text API) -->
+                        <div id="modelSelectionGroup" style="display: none;">
+                            <div class="form-group">
+                                <label for="modelSelect">Select Model</label>
+                                <select id="modelSelect" class="form-control">
+                                    <option value="default">Default Model</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Backend Selection (for Server API) -->
+                        <div id="backendSelectionGroup">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="sttBackend">STT Backend</label>
+                                    <select id="sttBackend" class="form-control">
+                                        <option value="">Default (Whisper)</option>
+                                        <option value="whisper">Whisper</option>
+                                        <option value="vosk">Vosk</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="audioLanguage">Language</label>
+                                    <input type="text" id="audioLanguage" class="form-control" placeholder="auto (auto detect)" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Beam Search Options (for AI2Text API) -->
+                        <div id="beamSearchOptions" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="beamWidth">Beam Width</label>
+                                    <input type="number" id="beamWidth" class="form-control" value="5" min="1" max="20" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="useBeamSearch" checked>
+                                        <span>Use Beam Search</span>
+                                    </label>
+                                </div>
+                                <div class="form-group checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="useLM">
+                                        <span>Use Language Model</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Audio Processing Options -->
+                        <div class="form-group">
+                            <label>Audio Processing Options</label>
+                            <div class="checkbox-grid">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="noiseReduction">
+                                    <span>Noise Reduction</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enhanceSpeech">
+                                    <span>Enhance Speech</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="normalize">
+                                    <span>Normalize</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="removeHum">
+                                    <span>Remove Hum</span>
+                                </label>
+                            </div>
+                            <div class="form-row" style="margin-top: 10px;">
+                                <div class="form-group">
+                                    <label for="highPass">High Pass Filter (Hz)</label>
+                                    <input type="number" id="highPass" class="form-control" placeholder="e.g., 80" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="lowPass">Low Pass Filter (Hz)</label>
+                                    <input type="number" id="lowPass" class="form-control" placeholder="e.g., 8000" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image OCR Options -->
+                    <div id="imageOptions" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ocrBackend">OCR Backend</label>
+                                <select id="ocrBackend" class="form-control">
+                                    <option value="">Default (Tesseract)</option>
+                                    <option value="tesseract">Tesseract</option>
+                                    <option value="easyocr">EasyOCR</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="imageLanguage">Language</label>
+                                <input type="text" id="imageLanguage" class="form-control" placeholder="auto (auto detect)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large" id="convertBtn">
+                        <span class="btn-text">Start Conversion</span>
+                        <span class="btn-loader" style="display: none;"></span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Result Section -->
+            <section class="card result-section" id="resultSection" style="display: none;">
+                <h2>📝 Conversion Result</h2>
+                <div class="result-content">
+                    <div class="result-item">
+                        <label>Converted Text:</label>
+                        <div class="result-text" id="resultText">-</div>
+                    </div>
+                    <div class="result-metrics" id="resultMetrics">
+                        <div class="metric">
+                            <span class="metric-label">Backend:</span>
+                            <span class="metric-value" id="backendValue">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Language:</span>
+                            <span class="metric-value" id="languageValue">-</span>
+                        </div>
+                        <div class="metric" id="confidenceMetric" style="display: none;">
+                            <span class="metric-label">Confidence:</span>
+                            <span class="metric-value" id="confidenceValue">-</span>
+                        </div>
+                        <div class="metric" id="processingTimeMetric" style="display: none;">
+                            <span class="metric-label">Processing Time:</span>
+                            <span class="metric-value" id="processingTimeValue">-</span>
+                        </div>
+                        <div class="metric" id="modelUsedMetric" style="display: none;">
+                            <span class="metric-label">Model Used:</span>
+                            <span class="metric-value" id="modelUsedValue">-</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="copyResultBtn">Copy Result</button>
+                </div>
+            </section>
+
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </main>
+
+        <footer class="footer">
+            <p>AI2Text System v2.0.0 | Powered by FastAPI</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

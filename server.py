@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, Tuple
 import os
@@ -8,6 +9,16 @@ import io
 import tempfile
 import pathlib
 import json
+import sys
+
+# Add audio_processing to path
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+try:
+    from audio_processing import auto_preprocess_audio
+    AUDIO_PROCESSING_AVAILABLE = True
+except ImportError:
+    AUDIO_PROCESSING_AVAILABLE = False
+    print("Warning: audio_processing module not available")
 
 # Optional backends will be loaded lazily
 _faster_whisper = None
@@ -170,7 +181,98 @@ def ocr_with_easyocr(image_bytes: bytes, language_hint: Optional[str]) -> Tuple[
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "audio_processing": AUDIO_PROCESSING_AVAILABLE}
+
+@app.post("/api/process-audio")
+async def api_process_audio(
+    file: UploadFile = File(...),
+    options: str = Form("{}")
+):
+    """
+    Process audio file: noise reduction, filtering, enhancement
+    """
+    if not AUDIO_PROCESSING_AVAILABLE:
+        raise HTTPException(500, detail="Audio processing module not available")
+    
+    try:
+        # Parse options
+        import json
+        opts = json.loads(options)
+        
+        # Save upload to temp file
+        suffix = pathlib.Path(file.filename or "upload.bin").suffix
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            raw_path = tmp.name
+            content = await file.read()
+            tmp.write(content)
+        
+        # Load audio
+        import librosa
+        import soundfile as sf
+        audio, sr = librosa.load(raw_path, sr=16000, mono=True)
+        
+        processed = audio.copy()
+        
+        # Noise reduction
+        if opts.get('noise_reduction', False):
+            reducer = NoiseReducer(method='spectral_gating')
+            reducer.load_audio(processed, sr=sr)
+            processed = reducer.reduce_noise(prop_decrease=0.8)
+        
+        # Filters
+        audio_filter = AudioFilter(sample_rate=sr)
+        
+        if opts.get('high_pass'):
+            processed = audio_filter.high_pass_filter(
+                processed, 
+                cutoff=float(opts['high_pass'])
+            )
+        
+        if opts.get('low_pass'):
+            processed = audio_filter.low_pass_filter(
+                processed,
+                cutoff=float(opts['low_pass'])
+            )
+        
+        if opts.get('remove_hum', False):
+            processed = audio_filter.remove_hum(processed)
+        
+        # Enhancement
+        if opts.get('enhance_speech', False):
+            enhancer = AudioEnhancer(sample_rate=sr)
+            processed = enhancer.enhance_speech(processed)
+        
+        # Normalize
+        if opts.get('normalize', False):
+            processed = audio_filter.normalize(processed, target_db=-3.0)
+        
+        # Save processed audio to memory
+        output_buffer = io.BytesIO()
+        sf.write(output_buffer, processed, sr, format='WAV')
+        output_buffer.seek(0)
+        
+        # Cleanup input file
+        try:
+            os.unlink(raw_path)
+        except:
+            pass
+        
+        # Return file
+        return StreamingResponse(
+            output_buffer,
+            media_type="audio/wav",
+            headers={
+                "Content-Disposition": f"attachment; filename=processed_{file.filename or 'audio.wav'}"
+            }
+        )
+        
+    except Exception as e:
+        # Cleanup
+        try:
+            os.unlink(raw_path)
+        except:
+            pass
+        raise HTTPException(500, detail=f"Processing error: {str(e)}")
 
 @app.post("/api/convert", response_model=ConvertResponse)
 async def api_convert(
@@ -201,8 +303,24 @@ async def api_convert(
     try:
         if kind == "audio":
             backend = (stt_backend or DEFAULT_STT).lower()
-            # Convert to mono16k wav for safety, then pass path to backend
+            # Convert to mono16k wav for safety
             wav16_path = convert_to_wav_mono16k(raw_path)
+            
+            # Auto preprocess audio (làm sạch tự động và đảm bảo format đúng)
+            if AUDIO_PROCESSING_AVAILABLE:
+                try:
+                    print(f"[Server] Auto preprocessing audio: {wav16_path}")
+                    # Preprocess và đảm bảo format: 16kHz mono WAV, PCM 16-bit
+                    wav16_path = auto_preprocess_audio(
+                        wav16_path, 
+                        sample_rate=16000,
+                        model_type='whisper'  # faster-whisper format
+                    )
+                    print(f"[Server] Preprocessed audio saved to: {wav16_path} (16kHz mono WAV)")
+                except Exception as e:
+                    print(f"[Server] Warning: Auto preprocessing failed: {e}, using original audio")
+                    # Continue with original if preprocessing fails
+            
             if backend == "whisper":
                 text, bmeta = stt_with_whisper(wav16_path, language or None)
             elif backend == "vosk":

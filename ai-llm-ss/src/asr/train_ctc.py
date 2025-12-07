@@ -1,6 +1,6 @@
 import argparse, json, torch, torch.nn as nn, torch.optim as optim
 import torch.backends.cudnn as cudnn
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from contextlib import nullcontext
 from torch.utils.data import DataLoader
 from pathlib import Path
@@ -21,7 +21,10 @@ def main():
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--device", default="auto", help="cuda|cpu|mps|auto")
     ap.add_argument("--num_workers", type=int, default=2)
-    ap.add_argument("--amp", action="store_true", help="enable automatic mixed precision on GPU")
+    ap.add_argument("--amp", action="store_true", help="enable automatic mixed precision on GPU (uses bfloat16)")
+    ap.add_argument("--gradient_accumulation_steps", type=int, default=1, help="Number of gradient accumulation steps (effective batch size = batch_size * gradient_accumulation_steps)")
+    ap.add_argument("--max_grad_norm", type=float, default=None, help="Gradient clipping max norm (None to disable)")
+    ap.add_argument("--empty_cache", action="store_true", help="Empty CUDA cache after each batch to save memory")
     ap.add_argument("--log_interval", type=int, default=50, help="print progress every N batches")
     ap.add_argument("--out", default="data/results/asr_ctc.pt", help="Final model output path")
     ap.add_argument("--checkpoint_dir", default="data/results/checkpoints", help="Directory to save checkpoints")
@@ -46,19 +49,34 @@ def main():
         )
     else:
         ds = ASRDataset(args.train_audio, args.train_text, args.vocab)
+    # Memory optimization: Enable pin_memory for GPU (good for Ryzen 9 + RTX 5060 Ti)
+    # With 16GB VRAM, we can use pin_memory even with larger batches
+    pin_memory = device.type == "cuda" and args.batch_size <= 128
+    
     dl = DataLoader(
         ds,
         batch_size=args.batch_size,
         shuffle=True,
         collate_fn=collate_batch,
         num_workers=args.num_workers,
-        pin_memory=device.type == "cuda",
+        pin_memory=pin_memory,
+        persistent_workers=args.num_workers > 0,  # Keep workers alive between epochs
     )
     model = CRNNCTC(n_mels=80, vocab_size=len(ds.vocab)).to(device)
     ctc = nn.CTCLoss(blank=0, zero_infinity=True)
     opt = optim.AdamW(model.parameters(), lr=args.lr)
-    scaler = GradScaler(enabled=args.amp and device.type == "cuda")
-    autocast_ctx = autocast if scaler.is_enabled() else nullcontext
+    # Use new torch.amp API (fixes FutureWarning)
+    scaler = GradScaler('cuda', enabled=args.amp and device.type == "cuda")
+    # Always use bf16 when AMP is enabled (no fp16)
+    if args.amp and device.type == "cuda":
+        if torch.cuda.is_bf16_supported():
+            autocast_ctx = lambda: autocast('cuda', dtype=torch.bfloat16)
+            print("Using bfloat16 (bf16) precision with AMP")
+        else:
+            print("Warning: bf16 not supported on this GPU, falling back to full precision (fp32)")
+            autocast_ctx = nullcontext
+    else:
+        autocast_ctx = nullcontext
 
     # Setup checkpoint directory
     checkpoint_dir = Path(args.checkpoint_dir)
@@ -76,26 +94,62 @@ def main():
         start_epoch = checkpoint.get('epoch', 1) + 1
         print(f"Resuming from epoch {start_epoch}")
 
+    # Memory optimization: Enable empty cache if requested
+    if args.empty_cache and device.type == "cuda":
+        print("Memory optimization: Emptying CUDA cache after each batch")
+    
+    # Gradient accumulation info
+    if args.gradient_accumulation_steps > 1:
+        print(f"Gradient accumulation: {args.gradient_accumulation_steps} steps (effective batch size: {args.batch_size * args.gradient_accumulation_steps})")
+    
     for ep in range(start_epoch, args.epochs+1):
         model.train(); total = 0.0
+        opt.zero_grad()  # Zero gradients at start of epoch
+        
         for i, (X, Xlen, Y, Ylen) in enumerate(dl, 1):
             X, Xlen, Y, Ylen = X.to(device, non_blocking=True), Xlen.to(device), Y.to(device), Ylen.to(device)
+            
             with autocast_ctx():
                 logits, out_lens = model(X, Xlen)      # (T,B,V)
                 log_probs = logits.log_softmax(dim=-1)
                 loss = ctc(log_probs, Y, out_lens, Ylen)
-            opt.zero_grad()
+                # Scale loss by accumulation steps
+                loss = loss / args.gradient_accumulation_steps
+            
+            # Backward pass
             if scaler.is_enabled():
                 scaler.scale(loss).backward()
-                scaler.step(opt)
-                scaler.update()
             else:
                 loss.backward()
-                opt.step()
-            total += loss.item()
+            
+            # Gradient accumulation: only step optimizer every N steps
+            if i % args.gradient_accumulation_steps == 0:
+                # Gradient clipping if specified
+                if args.max_grad_norm is not None:
+                    if scaler.is_enabled():
+                        scaler.unscale_(opt)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                    else:
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                
+                # Optimizer step
+                if scaler.is_enabled():
+                    scaler.step(opt)
+                    scaler.update()
+                else:
+                    opt.step()
+                opt.zero_grad()
+            
+            total += loss.item() * args.gradient_accumulation_steps  # Scale back for logging
+            
+            # Empty cache to free memory
+            if args.empty_cache and device.type == "cuda":
+                torch.cuda.empty_cache()
+            
             if i % args.log_interval == 0:
                 bar = progress_bar(i, len(dl))
-                print(f"epoch {ep} [{bar}] {i}/{len(dl)} | loss {loss.item():.3f}")
+                current_loss = loss.item() * args.gradient_accumulation_steps
+                print(f"epoch {ep} [{bar}] {i}/{len(dl)} | loss {current_loss:.3f}")
         avg_loss = total/len(dl)
         print(f"epoch {ep} | loss {avg_loss:.3f}")
 

@@ -1,15 +1,15 @@
 {
-  "manifest": "data/processed/merged_dataset/train/manifest.csv",
-  "audio_root": "data/processed/merged_dataset/train",
-  "timestamps": "data/processed/merged_dataset/train/timestamps.json",
-  "trim_segments": true,
+  "manifest": "data/processed/full_merged_dataset/train/manifest.csv",
+  "audio_root": "data/processed/full_merged_dataset/train",
   "vocab": "data/processed/vocab.json",
   "device": "auto",
   "amp": true,
   "batch_size": 32,
-  "num_workers": 0,
-  "epochs": 1,
+  "gradient_accumulation_steps": 5,
+  "max_grad_norm": 1.0,
+  "empty_cache": true,
+  "num_workers": 8,
+  "epochs": 20,
   "log_interval": 20,
   "lr": 0.001
 }
-

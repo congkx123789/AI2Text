@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import torch
 import torchaudio
@@ -20,6 +21,15 @@ app = FastAPI(
     title="ASR CTC API",
     description="Automatic Speech Recognition API using CTC model",
     version="1.0.0"
+)
+
+# CORS configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, restrict to specific domains
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -135,6 +145,26 @@ async def transcribe(file: UploadFile = File(...)):
             tmp_path = tmp_file.name
         
         try:
+            # Auto preprocess audio (làm sạch tự động và đảm bảo format đúng)
+            # ai-llm-ss yêu cầu: 16kHz mono WAV, sau đó convert sang log mel spectrogram
+            try:
+                import sys
+                from pathlib import Path
+                audio_processing_path = Path(__file__).parent.parent.parent.parent / "audio_processing"
+                if audio_processing_path.exists():
+                    sys.path.insert(0, str(audio_processing_path.parent))
+                    from audio_processing import auto_preprocess_audio
+                    print(f"[ai-llm-ss] Auto preprocessing audio: {tmp_path}")
+                    # Preprocess và đảm bảo format: 16kHz mono WAV, PCM 16-bit
+                    tmp_path = auto_preprocess_audio(
+                        tmp_path, 
+                        sample_rate=16000,
+                        model_type='ai-llm-ss'  # Format cho CTC model
+                    )
+                    print(f"[ai-llm-ss] Preprocessed audio: {tmp_path} (16kHz mono WAV, ready for log mel spec)")
+            except Exception as e:
+                print(f"[ai-llm-ss] Warning: Auto preprocessing failed: {e}, using original audio")
+            
             # Load audio
             wav, sr = torchaudio.load(tmp_path)
             duration = wav.shape[-1] / sr if wav.numel() > 0 else 0.0

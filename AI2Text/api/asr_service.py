@@ -48,9 +48,28 @@ class ASRService:
         checkpoint = torch.load(str(self.checkpoint_path), map_location='cpu', weights_only=False)
         self.config = checkpoint.get('config', {})
         
+        # Get state dict first
+        state_dict = checkpoint.get('model_state_dict', checkpoint.get('state_dict', checkpoint))
+        
+        # Detect vocab_size from checkpoint (most reliable method)
+        vocab_size = None
+        try:
+            if isinstance(state_dict, dict) and 'decoder.linear.weight' in state_dict:
+                vocab_size = state_dict['decoder.linear.weight'].shape[0]
+                logger.info(f"✅ Detected vocab_size={vocab_size} from checkpoint decoder.linear.weight")
+            elif 'decoder.linear.weight' in checkpoint:
+                vocab_size = checkpoint['decoder.linear.weight'].shape[0]
+                logger.info(f"✅ Detected vocab_size={vocab_size} from checkpoint")
+        except Exception as e:
+            logger.warning(f"Could not detect vocab_size from checkpoint: {e}")
+        
+        # Fallback to config or default
+        if vocab_size is None:
+            vocab_size = self.config.get('vocab_size', 2000)
+            logger.info(f"Using vocab_size={vocab_size} from config (checkpoint detection failed)")
+        
         # Get model parameters from config
         input_dim = self.config.get('n_mels', 80)
-        vocab_size = self.config.get('vocab_size', 2000)
         d_model = self.config.get('d_model', 320)
         num_encoder_layers = self.config.get('num_encoder_layers', 16)
         num_heads = self.config.get('num_heads', 4)
@@ -58,10 +77,12 @@ class ASRService:
         dropout = self.config.get('dropout', 0.1)
         use_timestamps = self.config.get('use_timestamps', True)
         
+        logger.info(f"Creating model: vocab_size={vocab_size}, input_dim={input_dim}, d_model={d_model}")
+        
         # Import model class
         from models.asr_with_timestamps import ASRModelWithTimestamps
         
-        # Create model
+        # Create model with detected vocab_size
         self.model = ASRModelWithTimestamps(
             input_dim=input_dim,
             vocab_size=vocab_size,
@@ -73,14 +94,13 @@ class ASRService:
             predict_timestamps=use_timestamps
         )
         
-        # Load weights
-        state_dict = checkpoint.get('model_state_dict', checkpoint.get('state_dict', {}))
+        # Load weights (state_dict already extracted above)
         if state_dict:
             try:
                 self.model.load_state_dict(state_dict, strict=False)
-                logger.info("Model weights loaded successfully")
+                logger.info("✅ Model weights loaded successfully")
             except Exception as e:
-                logger.error(f"Error loading model weights: {e}")
+                logger.error(f"❌ Error loading model weights: {e}")
                 raise
         
         # Move to device and set to eval mode
