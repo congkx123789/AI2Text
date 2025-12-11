@@ -76,14 +76,15 @@ def build_bpe_vocab(
 
 
 if __name__ == "__main__":
-    # Default: bilingual Vi+En, 2k vocab, train split of merged_dataset
+    # BILINGUAL: Vietnamese + English, 3500 vocab size
+    # Vocab size 3500: ~2000-2500 cho tiếng Việt, ~1000-1500 cho tiếng Anh
     build_bpe_vocab(
-        output_path="models/bilingual_bpe_2k.json",
+        output_path="models/bilingual_bpe_3500.json",
         dataset_root="data/processed/full_merged_dataset",
         split="train",
-        vocab_size=2000,
+        vocab_size=3500,  # Tăng từ 2000 -> 3500 cho bilingual
         min_frequency=2,
-        languages=["vi", "en"],
+        languages=["vi", "en"],  # Train trên cả 2 ngôn ngữ
     )
 
 

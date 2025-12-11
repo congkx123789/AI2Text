@@ -18,14 +18,12 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install additional dependencies for API and embeddings
+# Install additional dependencies for API
 RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
     python-multipart \
-    pyctcdecode \
-    gensim \
-    faiss-cpu
+    pyctcdecode
 
 # Copy application code
 COPY . .

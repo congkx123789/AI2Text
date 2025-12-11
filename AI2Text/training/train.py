@@ -15,13 +15,13 @@ from tqdm import tqdm
 import sys
 import multiprocessing
 import json
+from typing import List
 
 sys.path.append(str(Path(__file__).parent.parent))
 
 from models.asr_with_timestamps import ASRModelWithTimestamps, create_timestamp_targets
 from preprocessing.audio_processing import AudioProcessor, AudioAugmenter
 from preprocessing.text_cleaning import Tokenizer, BilingualTextNormalizer
-from database.db_utils import ASRDatabase
 from training.dataset import create_data_loaders
 from training.callbacks import (
     CallbackManager,
@@ -33,20 +33,22 @@ from training.callbacks import (
 from utils.metrics import calculate_wer, calculate_cer
 from utils.logger import setup_logger
 from utils.manifest_loader import load_merged_dataset
+# Beam search removed - using greedy decode only
 
 
 class ASRTrainer:
-    """Trainer class for ASR model with timestamp support and bilingual (English + Vietnamese) training."""
+    """Trainer class for ASR model with timestamp support and bilingual (English + Vietnamese) training.
     
-    def __init__(self, config: dict, db: ASRDatabase):
+    SIMPLIFIED: No database dependency - uses file-based logging instead.
+    """
+    
+    def __init__(self, config: dict):
         """Initialize trainer.
         
         Args:
             config: Configuration dictionary
-            db: Database instance
         """
         self.config = config
-        self.db = db
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.logger = setup_logger('ASRTrainer', config.get('log_file', 'training.log'))
         
@@ -70,6 +72,11 @@ class ASRTrainer:
         self.best_wer = float('inf')
         self.training_run_id = None
         self.should_stop = False
+        
+        # File-based logging (replaces database)
+        self.run_name = config.get('run_name', f'run_{int(time.time())}')
+        self.metrics_file = Path(config.get('checkpoint_dir', 'checkpoints')) / f'{self.run_name}_metrics.json'
+        self.metrics_history = []
         
         # Gradient accumulation
         self.gradient_accumulation_steps = self.config.get('gradient_accumulation_steps', 1)
@@ -176,9 +183,14 @@ class ASRTrainer:
             aggressive=aggressive_aug
         )
 
-        # Select tokenizer type (character-level or BPE)
+        # Select tokenizer type (character-level, BPE, or SentencePiece)
         tokenizer_type = self.config.get('tokenizer_type', 'char')
-        if tokenizer_type == 'bpe':
+        if tokenizer_type == 'sentencepiece':
+            from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
+            model_path = self.config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
+            self.tokenizer = SentencePieceTokenizer(model_path)
+            self.logger.info(f"✅ Using SentencePiece BPE tokenizer: {model_path} ({len(self.tokenizer)} tokens)")
+        elif tokenizer_type == 'bpe':
             from preprocessing.bpe_tokenizer import BPETokenizer
             bpe_path = self.config.get('bpe_vocab_path', 'models/bilingual_bpe_18k.json')
             self.tokenizer = BPETokenizer()
@@ -217,6 +229,43 @@ class ASRTrainer:
 
         # Use bilingual normalizer to support Vietnamese + English
         self.normalizer = BilingualTextNormalizer()
+        
+        # Using greedy decode only (beam search removed for speed)
+        self.logger.info(f"✅ Using Greedy Decoding (fast and efficient)")
+    
+    def _greedy_ctc_decode(self, logits: torch.Tensor, lengths: torch.Tensor) -> List[List[int]]:
+        """
+        Fast greedy CTC decoding for training loop.
+        
+        Args:
+            logits: Model logits (batch, time, vocab_size)
+            lengths: Sequence lengths (batch,)
+            
+        Returns:
+            List of decoded token sequences (one per batch item)
+        """
+        batch_size = logits.size(0)
+        blank_id = self.tokenizer.blank_token_id
+        
+        # Get predictions (argmax)
+        predictions = torch.argmax(logits, dim=-1)  # (batch, time)
+        
+        results = []
+        for b in range(batch_size):
+            seq_len = int(lengths[b].item())
+            pred_seq = predictions[b, :seq_len].cpu().tolist()
+            
+            # CTC collapse: remove consecutive duplicates and blanks
+            collapsed = []
+            prev = None
+            for token in pred_seq:
+                if token != prev and token != blank_id:
+                    collapsed.append(token)
+                prev = token
+            
+            results.append(collapsed)
+        
+        return results
     
     def _setup_model(self):
         """Setup model with timestamp support and move to device."""
@@ -323,6 +372,17 @@ class ASRTrainer:
         total_timestamp_loss = 0
         num_batches = 0
         
+        # Time tracking
+        epoch_start_time = time.time()
+        batch_times = []
+        
+        # For WER/CER calculation during training
+        log_wer_cer_every = self.config.get('log_wer_cer_every', 10)  # Calculate WER/CER every N batches (reduced for more frequent updates)
+        all_predictions = []
+        all_references = []
+        running_wer = None
+        running_cer = None
+        
         # Get batch size info for progress bar
         config_batch_size = self.config.get('batch_size', 16)
         effective_batch_size = config_batch_size * self.gradient_accumulation_steps
@@ -331,6 +391,7 @@ class ASRTrainer:
                    desc=f'Epoch {self.current_epoch} (batch={config_batch_size}, effective={effective_batch_size})', 
                    file=sys.stderr, dynamic_ncols=True)
         for batch_idx, batch in enumerate(pbar):
+            batch_start_time = time.time()
             # Move to device
             audio_features = batch['audio_features'].to(self.device, non_blocking=True)
             audio_lengths = batch['audio_lengths'].to(self.device, non_blocking=True)
@@ -357,6 +418,45 @@ class ASRTrainer:
                         audio_features, audio_lengths, return_timestamps=self.use_timestamps,
                         language_ids=language_ids
                     )
+                    
+                    # --- DEBUG LOGITS (mỗi 100 batch) ---
+                    if batch_idx % 100 == 0:
+                        with torch.no_grad():
+                            # Lấy logits của mẫu đầu tiên trong batch
+                            # Shape: [Time_Steps, Vocab_Size]
+                            # Convert về float32 nếu đang ở bfloat16
+                            sample_logits = logits[0].detach().cpu().float()
+                            
+                            # Chuyển sang xác suất (0.0 -> 1.0)
+                            probs = torch.softmax(sample_logits, dim=-1)
+                            
+                            # Lấy ra vài khung hình (Frames) ở giữa để xem
+                            num_frames = probs.shape[0]
+                            start_frame = num_frames // 2  # Xem đoạn giữa audio
+                            
+                            self.logger.info(f"\n🔍 --- DEBUG LOGITS (Batch {batch_idx}) ---")
+                            for t in range(start_frame, min(start_frame + 5, num_frames)):
+                                # Lấy Top 3 token có xác suất cao nhất tại thời điểm t
+                                top_probs, top_ids = torch.topk(probs[t], k=3)
+                                
+                                frame_info = []
+                                for p, i in zip(top_probs, top_ids):
+                                    # Token ID 0 thường là <pad>/<blank>
+                                    blank_id = self.tokenizer.blank_token_id
+                                    if i.item() == blank_id:
+                                        token_str = "BLANK"
+                                    else:
+                                        # Thử decode token để xem nó là gì
+                                        try:
+                                            token_text = self.tokenizer.decode([i.item()])
+                                            token_str = f"ID_{i.item()}({token_text[:10]})"
+                                        except:
+                                            token_str = f"ID_{i.item()}"
+                                    frame_info.append(f"{token_str}: {p.item():.4f}")
+                                
+                                self.logger.info(f"Frame {t}: {' | '.join(frame_info)}")
+                            self.logger.info("------------------------------------------\n")
+                    # --- KẾT THÚC DEBUG ---
                     
                     logits_t = logits.transpose(0, 1)
                     log_probs = torch.log_softmax(logits_t, dim=-1)
@@ -423,6 +523,45 @@ class ASRTrainer:
                     audio_features, audio_lengths, return_timestamps=self.use_timestamps,
                     language_ids=language_ids
                 )
+                
+                # --- DEBUG LOGITS (mỗi 100 batch) ---
+                if batch_idx % 100 == 0:
+                    with torch.no_grad():
+                        # Lấy logits của mẫu đầu tiên trong batch
+                        # Shape: [Time_Steps, Vocab_Size]
+                        # Convert về float32 nếu đang ở bfloat16
+                        sample_logits = logits[0].detach().cpu().float()
+                        
+                        # Chuyển sang xác suất (0.0 -> 1.0)
+                        probs = torch.softmax(sample_logits, dim=-1)
+                        
+                        # Lấy ra vài khung hình (Frames) ở giữa để xem
+                        num_frames = probs.shape[0]
+                        start_frame = num_frames // 2  # Xem đoạn giữa audio
+                        
+                        self.logger.info(f"\n🔍 --- DEBUG LOGITS (Batch {batch_idx}) ---")
+                        for t in range(start_frame, min(start_frame + 5, num_frames)):
+                            # Lấy Top 3 token có xác suất cao nhất tại thời điểm t
+                            top_probs, top_ids = torch.topk(probs[t], k=3)
+                            
+                            frame_info = []
+                            for p, i in zip(top_probs, top_ids):
+                                # Token ID 0 thường là <pad>/<blank>
+                                blank_id = self.tokenizer.blank_token_id
+                                if i.item() == blank_id:
+                                    token_str = "BLANK"
+                                else:
+                                    # Thử decode token để xem nó là gì
+                                    try:
+                                        token_text = self.tokenizer.decode([i.item()])
+                                        token_str = f"ID_{i.item()}({token_text[:10]})"
+                                    except:
+                                        token_str = f"ID_{i.item()}"
+                                frame_info.append(f"{token_str}: {p.item():.4f}")
+                            
+                            self.logger.info(f"Frame {t}: {' | '.join(frame_info)}")
+                        self.logger.info("------------------------------------------\n")
+                # --- KẾT THÚC DEBUG ---
                 
                 logits_t = logits.transpose(0, 1)
                 log_probs = torch.log_softmax(logits_t, dim=-1)
@@ -493,14 +632,178 @@ class ASRTrainer:
             total_timestamp_loss += true_ts
             num_batches += 1
             
+            # Collect predictions and references for WER/CER calculation (using Greedy Decode for speed)
+            if (batch_idx + 1) % log_wer_cer_every == 0 or batch_idx == len(train_loader) - 1:
+                with torch.no_grad():
+                    # Use fast greedy decode for training loop (beam search is too slow)
+                    pred_tokens_list = self._greedy_ctc_decode(logits, output_lengths)
+                    
+                    for i, pred_tokens in enumerate(pred_tokens_list):
+                        ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
+                        
+                        # Decode
+                        if len(pred_tokens) > 0:
+                            pred_text = self.tokenizer.decode(pred_tokens)
+                        else:
+                            pred_text = ""
+                        ref_text = self.tokenizer.decode(ref_tokens)
+                        
+                        all_predictions.append(pred_text)
+                        all_references.append(ref_text)
+            
             self.callback_manager.on_batch_end(self, num_batches - 1, loss.item())
-            pbar.set_postfix({'loss': true_loss, 'ctc': true_ctc, 'ts': true_ts})
+            
+            # Time tracking
+            batch_time = time.time() - batch_start_time
+            batch_times.append(batch_time)
+            
+            # Calculate and log WER/CER periodically
+            if (batch_idx + 1) % log_wer_cer_every == 0 and len(all_predictions) > 0:
+                running_wer = calculate_wer(all_references, all_predictions)
+                running_cer = calculate_cer(all_references, all_predictions)
+                # Reset for next period
+                all_predictions = []
+                all_references = []
+            
+            # Calculate ETA for epoch
+            if len(batch_times) > 0:
+                avg_batch_time = sum(batch_times) / len(batch_times)
+                remaining_batches = len(train_loader) - (batch_idx + 1)
+                eta_seconds = avg_batch_time * remaining_batches
+                eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 60 else f"{int(eta_seconds)}s"
+            else:
+                eta_str = "N/A"
+            
+            # Get current learning rate
+            current_lr = self.optimizer.param_groups[0]['lr']
+            
+            # Update progress bar with all metrics including time and LR
+            postfix_dict = {
+                'loss': f'{true_loss:.3f}',
+                'ctc': f'{true_ctc:.3f}',
+                'ts': f'{true_ts:.3f}',
+                'lr': f'{current_lr:.2e}',
+                'time': f'{batch_time:.2f}s',
+                'eta': eta_str
+            }
+            if running_wer is not None:
+                postfix_dict['wer'] = f'{running_wer:.3f}'
+            if running_cer is not None:
+                postfix_dict['cer'] = f'{running_cer:.3f}'
+            pbar.set_postfix(postfix_dict)
+            
+            # Log với đầy đủ metrics mỗi log_wer_cer_every batches
+            # Sử dụng tqdm.write() để tránh làm hỏng progress bar
+            if (batch_idx + 1) % log_wer_cer_every == 0:
+                elapsed_time = time.time() - epoch_start_time
+                elapsed_str = f"{int(elapsed_time // 60)}m {int(elapsed_time % 60)}s" if elapsed_time > 60 else f"{int(elapsed_time)}s"
+                if running_wer is not None and running_cer is not None:
+                    log_msg = (
+                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
+                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
+                        f"WER: {running_wer:.4f} | CER: {running_cer:.4f} | "
+                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
+                    )
+                else:
+                    log_msg = (
+                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
+                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
+                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
+                    )
+                # Sử dụng tqdm.write() để in ra mà không làm hỏng progress bar
+                pbar.write(log_msg)
+                # Vẫn log vào file
+                self.logger.info(log_msg)
+            # Log mỗi 10 batches với đầy đủ metrics (chỉ khi không phải log_wer_cer_every)
+            elif (batch_idx + 1) % 10 == 0:
+                elapsed_time = time.time() - epoch_start_time
+                elapsed_str = f"{int(elapsed_time // 60)}m {int(elapsed_time % 60)}s" if elapsed_time > 60 else f"{int(elapsed_time)}s"
+                # Tính WER/CER nếu chưa có (từ batch trước) - dùng greedy decode cho nhanh
+                if running_wer is None or running_cer is None:
+                    # Tính nhanh từ batch hiện tại với greedy decode
+                    with torch.no_grad():
+                        pred_tokens_quick = self._greedy_ctc_decode(logits, output_lengths)
+                        quick_predictions = []
+                        quick_references = []
+                        for i, pred_tokens in enumerate(pred_tokens_quick):
+                            ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
+                            
+                            if len(pred_tokens) > 0:
+                                pred_text = self.tokenizer.decode(pred_tokens)
+                            else:
+                                pred_text = ""
+                            ref_text = self.tokenizer.decode(ref_tokens)
+                            
+                            quick_predictions.append(pred_text)
+                            quick_references.append(ref_text)
+                        
+                        if len(quick_predictions) > 0:
+                            running_wer = calculate_wer(quick_references, quick_predictions)
+                            running_cer = calculate_cer(quick_references, quick_predictions)
+                
+                if running_wer is not None and running_cer is not None:
+                    log_msg = (
+                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
+                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
+                        f"WER: {running_wer:.4f} | CER: {running_cer:.4f} | "
+                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
+                    )
+                else:
+                    log_msg = (
+                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
+                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
+                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
+                    )
+                # Sử dụng tqdm.write() để in ra mà không làm hỏng progress bar
+                pbar.write(log_msg)
+                # Vẫn log vào file
+                self.logger.info(log_msg)
         
         avg_loss = total_loss / num_batches
         avg_ctc = total_ctc_loss / num_batches
         avg_ts = total_timestamp_loss / num_batches
         
-        self.logger.info(f"Epoch {self.current_epoch} - Loss: {avg_loss:.4f} (CTC: {avg_ctc:.4f}, TS: {avg_ts:.4f})")
+        # Calculate final WER/CER for the epoch if we have collected samples
+        epoch_wer = None
+        epoch_cer = None
+        if len(all_predictions) > 0:
+            epoch_wer = calculate_wer(all_references, all_predictions)
+            epoch_cer = calculate_cer(all_references, all_predictions)
+        
+        # Calculate epoch time
+        epoch_time = time.time() - epoch_start_time
+        avg_batch_time = sum(batch_times) / len(batch_times) if batch_times else 0
+        epoch_time_str = f"{int(epoch_time // 60)}m {int(epoch_time % 60)}s" if epoch_time > 60 else f"{epoch_time:.1f}s"
+        
+        # Get current learning rate
+        current_lr = self.optimizer.param_groups[0]['lr']
+        
+        # Log epoch summary với đầy đủ metrics và thời gian
+        self.logger.info("=" * 80)
+        if epoch_wer is not None and epoch_cer is not None:
+            self.logger.info(
+                f"📊 Epoch {self.current_epoch} Training Summary [{epoch_time_str}]"
+            )
+            self.logger.info(
+                f"   Loss: {avg_loss:.4f} | CTC: {avg_ctc:.4f} | TS: {avg_ts:.4f}"
+            )
+            self.logger.info(
+                f"   WER: {epoch_wer:.4f} | CER: {epoch_cer:.4f}"
+            )
+            self.logger.info(
+                f"   LR: {current_lr:.2e} | Avg batch time: {avg_batch_time:.3f}s | Batches: {num_batches}"
+            )
+        else:
+            self.logger.info(
+                f"📊 Epoch {self.current_epoch} Training Summary [{epoch_time_str}]"
+            )
+            self.logger.info(
+                f"   Loss: {avg_loss:.4f} | CTC: {avg_ctc:.4f} | TS: {avg_ts:.4f}"
+            )
+            self.logger.info(
+                f"   LR: {current_lr:.2e} | Avg batch time: {avg_batch_time:.3f}s | Batches: {num_batches}"
+            )
+        self.logger.info("=" * 80)
         
         return avg_loss
     
@@ -548,14 +851,60 @@ class ASRTrainer:
             
             total_loss += loss.item()
             
-            # Decode predictions for WER/CER calculation
-            predictions = torch.argmax(logits, dim=-1)
+            # Decode predictions for WER/CER calculation using Greedy Decode
+            pred_tokens_list = self._greedy_ctc_decode(logits, output_lengths)
             
-            for i in range(predictions.size(0)):
-                pred_tokens = predictions[i, :output_lengths[i]].cpu().tolist()
+            # Decode token IDs to text
+            predictions_text = []
+            for pred_tokens in pred_tokens_list:
+                if len(pred_tokens) > 0:
+                    pred_text = self.tokenizer.decode(pred_tokens)
+                    predictions_text.append(pred_text)
+                else:
+                    predictions_text.append("")
+            
+            # DEBUG: Check first sample in first batch
+            if num_batches == 0:
+                sample_idx = 0
+                ref_tokens_debug = text_tokens[sample_idx, :text_lengths[sample_idx]].cpu().tolist()
+                
+                # Check logits distribution
+                sample_logits = logits[sample_idx, :output_lengths[sample_idx], :].cpu()
+                probs = torch.softmax(sample_logits, dim=-1)
+                max_probs, max_indices = torch.max(probs, dim=-1)
+                
+                blank_id = self.tokenizer.blank_token_id
+                
+                self.logger.info(f"🔍 DEBUG Validation Sample 0:")
+                self.logger.info(f"   Decoding method: Greedy Decode")
+                self.logger.info(f"   Output length: {output_lengths[sample_idx].item()}")
+                
+                # Beam search results
+                pred_tokens_debug = predictions_text[sample_idx] if sample_idx < len(predictions_text) else []
+                self.logger.info(f"   Beam search pred tokens (first 30): {pred_tokens_debug[:30]}")
+                self.logger.info(f"   Pred tokens length: {len(pred_tokens_debug)}")
+                
+                self.logger.info(f"   Max prob values (first 10): {[f'{p:.3f}' for p in max_probs[:10].tolist()]}")
+                self.logger.info(f"   Max indices (first 30): {max_indices[:30].tolist()}")
+                self.logger.info(f"   Ref tokens (first 20): {ref_tokens_debug[:20]}")
+                
+                # Decode
+                pred_text_debug = self.tokenizer.decode(pred_tokens_debug) if len(pred_tokens_debug) > 0 else ""
+                ref_text_debug = self.tokenizer.decode(ref_tokens_debug)
+                self.logger.info(f"   Decoded pred: '{pred_text_debug}' (len={len(pred_text_debug)})")
+                self.logger.info(f"   Decoded ref: '{ref_text_debug}'")
+            
+            # Process predictions (Greedy Decode)
+            for i in range(len(predictions_text)):
+                # Beam search results
+                pred_tokens = predictions_text[i] if i < len(predictions_text) else []
                 ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
                 
-                pred_text = self._ctc_decode(pred_tokens)
+                # Decode greedy tokens
+                if len(pred_tokens) > 0:
+                    pred_text = self.tokenizer.decode(pred_tokens)
+                else:
+                    pred_text = ""
                 ref_text = self.tokenizer.decode(ref_tokens)
                 
                 all_predictions.append(pred_text)
@@ -575,6 +924,16 @@ class ASRTrainer:
         
         if wer >= 0.95:
             self.logger.error(f"WER >= 0.95 (Model not learning!) - Check predictions")
+        
+        # Log validation summary với đầy đủ metrics
+        self.logger.info("=" * 80)
+        self.logger.info(f"📊 Validation (Epoch {self.current_epoch})")
+        self.logger.info(f"   Loss: {avg_loss:.4f}")
+        self.logger.info(f"   WER: {wer:.4f} | CER: {cer:.4f}")
+        self.logger.info(f"   Samples: {len(all_predictions)}")
+        if empty_preds > 0:
+            self.logger.info(f"   ⚠️  Empty predictions: {empty_preds}/{len(all_predictions)}")
+        self.logger.info("=" * 80)
         
         # Print first 10 validation outputs
         print("\n" + "=" * 80)
@@ -597,28 +956,6 @@ class ASRTrainer:
         
         return avg_loss, wer, cer
     
-    def _ctc_decode(self, tokens: list) -> str:
-        """Simple CTC greedy decoding.
-        
-        Args:
-            tokens: List of token IDs
-            
-        Returns:
-            decoded_text: Decoded text
-        """
-        # Remove consecutive duplicates
-        collapsed = []
-        prev = None
-        for token in tokens:
-            if token != prev:
-                collapsed.append(token)
-                prev = token
-        
-        # Remove blank tokens
-        filtered = [t for t in collapsed if t != self.tokenizer.blank_token_id]
-        
-        # Decode to text
-        return self.tokenizer.decode(filtered)
     
     def train(self, train_loader, val_loader, num_epochs: int):
         """
@@ -655,28 +992,33 @@ class ASRTrainer:
                     break
             self.logger.info(f"Fast-forwarded scheduler to step {steps_completed} (epoch {self.current_epoch})")
         
-        # Create training run in database (Data Layer)
-        model_id = self.db.add_model(
-            model_name=self.config.get('model_name', 'ASR_Base'),
-            model_type='transformer_ctc',
-            architecture='encoder_ctc',
-            version='1.0',
-            config=self.config,
-            total_parameters=self.model.get_num_trainable_params()
-        )
+        # Initialize training run metadata (file-based, no database)
+        self.training_run_id = f"{self.run_name}_{int(time.time())}"
         
-        base_run_name = self.config.get('run_name', f'run_{int(time.time())}')
-        run_name = f"{base_run_name}_{int(time.time())}"
-        self.training_run_id = self.db.create_training_run(
-            model_id=model_id,
-            run_name=run_name,
-            config=self.config,
-            batch_size=self.config.get('batch_size', 16),
-            learning_rate=self.config.get('learning_rate', 1e-4),
-            num_epochs=num_epochs,
-            optimizer='AdamW',
-            gpu_name=torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'
-        )
+        # Save training metadata to JSON file
+        training_metadata = {
+            'run_id': self.training_run_id,
+            'run_name': self.run_name,
+            'model_name': self.config.get('model_name', 'ASR_Base'),
+            'model_type': 'transformer_ctc',
+            'architecture': 'encoder_ctc',
+            'version': '1.0',
+            'config': self.config,
+            'total_parameters': self.model.get_num_trainable_params(),
+            'batch_size': self.config.get('batch_size', 16),
+            'learning_rate': self.config.get('learning_rate', 1e-4),
+            'num_epochs': num_epochs,
+            'optimizer': 'AdamW',
+            'gpu_name': torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU',
+            'start_time': time.time()
+        }
+        
+        metadata_file = Path(self.config.get('checkpoint_dir', 'checkpoints')) / f'{self.training_run_id}_metadata.json'
+        metadata_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(metadata_file, 'w', encoding='utf-8') as f:
+            json.dump(training_metadata, f, indent=2, default=str)
+        
+        self.logger.info(f"Training run initialized: {self.training_run_id}")
         
         start_time = time.time()
         
@@ -700,6 +1042,16 @@ class ASRTrainer:
             
             epoch_time = time.time() - epoch_start_time
             
+            # Calculate total training time and ETA
+            total_elapsed = time.time() - start_time
+            avg_epoch_time = total_elapsed / self.current_epoch if self.current_epoch > 0 else epoch_time
+            remaining_epochs = num_epochs - self.current_epoch
+            eta_total_seconds = avg_epoch_time * remaining_epochs
+            eta_total_str = f"{int(eta_total_seconds // 3600)}h {int((eta_total_seconds % 3600) // 60)}m" if eta_total_seconds > 3600 else f"{int(eta_total_seconds // 60)}m {int(eta_total_seconds % 60)}s"
+            
+            epoch_time_str = f"{int(epoch_time // 60)}m {int(epoch_time % 60)}s" if epoch_time > 60 else f"{epoch_time:.1f}s"
+            total_time_str = f"{int(total_elapsed // 3600)}h {int((total_elapsed % 3600) // 60)}m {int(total_elapsed % 60)}s" if total_elapsed > 3600 else f"{int(total_elapsed // 60)}m {int(total_elapsed % 60)}s"
+            
             # Update best metrics
             if val_loss < self.best_val_loss:
                 self.best_val_loss = val_loss
@@ -707,13 +1059,32 @@ class ASRTrainer:
             
             # Prepare metrics dictionary for callbacks
             metrics = {
+                'epoch': self.current_epoch,
                 'train_loss': train_loss,
                 'val_loss': val_loss,
                 'wer': wer,
                 'cer': cer,
                 'learning_rate': self.optimizer.param_groups[0]['lr'],
-                'epoch_time': epoch_time
+                'epoch_time': epoch_time,
+                'total_time': total_elapsed,
+                'eta_total': eta_total_seconds,
+                'timestamp': time.time()
             }
+            
+            # Get current learning rate
+            current_lr = self.optimizer.param_groups[0]['lr']
+            
+            # Log epoch completion với đầy đủ thời gian và LR
+            self.logger.info("=" * 80)
+            self.logger.info(f"✅ Epoch {self.current_epoch}/{num_epochs} Completed")
+            self.logger.info(f"   Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+            self.logger.info(f"   WER: {wer:.4f} | CER: {cer:.4f}")
+            self.logger.info(f"   LR: {current_lr:.2e}")
+            self.logger.info(f"   Epoch time: {epoch_time_str} | Total: {total_time_str} | ETA: {eta_total_str}")
+            self.logger.info("=" * 80)
+            
+            # Save metrics to history (file-based logging)
+            self.metrics_history.append(metrics)
             
             # Training Layer: Callback on_epoch_end (Checkpoints, Logging, Metrics)
             self.callback_manager.on_epoch_end(self, self.current_epoch, metrics)
@@ -724,25 +1095,53 @@ class ASRTrainer:
                 break
         
         total_time = time.time() - start_time
+        total_time_str = f"{int(total_time // 3600)}h {int((total_time % 3600) // 60)}m {int(total_time % 60)}s" if total_time > 3600 else f"{int(total_time // 60)}m {int(total_time % 60)}s"
         
-        # Complete training run in database (Data Layer)
-        self.db.complete_training_run(
-            run_id=self.training_run_id,
-            final_train_loss=train_loss,
-            final_val_loss=val_loss,
-            best_val_loss=self.best_val_loss,
-            best_epoch=self.current_epoch,
-            wer=self.best_wer,
-            cer=cer,
-            total_time=total_time
-        )
+        # Calculate average epoch time
+        avg_epoch_time = total_time / self.current_epoch if self.current_epoch > 0 else total_time
+        avg_epoch_time_str = f"{int(avg_epoch_time // 60)}m {int(avg_epoch_time % 60)}s" if avg_epoch_time > 60 else f"{avg_epoch_time:.1f}s"
+        
+        # Save final training results to file (replaces database)
+        final_results = {
+            'run_id': self.training_run_id,
+            'final_train_loss': train_loss,
+            'final_val_loss': val_loss,
+            'best_val_loss': self.best_val_loss,
+            'best_wer': self.best_wer,
+            'best_epoch': self.current_epoch,
+            'cer': cer,
+            'total_time': total_time,
+            'total_time_str': total_time_str,
+            'avg_epoch_time': avg_epoch_time,
+            'avg_epoch_time_str': avg_epoch_time_str,
+            'completed_at': time.time()
+        }
+        
+        results_file = Path(self.config.get('checkpoint_dir', 'checkpoints')) / f'{self.training_run_id}_results.json'
+        with open(results_file, 'w', encoding='utf-8') as f:
+            json.dump(final_results, f, indent=2, default=str)
+        
+        # Save metrics history
+        if self.metrics_history:
+            with open(self.metrics_file, 'w', encoding='utf-8') as f:
+                json.dump(self.metrics_history, f, indent=2, default=str)
+        
+        self.logger.info(f"Training results saved to: {results_file}")
         
         # Training Layer: Callback on_train_end
         self.callback_manager.on_train_end(self)
         
-        self.logger.info(f'Training completed in {total_time:.2f}s')
-        self.logger.info(f'Best validation loss: {self.best_val_loss:.4f}')
-        self.logger.info(f'Best WER: {self.best_wer:.4f}')
+        # Log final summary với đầy đủ thời gian
+        self.logger.info("=" * 80)
+        self.logger.info(f"🎉 TRAINING COMPLETED!")
+        self.logger.info("=" * 80)
+        self.logger.info(f"Total training time: {total_time_str}")
+        self.logger.info(f"Average epoch time: {avg_epoch_time_str}")
+        self.logger.info(f"Total epochs: {self.current_epoch}")
+        self.logger.info(f"Best validation loss: {self.best_val_loss:.4f} (Epoch {self.current_epoch})")
+        self.logger.info(f"Best WER: {self.best_wer:.4f}")
+        self.logger.info(f"Final CER: {cer:.4f}")
+        self.logger.info("=" * 80)
     
     def save_checkpoint(self, filename: str):
         """Save model checkpoint."""
@@ -864,10 +1263,7 @@ def main():
     if 'use_timestamps' not in config:
         config['use_timestamps'] = True
     
-    # Initialize database (still needed for training run tracking)
-    db = ASRDatabase(config.get('database_path', 'database/asr_training.db'))
-    
-    # Load data from merged_dataset manifest files
+    # Load data from merged_dataset manifest files (no database needed)
     dataset_root = config.get('dataset_root', 'data/processed/merged_dataset')
     language = args.language or config.get('language_filter', None)
     
@@ -931,7 +1327,12 @@ def main():
     augmenter = AudioAugmenter()
 
     tokenizer_type = config.get('tokenizer_type', 'char')
-    if tokenizer_type == 'bpe':
+    if tokenizer_type == 'sentencepiece':
+        from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
+        model_path = config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
+        tokenizer = SentencePieceTokenizer(model_path)
+        print(f"✅ Using SentencePiece BPE tokenizer: {model_path} ({len(tokenizer)} tokens)")
+    elif tokenizer_type == 'bpe':
         from preprocessing.bpe_tokenizer import BPETokenizer
         bpe_path = config.get('bpe_vocab_path', 'models/bilingual_bpe_18k.json')
         tokenizer = BPETokenizer()
@@ -944,6 +1345,7 @@ def main():
             vocab_file = Path(char_vocab_path)
             if not vocab_file.exists():
                 print(f"⚠️ Char vocab file not found: {vocab_file}, falling back to default tokenizer vocab")
+                from preprocessing.text_cleaning import Tokenizer
                 tokenizer = Tokenizer()
                 print(f"✅ Using default character-level tokenizer ({len(tokenizer)} tokens)")
             else:
@@ -969,6 +1371,7 @@ def main():
         audio_processor=audio_processor,
         tokenizer=tokenizer,
         batch_size=config.get('batch_size', 16),
+        val_batch_size=config.get('val_batch_size', None),
         num_workers=config.get('num_workers', 4),
         augmenter=augmenter,
         persistent_workers=config.get('persistent_workers', True),
@@ -979,8 +1382,8 @@ def main():
         cache_in_ram=config.get('cache_in_ram', False)  # Cache data in RAM (reduces CPU load)
     )
     
-    # Initialize trainer
-    trainer = ASRTrainer(config, db)
+    # Initialize trainer (no database needed)
+    trainer = ASRTrainer(config)
     
     # Resume from checkpoint if specified
     if args.resume:

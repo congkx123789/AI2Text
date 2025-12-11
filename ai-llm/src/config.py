@@ -16,8 +16,19 @@ ASR_MODEL = os.getenv("ASR_MODEL", "small")
 ASR_DEVICE = os.getenv("ASR_DEVICE", "auto")
 ASR_COMPUTE = os.getenv("ASR_COMPUTE", "float16")
 
+# Fine-tuned model paths (nếu có)
+ASR_FINETUNED_MODEL = os.getenv("ASR_FINETUNED_MODEL", None)  # e.g., "./models/finetuned/whisper-mixed"
+GEN_FINETUNED_MODEL = os.getenv("GEN_FINETUNED_MODEL", None)  # e.g., "./models/finetuned/qwen-mixed"
+
+# Use fine-tuned models if available
+if ASR_FINETUNED_MODEL and Path(ASR_FINETUNED_MODEL).exists():
+    ASR_MODEL = ASR_FINETUNED_MODEL
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 RERANKER_MODEL = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
 GEN_MODEL = os.getenv("GEN_MODEL", "Qwen2.5-0.5B-Instruct")
 GEN_MAX_TOKENS = int(os.getenv("GEN_MAX_TOKENS", "512"))
+
+# Use fine-tuned LLM if available
+if GEN_FINETUNED_MODEL and Path(GEN_FINETUNED_MODEL).exists():
+    GEN_MODEL = GEN_FINETUNED_MODEL

@@ -1,0 +1,4251 @@
+{
+  "model_path": "./models/final/whisper-vi-en-ct2",
+  "test_dataset": "data/processed_finetune/whisper_test.jsonl",
+  "timestamp": "2025-12-10T10:54:30.111796",
+  "device": "cuda",
+  "compute": "float16",
+  "total_samples": 32818,
+  "results": [
+    {
+      "sample_id": 0,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000007975.wav",
+      "reference": "tiến vào thế kỷ hai mươi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.5,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 1,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6689-64264-0014.wav",
+      "reference": "when turnbull in the narrow space behind the counter would push his way past her without other pretense of apology than something like a sneer she did feel for a moment as if evil were about to have the victory over her",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9041095890410958,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 2,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000011_000000221.wav",
+      "reference": "giống hệt như năm xưa bà nội và mẹ thằng thanh cứ cãi nhau ầm ĩ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8571428571428571,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 3,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/113_000002146.wav",
+      "reference": "thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8947368421052632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 4,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000027_000000578.wav",
+      "reference": "con ơi con con ơi con đâu rồi con con",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.0,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 5,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000130_000000073.wav",
+      "reference": "người gì đâu á người đẹp trai",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.3103448275862069,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 6,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000003849.wav",
+      "reference": "tôi là một tên đần độn anh ta mất tới hai mươi ba tiếng đồng hồ mới sắp xếp được một cuộc phỏng vấn đó là lần đầu tiên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8898305084745762,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 7,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000006586.wav",
+      "reference": "và qua những con số đó mụ thì thầm hát âu phải thế chàng trai thỏ thẻ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8840579710144928,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 8,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/668_000000012.wav",
+      "reference": "một nguyên tử hydro có khối lượng nhỏ hơn tổng khối lượng của các proton và electron tạo nên nó",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8842105263157894,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 9,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/009_000000790.wav",
+      "reference": "cuối cùng có thể khẳng định dạng câu hỏi giả định này có rất nhiều tác dụng ở những thời điểm cuộc trò chuyện đang kéo dài lê thê",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8992248062015504,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 10,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000006005.wav",
+      "reference": "mà em có giấy thông hành chứ dĩ nhiên thôi đừng bàn đến việc ấy nữa hãy tận hưởng hạnh phúc đi đã",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8969072164948454,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 11,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000008730.wav",
+      "reference": "con ranh nó không biết áp ty đến đây lại còn nói láo nói hỗn ở đây để áp ty lại thêm phiền lòng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8842105263157894,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 12,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/057_000010342.wav",
+      "reference": "những gốc rễ của niềm tin tôn giáo có thể nhìn thấy trong thời thơ trẻ không tự động có nghĩa nó phá hại mọi hình thức tôn giáo trưởng thành",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8928571428571429,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 13,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000100_000000259.wav",
+      "reference": "quay trở lại với chương trình quýt làm cam chịu và đây là vòng ba các bạn đang chênh lệch nhau có mười điểm thôi cho nên là cố gắng lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 14,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/846-130984-0031.wav",
+      "reference": "there are rights of great moment to the trade of america which are rights of the union i allude to the fisheries to the navigation of the western lakes and to that of the mississippi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9010989010989011,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 15,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/215_000000125.wav",
+      "reference": "em thấy đó bây giờ em đang phải trông quán cho mẹ nhưng đồng thời em có thể đóng cửa quán em xách xe máy chạy một mạch lên đà lạt cũng được",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8992805755395683,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 16,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/296_000000040.wav",
+      "reference": "khi tổ tiên ta vẫn còn sống trong hoang động lang thang khắp nơi để tìm về miền đất hứa khi họ đã bắt kiệt các nguồn tài nguyên tại vùng đất cũ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9090909090909091,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 17,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000002983.wav",
+      "reference": "nỗi lo lắng khi đối mặt với các chết không tìm thấy phương thuốc chữa trị trong xác xuất thống kê",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8865979381443299,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 18,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3488-85273-0035.wav",
+      "reference": "first i don't think that the man kemsley although an impostor was the actual assassin",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 19,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/029_000004224.wav",
+      "reference": "anh vội vàng nói đừng gieo mình xuống đó chẳng đáng đâu không đáng ngay cả khi cô bất hạnh vô cùng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8979591836734694,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 20,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/799_000000039.wav",
+      "reference": "trong suốt hơn hai mươi năm qua và trở thành một phần quan trọng trong cuộc sống của người tiêu dùng trên khắp việt nam",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8907563025210085,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 21,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/137_000005996.wav",
+      "reference": "dọc các khe gỗ dòng nước rỉ từ đợt mưa cuối cùng để lại những vệt đất màu vàng chưa khô hẳn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8901098901098901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 22,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/427_000000145.wav",
+      "reference": "bản thân mình cũng đã học được cái cách để tận hưởng những khoảnh khắc vui vẻ của cuộc sống nhiều hơn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8811881188118812,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 23,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000042_000000035.wav",
+      "reference": "trung quốc có thể đang chờ đợi thời điểm thích hợp để can dự sâu hơn vào việc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8701298701298701,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 24,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/031_000004397.wav",
+      "reference": "lạp rời rã lúc ấy mặt lạp chắc hoảng hốt lắm nhưng trời đã tối nhàn không thấy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9102564102564102,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 25,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7408-256039-0016.wav",
+      "reference": "you will excite your blood and that would produce an appetite it would require a million a day to satisfy be more economical but when i have no more money left to pay you",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8647058823529412,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 26,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000026_000000087.wav",
+      "reference": "nếu như mà không muốn giúp hai vợ chồng bay á cần gì ta phải cho tụi bay thuê tạo điều kiện cho tụi bay làm gì tôi bay dở quá",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.872,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 27,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000003237.wav",
+      "reference": "tôi gặp hồ hữu tường lấy ra hỏi tương cũng không hiểu bốn chữ kín ấy nghĩa gì khi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 28,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/004_000000432.wav",
+      "reference": "để có tiền tiêu vặt tôi nhận chân dọn dẹp phụ cha ở cửa hàng mỗi thứ tư sau giờ học",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8554216867469879,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 29,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000055_000000019.wav",
+      "reference": "đó là anh hải ơi à anh đem hàng xuống để cho em bán với",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8727272727272727,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 30,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/104_000000035.wav",
+      "reference": "xuất phát từ một tuổi thơ được yêu thương và có sự chăm sóc đầy đủ nhất là về đời sống tinh thần",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9166666666666666,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 31,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000001121.wav",
+      "reference": "huệ trầm ngâm nói nếu ta có con đường thượng đạo ấy bất ngờ đánh vào sau lưng kẻ địch ví như cọp vồ từ sau lưng tướng quân đó",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.904,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 32,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000004715.wav",
+      "reference": "bạn hoàn toàn có thể hi vọng mức phản hồi không phẩy năm đến một phẩy năm phần trăm từ quảng cáo của bạn trên tạp chí",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8974358974358975,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 33,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/148_000002085.wav",
+      "reference": "espn lại không nhẩy cẫng lên khi quay được cảnh những anh chàng đẹp trai mặc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.868421052631579,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 34,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/181_000003232.wav",
+      "reference": "kể lại câu chuyện riêng của tôi và xin rằng sẽ kết lại duyên cũ nhưng đều không tiếp được thư trả lời",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8910891089108911,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 35,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1051-133881-0039.wav",
+      "reference": "he dropped a hot cent down mary ann's back as that pretty maid was waiting at table one day when there were gentlemen to dinner whereat the poor girl upset the soup and rushed out of the room in dismay leaving the family to think that she had gone mad",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9083665338645418,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 36,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000005489.wav",
+      "reference": "ta không sợ ta không sợ nói đoạn lại xông vào đánh nhau ngô dụng hết sức can ngăn cũng không được",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8865979381443299,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 37,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/147_000007947.wav",
+      "reference": "chị ra trông đau lòng tiếp tục bước lên thang chị thở dài thườn thượt như đang cố trút bỏ lời trách móc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8737864077669902,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 38,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/160_000004748.wav",
+      "reference": "nghe người xưa thuật lại rằng ngày xưa ở đây có một vị tỳ kheo đã gọi mời bạn của mình đến",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8666666666666667,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 39,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/5285-48598-0020.wav",
+      "reference": "o zumurrud whilst the small boys flocked round him calling out a madman a madman and all who knew him wept for him saying",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8512396694214877,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 40,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000034_000000102.wav",
+      "reference": "ở đằng kia",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.6666666666666667,
+      "cer": 4.0,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 41,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/188_000001619.wav",
+      "reference": "thì đường bị nghẽn và vì có đàn bò lớn đi từ đồng cỏ về",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8909090909090909,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 42,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/313-122804-0005.wav",
+      "reference": "and looked at her little sick child that drew its breath so deep and raised its little hand",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8351648351648352,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 43,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000000496.wav",
+      "reference": "mẹ cô tất cả họ hàng hàng xóm đều nói anh trai của cô đã qua đời hai năm trước khi cô sinh ra",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8709677419354839,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 44,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8307-120456-0017.wav",
+      "reference": "he put in his fingers and pulled nothing happened then he did so again considerably harder and the screen went sailing out of the window",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8676470588235294,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 45,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000073_000001322.wav",
+      "reference": "bạn bè của em á hai nháy thì có chồng xong rồi đi làm thông dịch viên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8695652173913043,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 46,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000005997.wav",
+      "reference": "chẳng có nguyên nhân cũng chẳng cần kết quả chỉ đơn giản là làm việc gì đó thật là thoải mái anh sống một năm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8899082568807339,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 47,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/100_000002410.wav",
+      "reference": "nhưng tại sao xu hướng biến thành quark lại nhiều hơn tạo thành phản quark",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8783783783783784,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 48,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000125_000000027.wav",
+      "reference": "anh là đàn ông nhưng mà anh đâu phải phụ nữ đâu có thể nào làm những cái chuyện mà nó mạnh mẽ hơn để nó kiếm ra tiền được không thôi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8939393939393939,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 49,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/216_000000166.wav",
+      "reference": "lúc này ông chú tâm vào chăm sóc người mẹ già cũng như nuôi nấng miki no suke chuyên dạy những gì ông biết về kiến thức",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.907563025210084,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 50,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/015_000005163.wav",
+      "reference": "sẽ thế nào nếu bức thư ramona nhận được hoàn toàn sai sự thật",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8852459016393442,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 51,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/150_000002324.wav",
+      "reference": "người vòng trong vòng ngoài vây kín ông khổng tử ngồi đó ca hát khảy đàn mà không nói gì",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8863636363636364,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 52,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/189_000004191.wav",
+      "reference": "xảy ra xung quanh chính mấy con chó báo cho tôi biết tàu tới và chúng đã đánh hơi thấy chủ chúng tôi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 53,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000155_000000212.wav",
+      "reference": "mày biết điều đó mà",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 2.0,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 54,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000042_000001155.wav",
+      "reference": "tôi đã dùng vũ lực tôi hứa với nhóc đó sẽ là lần cuối cùng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8620689655172413,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 55,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/111_000000937.wav",
+      "reference": "cuối cùng suy đi nghĩ lại thợ săn quyết định thả một bầy sói vào khu rừng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8904109589041096,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 56,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000056_000000243.wav",
+      "reference": "vâng không hiểu ý rồi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.8571428571428572,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 57,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000007967.wav",
+      "reference": "mà ở trong phật pháp tôi tuy xem nước nhưng tâm vẫn tại phật",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 58,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000001516.wav",
+      "reference": "lỗ trí thâm lại bảo với phó rèn rằng ta còn ít tiền lẻ ở đây anh đi mua rượu về uống với ta một thể cho vui",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8785046728971962,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 59,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/076_000001267.wav",
+      "reference": "tại sao anh ta có thể làm được như vậy khi chưa từng làm việc trong lĩnh vực đó làm thế nào anh có thể bán hàng giỏi hơn những chuyên gia đã có kinh nghiệm cả chục năm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8922155688622755,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 60,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1726-142316-0004.wav",
+      "reference": "putting the sight that she would have to encounter out of the question mister bell sate over the fire considering what he had better do margaret lay motionless",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8742138364779874,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 61,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000145_000000303.wav",
+      "reference": "trở lại bình thường hiện giờ thì có lẽ họ đang đoàn tụ với gia đình của mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8552631578947368,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 62,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000006397.wav",
+      "reference": "trước khi vua vào nam bicail khoe với tôi rằng vốn cùng vua học chung một thầy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8333333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 63,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000002481.wav",
+      "reference": "đã trao cho hoa kỳ quyền truy cập và các quyền hạn khác đối với các căn cứ của họ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 64,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/050_000001919.wav",
+      "reference": "hay khi một đứa trẻ bắt chước phong cách riêng của một đứa trẻ khác mà nó ngưỡng mộ thì johnny vậy không phải con",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8849557522123894,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 65,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000033_000000558.wav",
+      "reference": "tai nạn chết người hiệu trưởng trong lúc đi bộ đã dấp trúng cục đá trong công vi và té ngã trong khi ông ấy đang bê hồ cá",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8842975206611571,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 66,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000093_000000199.wav",
+      "reference": "còn mềm không quá cứng mà nó vẫn có vị béo mình làm món này mới ngon",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 67,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/424_000000026.wav",
+      "reference": "theo đó ở thời cổ xưa các bài báo câu chuyện dài sẽ được viết ra khi xung đột hoặc cuộc chiến đã kết thúc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8857142857142857,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 68,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/064_000000278.wav",
+      "reference": "haisự vươn lên của một cá nhân sáng tạo hãy cho tôi một điểm tựa và một đòn bẩy tôi sẽ nâng bổng trái đất lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8990825688073395,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 69,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000010_000000034.wav",
+      "reference": "đồng thời sư tử cũng là một người tràn đầy sự sáng tạo",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9074074074074074,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 70,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/137_000012351.wav",
+      "reference": "thằng kiếm tự hỏi ai đã lay gọi hắn thức dậy giữa cơn mê man trong chiến hào",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8421052631578947,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 71,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000036_000000075.wav",
+      "reference": "khiến em không thể nào sống hòa thuận trong căn nhà này",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8545454545454545,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 72,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000008494.wav",
+      "reference": "vân công thấy tôi nói như thị tôi gặp vân công chứng như thị vân công và tôi đều như thị",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9090909090909091,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 73,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7327-96491-0029.wav",
+      "reference": "they looked at him in consternation he explained i have been reading up the experience of the past few centuries in such cases",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.873015873015873,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 74,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000002087.wav",
+      "reference": "được giải thích bằng địa lý và bởi lịch sử về quá trình thống nhất của hợp chủng quốc hoa kỳ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8695652173913043,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 75,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/264_000000187.wav",
+      "reference": "nhà càng gần ga gần trung tâm thì càng đắt khi vào nhà sẽ mất một khoản phí gọi là tiền lễ rất cao",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8673469387755102,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 76,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000011409.wav",
+      "reference": "ngày xưa tề hoàn công đánh nam dẹp bắc chỉ còn có nước đông di là chưa đánh nổi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8734177215189873,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 77,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000005511.wav",
+      "reference": "đôi khi tôi bực mình trước sự xoi mói liên tục của bà ấy đến nỗi chỉ muốn băng miệng bà ấy lại",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8829787234042553,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 78,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000013988.wav",
+      "reference": "từ phòng ngủ ra phòng khách của khách sạn plaza nầy phải nói là lên vì phòng ở dưới hầm sâu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8901098901098901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 79,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/113_000002012.wav",
+      "reference": "điều tất nhiên là khi ta nghiêng về một bên ta sẽ vấp phải sức phản kháng từ phía bên kia",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8876404494382022,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 80,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000003430.wav",
+      "reference": "sang tường bên kia để phơi quần áo có những chiếc sơ mi ống tay nặng trĩu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8493150684931506,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 81,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000010466.wav",
+      "reference": "trái lại rõ ràng tôi đang khẳng định thế giới vật chất tuy nhiên tôi cho rằng vật chất có điểm cuối",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8787878787878788,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 82,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/705-157945-0029.wav",
+      "reference": "mademoiselle bourienne was the first to recover herself after this apparition and began speaking about the prince's indisposition",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.875968992248062,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 83,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/007_000001360.wav",
+      "reference": "người thợ máy hoá điên từ đó suốt ngày đêm cầm chiếc đèn đi lang thang phố phường miệng luôn luôn lẩm bẩm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8952380952380953,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 84,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000119_000000224.wav",
+      "reference": "sao chị ai thấy được không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.3846153846153846,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 85,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/031_000004846.wav",
+      "reference": "giời đất này người như con kiến chết thì lấp đi lại còn gọi ai khóc ai",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8571428571428571,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 86,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000006085.wav",
+      "reference": "thì tôi chắc chắn cậu có thể sẽ tin cậy tôi trong câu hỏi số mười số mười một và mười hai",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8764044943820225,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 87,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/164_000004807.wav",
+      "reference": "ngày trước trai đất thánh gặp nhau trong rừng mắc võng nằm cạnh nhau",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8529411764705882,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 88,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/157_000000681.wav",
+      "reference": "khi ta nhìn thấy cột bê tông hình tháp nhọn ghi độ cao của đỉnh núi ba nghìn bốn trăm mười ba m",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8947368421052632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 89,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000001956.wav",
+      "reference": "việc biến một mỏm đá ngầm thành một sân bay đơn giản không đem lại các quyền hạn về chủ quyền lãnh thổ cũng chẳng được",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8983050847457628,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 90,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000043_000002363.wav",
+      "reference": "mình phải về quê một chuyến để cho tất cả mọi người dưới quê người ta biết được thằng thanh lịch",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8854166666666666,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 91,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/956-127932-0010.wav",
+      "reference": "they haven't gone to paris that was all a blind for the present let's go back to your chambers then i'll talk to you once within breton's inner room with the door closed upon them",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.888268156424581,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 92,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/102_000005979.wav",
+      "reference": "điều này cải thiện đáng kể độ phân giải của bộ máy này mà không đòi hỏi phải có",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8860759493670886,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 93,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/141_000004105.wav",
+      "reference": "bước đường đi còn trăm nghìn gian khổ chúc th vững bước đi lên đạp bằng mọi trở lực để xứng đáng làm một đảng viên chân chính nhất",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 94,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/175_000001109.wav",
+      "reference": "trời nghiêm trọng vậy sao thấy có chút xíu à không có đau do chú bị tiểu đường lâu ngày không biết",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8775510204081632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 95,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/182_000002902.wav",
+      "reference": "thì trước những cặp mắt ngơ ngác của một bầy con cháu chí hiếu chỉ óng ruột đem chôn cho chóng cái xác chết của cụ tổ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8803418803418803,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 96,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/108_000002786.wav",
+      "reference": "hay là họ không ở trong các kim tự tháp mà là ở dưới đó dưới các kim tự tháp",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.881578947368421,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 97,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000022_000001018.wav",
+      "reference": "như từ phần lớn phương tây bài báo chỉ ra rằng một phần lý do có thể là các quốc gia châu á từ lâu đã hoài nghi về việc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8739495798319328,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 98,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000110_000000020.wav",
+      "reference": "thì khi cắt xong mình sẽ uốn một chút ở trên này để tạo điểm nhấn và tạo độ bồng bềnh cho tóc mái tóc mình sẽ thêm ấn tượng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9105691056910569,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 99,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000005538.wav",
+      "reference": "nếu không đỗ thành nhân sẽ giết chết hoàng thân trong thành thì cháu cũng mang tiếng là người bất nhân vậy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8773584905660378,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 100,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000115_000000334.wav",
+      "reference": "thì nó dính lưới à nó chết rồi thì mấy anh em mới mần ra còn nếu mà biết nó có trứng thì cũng chẳng có bắt nó làm gì đâu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 101,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/144_000000186.wav",
+      "reference": "tôi còn nhớ hồi mới tới có cảm tưởng rằng sài gòn không phải là một thành phố việt nam",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9069767441860465,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 102,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000009562.wav",
+      "reference": "bỏ quân tiêm nguyễn hai vạn còn lại mấy trăm quân theo chủ tướng chạy về đồn trà tân",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8571428571428571,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 103,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000055_000000069.wav",
+      "reference": "đốt nhà hả mày nè mày sống lỗi với con gái tao bây giờ mày vừa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8709677419354839,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 104,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2273-152357-0010.wav",
+      "reference": "stranded within the meaning of this paper stands for a more or less excusable mistake a ship may be driven ashore by stress of weather",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8656716417910447,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 105,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000005642.wav",
+      "reference": "đó là phẩm chất của một nghệ sĩ lớn cậu có biết tại sao người ta gọi tôi là nữ hoàng phim bi kịch không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.883495145631068,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 106,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000011684.wav",
+      "reference": "fantine sung sướng chị không tỏ vẻ ngạc nhiên hay vui mừng cả người chị là hiện thân của vui mừng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8865979381443299,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 107,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000006852.wav",
+      "reference": "bác madeleine là một người tuổi độ năm mươi có vẻ đăm chiêu và lại hảo tâm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8648648648648649,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 108,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000004511.wav",
+      "reference": "liên xưng và quản chí phủ vào thành lập vô tri lên nối ngôi cho liên thị làm phu nhân",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 109,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000160_000000195.wav",
+      "reference": "và các bạn đừng quên theo dõi các trang mạng xã hội của mai ti vi để cập nhật nhanh nhất và chính xác nhất với các giải thể thao hấp dẫn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9117647058823529,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 110,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2733-28252-0069.wav",
+      "reference": "ben zoof in his turn danced a pas seul often performed in the elysee",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8235294117647058,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 111,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000006726.wav",
+      "reference": "khi tôi coi vườn rau giải vũ ở chùa đại tướng quốc gặp báo tử đầu lâm xung bị cao thái úy toan giết hại",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8640776699029126,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 112,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3757-134141-0029.wav",
+      "reference": "and sylvie and bruno came in with their arms twined lovingly round each other bruno sobbing convulsively with his face hidden on his sister's shoulder and sylvie more grave and quiet",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8901098901098901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 113,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/116_000001322.wav",
+      "reference": "trường ca đủ giọng một bộ iliade của côn trùng một bộ thánh kinh của tạo vật",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8552631578947368,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 114,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1621-141593-0008.wav",
+      "reference": "the non natural features of the planet's surface including especially",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8260869565217391,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 115,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000014488.wav",
+      "reference": "còn người mặc áo vàng đây là con cả khổng thái công tên là mao đầu tinh khổng minh",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8780487804878049,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 116,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/174_000001030.wav",
+      "reference": "và những kẻ giàu có người ta học cách nói như thế nào cho đúng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8709677419354839,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 117,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000123_000000238.wav",
+      "reference": "tưởng thừa thiên huế đã và đang nỗ lực để bảo vệ diện tích rừng hiện có hạn chế tới mức thấp nhất thiệt hại do cháy rừng gây ra",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.889763779527559,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 118,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000043_000000050.wav",
+      "reference": "trong đó nổi bật với thông tin về việc điều kiện duy nhất để sanchez quay trở lại man utd",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8651685393258427,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 119,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2273-152357-0036.wav",
+      "reference": "he attacked grumpily the steward a lanky anxious youth with a long pale face and two big front teeth what makes this soup so bitter",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8549618320610687,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 120,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000007125.wav",
+      "reference": "vua nước cử sai người đuổi khánh phủ lại nghĩ đến thụ điêu nước tề khi trước đã từng ăn lễ mà bênh vực cho mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8918918918918919,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 121,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000004624.wav",
+      "reference": "do vậy sẽ đẩy mức chi phí sản xuất ban đầu lên cao hơn so với tiêu chuẩn của chúng ta",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8470588235294118,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 122,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/132_000010144.wav",
+      "reference": "bình nguyên quân nói phàm kẻ sĩ tài giỏi ở trên đời cũng như cái dùi ở trong túi mũi dùi phải lòi ngay ra chứ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8899082568807339,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 123,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3598-180204-0018.wav",
+      "reference": "sir willoughby says when he's married you won't let me hide ah it is wrong to pet a big boy like you",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.87,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 124,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6251-63840-0019.wav",
+      "reference": "and the member of parliament for his county these medallions gave him some reputation and it was a favorite branch with him as long as he lived",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8601398601398601,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 125,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000003_000001287.wav",
+      "reference": "sở hữu ngay cho mình những sản phẩm chính hãng với chất lượng tốt nhất cũng như",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9113924050632911,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 126,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000010357.wav",
+      "reference": "người ta nhìn người ta vội vã bước nhanh người ta giơ tay giữ lại cái đang trôi qua",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8554216867469879,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 127,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000049_000000602.wav",
+      "reference": "với việc tung vào sân tới bốn cầu thủ ở trong những phút qua của hiệp hai thì tesco hy vọng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8681318681318682,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 128,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/100_000003568.wav",
+      "reference": "lúc này hydro kết thành heli nhiệt lượng thoát ra làm tăng áp suất và các đám mây không co lại thêm nữa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8737864077669902,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 129,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000002121.wav",
+      "reference": "tôi đã chán nghề là ai thủ công thường bị hiếp đáp làm xâu đóng thuế chuộc công sưu nặng nề",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8901098901098901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 130,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000000351.wav",
+      "reference": "của fir một không có những lý do để bắt người theo điều hai mươi hai của hiến pháp đã quy định và ông đã vi phạm điều năm mươi của bộ luật tố tụng hình sự",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9090909090909091,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 131,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/050_000001650.wav",
+      "reference": "là bởi một hình ảnh sống động có tầm ảnh hưởng lớn đến thường thức hơn là một ý niệm không chắc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8947368421052632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 132,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/132_000001874.wav",
+      "reference": "nhưng chưa hạ được thành nghe tin trần vương thua chạy quân tần sắp đến bình liền vượt trường giang giả làm mệnh lệnh của trần vương",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9015151515151515,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 133,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000039_000000532.wav",
+      "reference": "hôm nay anh làm tốt lắm anh cũng cố gắng hết sức mình rồi mà",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.85,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 134,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7121-86787-0002.wav",
+      "reference": "i cannot tell you all i feel at this moment terror grief madness",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.796875,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 135,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/165_000004375.wav",
+      "reference": "tôi đứng trên đài cao với một cái loa lá cờ đỏ những tấm bảng có kẻ chữ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8450704225352113,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 136,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000148_000000391.wav",
+      "reference": "sẽ luôn luôn là anh cho đến cuối cuộc đời em",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8863636363636364,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 137,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7147-80028-0055.wav",
+      "reference": "and then i love her and then i tell her so or else she finds it out without my telling was that a sin you can't forgive i never said it was a sin",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8689655172413793,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 138,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000019_000000821.wav",
+      "reference": "ngược lại nếu con càng dịu dàng với lam thì lam càng nghĩ con có lỗi nên mới chịu hạ mình như vậy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.865979381443299,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 139,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6030-57826-0015.wav",
+      "reference": "in thus expressing himself the duke wellington meant that bodily vigor power of endurance courage and rapidity of decision are produced by the manly games which are fostered here",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8820224719101124,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 140,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000073_000000086.wav",
+      "reference": "chính xác cao vũ thị hòa cũng đã vượt qua được sự truy cản của hậu vệ bên phía đội tuyển nữ đức",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8736842105263158,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 141,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/369_000000113.wav",
+      "reference": "hay đặc biệt nhất là để hẹn hò nhưng chẳng cần đợi đến bây giờ hồ tây mới lãng mạn đến vậy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 142,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000006888.wav",
+      "reference": "tại sao cô quá tin như vậy người anh thứ hai lại còn hủy báng khinh nhờn thần phật nữa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8953488372093024,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 143,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/189_000002317.wav",
+      "reference": "phủ rêu mịn như nhung và những cây thạch thảo khô héo và những cây kim tước chi cằn cỗi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8735632183908046,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 144,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000112_000000048.wav",
+      "reference": "sau vài tuần tham gia ví dụ một cuộc tấn công tên lửa của nga vào tháng ba năm hai nghìn không trăm hai mươi hai đã đánh trúng một căn cứ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8832116788321168,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 145,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/075_000001312.wav",
+      "reference": "có khi họ cũng sai nhưng một người ngoại quốc như bạn mà muốn đoán xem người tiêu dùng bản xứ sẽ phản ứng ra sao",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9107142857142857,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 146,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/067_000001075.wav",
+      "reference": "là người syri mặc dù sử dụng ngôn ngữ của các bạn không thành thạo lắm nhưng tôi rất muốn gọi đúng tên người bạn thương gia vừa rồi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9083969465648855,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 147,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000013_000001453.wav",
+      "reference": "ổn không anh sợ là thằng nghĩa không chịu tin á thực ra thì em không có định dụ anh nghĩa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8651685393258427,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 148,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000012_000001377.wav",
+      "reference": "thì ra cậu nghĩa không phải là con ruột của bả vậy có thể bả là hung thủ rồi đó con",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8674698795180723,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 149,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000011_000000237.wav",
+      "reference": "ba món bún không ăn với nước lèo bún thịt nước làm gì ăn với nước lèo bún xào chung với thịt gì đó thịt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.883495145631068,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 150,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000156_000000215.wav",
+      "reference": "việc làm nhằm tạo điều kiện cho hội viên ổn định cuộc sống và sống hòa nhập với cộng đồng trong nhiệm kỳ qua đã đẩy mạnh công tác lao động sản xuất",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9047619047619048,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 151,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000090_000000024.wav",
+      "reference": "tại vì cái phim mình ra này chính xác ngay từ đầu mình xác định là làm một cái kỷ niệm đối với tri âm với khán giả của mình thôi chứ không ai nghĩ quá đó và",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9102564102564102,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 152,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000050_000000533.wav",
+      "reference": "chắc tại vì vậy mà vợ chồng ông sơn mới cương quyết coi đăng duy như là người ngoài",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8674698795180723,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 153,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000008075.wav",
+      "reference": "tôi thì cậu được gì nào cậu sẽ không có được tiền của cậu giờ hãy bỏ súng xuống và tôi xin hứa sẽ cho phép cậu giành giải thưởng cao nhất",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9124087591240876,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 154,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000017_000000138.wav",
+      "reference": "dạ hay là tối nay chị về bên nhà ngủ với con cháu một đêm cho vui nha",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.855072463768116,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 155,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1704-142310-0082.wav",
+      "reference": "open it quick said she to the eldest child it's bolted make no noise be very still",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8536585365853658,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 156,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/406_000000120.wav",
+      "reference": "phải đến khi mông cổ chinh phục trung hoa và lập ra nhà nguyên miến điện mới phải đối mặt với cuộc xâm lăng đầu tiên đến từ trung hoa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8947368421052632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 157,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000015_000000256.wav",
+      "reference": "rồi người ta cũng mở rồi nhưng mà cũng buổi sáng à cậu thôi được rồi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8676470588235294,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 158,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000088_000000281.wav",
+      "reference": "về chứ không được đi đâu hết nhớ chưa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.054054054054054,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 159,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000006697.wav",
+      "reference": "nhưng anh ta đành cắt ngang câu chuyện đó vì có tiếng nhân vật chính vang lên ngoài cửa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8505747126436781,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 160,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/956-157879-0021.wav",
+      "reference": "it's the woman's bargaining instinct you know she wants to get value now i want to hear about miss dalstan where did you meet her and how did you get her to accept your play",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8786127167630058,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 161,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/040_000001048.wav",
+      "reference": "toong một chung quanh khu vườn vuông ấy những cây chanh những cây hồng và cỏ đều bị phạt đi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8901098901098901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 162,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/046_000003316.wav",
+      "reference": "sáu mươi chín quy luật định vị nhận thức của khách hàng về bạn và công ty sẽ dẫn đến quyết định mua hàng thông qua cách khách hàng suy nghĩ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9064748201438849,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 163,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/071_000000034.wav",
+      "reference": "bạn là ai không có gì khác chỉ có ba chữ viết tay với một dấu chấm hỏi to tướng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8607594936708861,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 164,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/392_000000062.wav",
+      "reference": "chỉ đã quen với hơi thở của nhau thì không có cảm giác khó chịu với lưỡi và nước bọt của đối phương do",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8921568627450981,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 165,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000123_000000152.wav",
+      "reference": "một khi nó thức tỉnh thì con ngươi sẽ xuất hiện những hoa văn mang hình thù đặc trưng có thể dễ dàng nhìn thấu thể thuật",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 166,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4225-144132-0126.wav",
+      "reference": "and arrived at the bureau and glancing round once more carefully packed the cash in one of his money bags where doubtless",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.859504132231405,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 167,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4863-258985-0026.wav",
+      "reference": "as a reduction of supply results in a higher price it is possible as is seen in the paradox of value",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.89,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 168,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/150_000000524.wav",
+      "reference": "tôi từng đọc một cuốn sách nhan đề là kho báu ẩn giấu cuốn sách kể về câu chuyện của một người mỹ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8762886597938144,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 169,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4017-6540-0080.wav",
+      "reference": "no more than two hundred or three hundred yards from the land and that it had taken him nearly an hour to get back again",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8583333333333333,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 170,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/145_000002177.wav",
+      "reference": "sau đó cô bị cơ quan chức năng gửi công văn đến trường và bị ban giám hiệu phê bình trước tập thể",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8969072164948454,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 171,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000003_000000647.wav",
+      "reference": "anh hoàng bảo là con cá này nè nướng ăn rất là ngon",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9019607843137255,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 172,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/077_000000725.wav",
+      "reference": "khi mong ước rằng một người giúp việc một kẻ thân thích hay một người bạn sẽ không có khuyết điểm đây là mong ước",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8761061946902655,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 173,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/346_000000097.wav",
+      "reference": "chẳng hạn trong trường hợp của my và trang nói trên nếu mà giáo viên lựa chọn để cho hai em cùng đọc những tài liệu như nhau",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8870967741935484,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 174,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/188_000006005.wav",
+      "reference": "nếu thế tôi sẽ mất cả một ngày tôi tin rằng chẳng có lấy một phần trăm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8857142857142857,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 175,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000078_000000338.wav",
+      "reference": "em nói lần cuối cùng em không đi bệnh viện anh hiểu không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9122807017543859,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 176,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000047_000000151.wav",
+      "reference": "anh nghĩ đi nếu là ba anh á ba anh có cho anh làm như vậy không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8571428571428571,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 177,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000002754.wav",
+      "reference": "trên thể lệ ghi gía tiền nó là con ngựa duy nhất với giá một ăn ba mươi lăm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8533333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 178,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000076_000000794.wav",
+      "reference": "vì vậy là điểm số được xác định cho đội tuyển mỹ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9166666666666666,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 179,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000000218.wav",
+      "reference": "đã trải qua những biến chuyển từ kiểu mẫu truyền thống sang kiểu gia đình với những đặc điểm hiện đại",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.900990099009901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 180,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000000543.wav",
+      "reference": "tôi đã ngồi trên những chiếc ghế rửa tay trong bồn nguệch ngoạc các chỉ dẫn trên bảng thông báo thay đổi lịch công tác",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8728813559322034,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 181,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/102_000003366.wav",
+      "reference": "sự thông thái của con số trong adn thật sâu sắc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9148936170212766,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 182,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/015_000001106.wav",
+      "reference": "sẽ bị xóa sạch và không thể tác động gì đến bạn cách tiềm thức điều khiển tất cả các chức năng của cơ thể",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9047619047619048,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 183,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000022_000000053.wav",
+      "reference": "lúc này con nghe nói",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.85,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 184,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4009-43916-0012.wav",
+      "reference": "melt in a saucepan a piece of butter in which brown half an onion cut into thin slices to be removed from the butter when browned then add to the butter two teaspoonfuls of flour mix but don't allow to brown",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.893719806763285,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 185,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/020_000002504.wav",
+      "reference": "bạn có thể nghe mọi điều bằng một tinh thần cởi mở biết đặt mình vào vị trí của người khác để hiểu những điều họ nói",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9051724137931034,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 186,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8846-305209-0028.wav",
+      "reference": "loved much and prayed unceasingly when the young wives of her acquaintance married like herself to pagan husbands complained of the insults and even blows which they had to bear",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8813559322033898,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 187,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000040_000000982.wav",
+      "reference": "người dân anh rất là thích hoặc kỷ tử khi mà sử dụng trong cuộc sống hàng ngày giúp cho cải",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8681318681318682,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 188,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/124_000005793.wav",
+      "reference": "trong cái trạng thái cuồng nhiệt đó tôi vẫn còn kịp nhìn thấy những thằng người màu xám chì hoảng loạn giạt ra",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8909090909090909,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 189,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000118_000000058.wav",
+      "reference": "phạm tội thuộc một trong các trường hợp như có tổ chức dùng vũ khí hung khí hoặc có hành vi phá phách",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.900990099009901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 190,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000002330.wav",
+      "reference": "không thể rời mắt cảnh khuất phục cô gái thật vô cùng bí ẩn và cũng hiển nhiên không chút giấu giếm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9191919191919192,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 191,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/307_000000083.wav",
+      "reference": "vì phe hoà cả làng thường không đưa ra chính kiến rõ ràng mà chủ yếu bình luận làm sao mà không làm mất lòng cả hai phe càng tốt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8828125,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 192,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/474-134809-0008.wav",
+      "reference": "she put on little round caps which concealed her shorn head and in which she was still pretty dark thoughts held possession of fantine's heart when she saw that she could no longer dress her hair",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8923076923076924,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 193,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/103_000003389.wav",
+      "reference": "trong hoàn cảnh này một cách tự nhiên người nông dân sẽ để ý tới việc cung cấp các thành phần thực phẩm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9029126213592233,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 194,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/064_000000519.wav",
+      "reference": "có thể góp phần giải thích tại sao quyền lực của cá nhân ngày càng tăng trong khi sức mạnh của hệ thống tập đoàn ngày càng giảm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8818897637795275,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 195,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/183_000000937.wav",
+      "reference": "nhưng thấy chúng tôi sừng bướng đầu mình bọc giáp sắt chân mang khí giới nhọn hoắt thì họ lại lờ vờ lảng dần",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 196,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000000949.wav",
+      "reference": "vậy tôi có thể nào y theo phép tắc đó không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9069767441860465,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 197,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1051-133883-0010.wav",
+      "reference": "never was a garden more faithfully hoed mister bhaer really feared that nothing would find time to grow nat kept up such a stirring of the soil",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8671328671328671,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 198,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/670_000000043.wav",
+      "reference": "việc thiếu một quân cảng nước ấm đã luôn là điểm yếu chí mạng của hải quân nga nói riêng và quân đội nga nói chung",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8859649122807017,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 199,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000097_000000055.wav",
+      "reference": "làm công việc thiện nguyện cùng cùng với một cái đội ngủ mà khá lớn tại thành phố hồ chí minh",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8924731182795699,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 200,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/146_000001699.wav",
+      "reference": "liên lạc với ban đại diện xin tên quản cho đi làm nốt đoạn đường hôm trước bỏ dở dài vào khoảng ba trăm thước",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8715596330275229,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 201,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000005598.wav",
+      "reference": "thiên hạ thấy trong lúc đất nước như ngàn cân treo sợi tóc mà các chúa tranh quyền với nhau đều lắc đầu chán ngán",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8761061946902655,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 202,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000003619.wav",
+      "reference": "xin cô cho phép không tôi xin cô đừng từ chối mong cô tha lỗi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8688524590163934,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 203,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000124_000000012.wav",
+      "reference": "cuộc phiêu lưu của thú cưng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.3703703703703705,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 204,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1065-134602-0001.wav",
+      "reference": "the latter was interested in comparing and contrasting allied types of animals occurring in the north american and old world fauna",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8461538461538461,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 205,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000031_000000011.wav",
+      "reference": "hiện tại bây giờ thì rén giép chưa phải là những cái tệp khách hàng cũng như là lực lượng lao động chính ở trong doanh nghiệp hiện nay",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8880597014925373,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 206,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000032_000000758.wav",
+      "reference": "ca khúc rất là hay tình cảm của nhạc sĩ nguyễn hải phong ba kể con nghe",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8591549295774648,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 207,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7333-94828-0034.wav",
+      "reference": "where were located a dilapidated bed and a small writing table on the table lay some writing material and several scraps of paper but they were of no value",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8774193548387097,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 208,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000015_000000638.wav",
+      "reference": "sát một vòng xung quanh cái xe máy này rồi nhưng mà không thấy có dấu hiệu gì cả khả năng là anh dưỡng không trốn ở đây rồi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9105691056910569,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 209,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000085_000000733.wav",
+      "reference": "làm thế nào để trong cái chuyện tình yêu này mình mình cho cả bản thân mình lẫn cái người mình yêu sống hòa hợp",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9009009009009009,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 210,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/014_000003155.wav",
+      "reference": "từ lúc đó trở đi sự căng thẳng tan biến chúng tôi có một cuộc trò chuyện thú vị và cuối cùng tôi đã ra về với một lời mời làm việc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8769230769230769,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 211,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/057_000009778.wav",
+      "reference": "cảm xúc hành động những ước muốn hay những cảm xúc vô thức có thể làm cho con người làm những điều mà y không giải thích được một cách thuần lý",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.916083916083916,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 212,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/164_000004747.wav",
+      "reference": "phụ nữ bọn cháu ấy mà ở mọi lứa tuổi chẳng ai là không thích mê khi được làm quà bằng thứ hàng này",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8979591836734694,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 213,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000000719.wav",
+      "reference": "với giới tinh hoa về chính sách đối ngoại của nga tư cách thành viên eu chỉ đơn giản là cái vỏ bọc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8673469387755102,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 214,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000004_000000367.wav",
+      "reference": "không biết có chuyện gì mà thấy cũng tội ghê dạ vậy chú tính tiền giùm tôi đi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8961038961038961,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 215,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000000083.wav",
+      "reference": "học tiếng việt và văn hóa giữa miền nam và miền bắc trung quốc sự khác biệt đó dẫn đến các cuộc nổi dậy của người việt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8813559322033898,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 216,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/188_000006856.wav",
+      "reference": "kể cả thần thánh của anh ta nữa chúng tôi cho thuyền đi trong mười một ngày thì được một chiếc tàu vớt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8921568627450981,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 217,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/039_000003985.wav",
+      "reference": "cậu ấy sẽ lại làm chuyện xấu lần nữa với những kẻ giá áo túi cơm bất hạnh tôi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8831168831168831,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 218,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3098-5406-0021.wav",
+      "reference": "though most of them had doubtless been passed upon the ocean for his well knit form showed him to be one thoroughly inured to service she does her work daintily captain ratlin",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8914285714285715,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 219,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/116_000002042.wav",
+      "reference": "sớm muộn mười lăm hai mươi phút cũng không hại gì và mỗi tuần thức khuya một đêm cũng không sao",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8736842105263158,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 220,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/160_000004618.wav",
+      "reference": "và du hành hóa độ nhưng trong lòng rất khao khát được đảnh lễ liền ra lệnh thỉnh như lai và nói rằng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.89,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 221,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000029_000000343.wav",
+      "reference": "má con biết lỗi rồi má má tha lỗi cho con nha má nha má",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8181818181818182,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 222,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000088_000000234.wav",
+      "reference": "thế nên là là rất là hy vọng là ở lần này thì vũ có thể tìm thấy một cái nhịp nào đó cho mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8817204301075269,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 223,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7923-111572-0004.wav",
+      "reference": "also they can rise to the surface or fall to the depths and do not collide with one another",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8461538461538461,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 224,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/179_000002956.wav",
+      "reference": "ông đã tìm được điều ông muốn trong kinh điển của đức phật và nhờ siêng năng học hỏi mà ông đã mở được con mắt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8909090909090909,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 225,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000049_000000125.wav",
+      "reference": "anh không muốn em phải khó xử",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.3448275862068966,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 226,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/050_000000152.wav",
+      "reference": "vấn đề là nó không chỉ là đòn bẩy gây ra những biến động trong đòi sống chính trị",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 227,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/013_000000112.wav",
+      "reference": "dù thuyết darvê képin cùng với lịch sử tiến hóa của loài người vẫn còn nhiều tranh cãi nhưng mọi nghiên cứu đều thừa nhận",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8760330578512396,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 228,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/164_000001418.wav",
+      "reference": "không định trước kiên rời đường cái rẽ vào đường rất mỏng chìm trong cỏ vòng quanh đồi mơ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8764044943820225,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 229,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/116_000000037.wav",
+      "reference": "mà chẳng riêng gì lão trang ngay môn đệ của khổng giáo cũng có một lối sống khoáng đạt vui vẻ về vật chất thì giản dị",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8803418803418803,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 230,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000045_000000298.wav",
+      "reference": "cổ có hỏi nhưng mà cổ bận khách cổ đi rồi con vậy hả mẹ ừ mà con nè ở đây",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8767123287671232,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 231,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/754_000000095.wav",
+      "reference": "ở góc độ cá nhân con người vẫn chưa thể tự điều chỉnh được thói quen và mong muốn nguyên thủy có từ xa xưa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8867924528301887,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 232,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/183_000001850.wav",
+      "reference": "mà ta chịu khó bình tĩnh hỏi han trước thì không thể xảy ra sự đáng tiếc và chúng ta đã hiểu nhau ngay từ lúc ấy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.875,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 233,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000006356.wav",
+      "reference": "tôi đã loại trừ rồi đây không phải là việc chỉ xảy ra lần một lần hai không thể trùng hợp nhiều đến như vậy được",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.875,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 234,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000004_000000160.wav",
+      "reference": "anh có biết cái số tiền đó là tiền hai vợ chồng để dành sau này có con không hả",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8734177215189873,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 235,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/46-128001-0022.wav",
+      "reference": "the house of commons readily voted sums unexampled in our history sums exceeding those which had supported the fleets and armies of cromwell at the time when his power was the terror of all the world",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8844221105527639,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 236,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000058_000000008.wav",
+      "reference": "thời gian gần đây đặc biệt là giai đoạn du lịch phục hồi sau đại dịch cô vít mười chín làng chài ngư mỹ thành xã quảng lợi huyện quảng điền nổi lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9047619047619048,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 237,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000025_000000414.wav",
+      "reference": "hành động rồi mà cái ngoại hình nó thể hiện tính cách con người cho nên em không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.875,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 238,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000044_000000248.wav",
+      "reference": "tất cả nhân công đều bỏ đi hết cả vợ của chú cũng bỏ đi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8727272727272727,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 239,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000149_000000068.wav",
+      "reference": "chỉ nghĩ được như vậy rồi tôi leo lên tường và thực sự rất xúc động khi làm việc rất nhỏ nhưng đã",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8762886597938144,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 240,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1096-128267-0016.wav",
+      "reference": "when however zarathustra had spoken these words the violence of his pain and a sense of the nearness of his departure from his friends came over him so that he wept aloud",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 241,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/277-122805-0013.wav",
+      "reference": "you deserve to be a baroness said the collar all that i have is a fine gentleman a boot jack and a hair comb if i only had the barony",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8571428571428571,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 242,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6010-56787-0074.wav",
+      "reference": "mary w whitney of vassar mary e boyd of smith susan cunningham of swarthmore and annie s young of mt holyoke",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8333333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 243,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6236-52083-0136.wav",
+      "reference": "by blowing savages usually kindle the flame by blowing at the live spark and feeding it with little bits of stick just so much as is necessary",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8661971830985915,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 244,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000009350.wav",
+      "reference": "đành phải cho thảo công văn sai chu đồng lôi hoành đem lính đến tống gia trang mà vây bắt tống giang",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.88,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 245,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/087_000001310.wav",
+      "reference": "có một đạo quân tự phía tây bắc đánh thốc vào giữa trận cứu được quốc toản ra ngoài vòng vây",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8586956521739131,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 246,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/097_000001999.wav",
+      "reference": "lũng chùm năng lượng đi vào liên tục và sức mạnh của các chùm tia này được gia tăng khi di chuyển đi lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8653846153846154,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 247,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/031_000000969.wav",
+      "reference": "tóc chị dầy dài thướt tha đêm mùa hè nóng bức có khi đương ngủ cũng phải trở dậy quạt tóc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.898876404494382,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 248,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/091_000000955.wav",
+      "reference": "việc lợi dụng nghĩa hòa đoàn để chống lại người tây phương là một sai lầm nghiêm trọng của từ hy thái hậu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8857142857142857,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 249,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/131_000006605.wav",
+      "reference": "lần đầu tiên trong lịch sử từ trung hoa tới ba tư đều sử dụng chung một đơn vị chi tiêu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8505747126436781,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 250,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/011_000001738.wav",
+      "reference": "nếu là trước đây thì tôi sẽ phải vào những giảng đường và dạy theo kiểu tôi đứng trên còn bạn ngồi dưới thì",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9065420560747663,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 251,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/087_000003423.wav",
+      "reference": "kể công trạng của ngài so sánh ngài với thái công thượng phụ nhà chu khi xưa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.868421052631579,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 252,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/148_000003008.wav",
+      "reference": "trong hai ngày họ chống chọi với những trận gió dữ đội và những ngón tay bị bỏng lạnh để cung cấp đồ cứu thương và xúp nóng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8943089430894309,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 253,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/079_000003362.wav",
+      "reference": "hiển nhiên lúc này ai ra tay trước sẽ có lợi thế còn người chậm trễ thì sẽ càng gần với cái chết hơn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.89,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 254,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/116_000000103.wav",
+      "reference": "một thứ bệnh cũ mà mới bệnh do xúc động nhưng hiện nay tình trạng chưa có gi đáng mừng cho lắm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.851063829787234,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 255,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000004060.wav",
+      "reference": "douglas price thức giấc vào một buổi sáng mùa hè đẹp trời trong căn nhà sang trọng của mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8791208791208791,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 256,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/138_000003597.wav",
+      "reference": "cặp ghế giúp anh đi lại bữa cơm tù cuối cùng ở sân bay tân sơn nhất khá thịnh soạn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8658536585365854,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 257,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2246-131710-0157.wav",
+      "reference": "stayed there and founded electrical factories which became the third largest in germany their proprietor dying very wealthy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8699186991869918,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 258,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000008887.wav",
+      "reference": "nhưng chút ít phong thanh cũng đã để lại trong thành phố này một ấn tượng hết sức đặc biệt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 259,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8044-84190-0022.wav",
+      "reference": "there i don't think we shall want to get our water from that place again why not said ned suddenly",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.826530612244898,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 260,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/265_000000106.wav",
+      "reference": "tất cả những gì tôi làm là để có được ít nhất một điều trong bốn điều trên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8918918918918919,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 261,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000130_000000054.wav",
+      "reference": "vâng ạ rõ ràng là khi mà ngồi với đây cùng các anh thì bản thân em cũng cảm thấy rất là",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8620689655172413,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 262,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/051_000002357.wav",
+      "reference": "những người kiêu ngạo hay phê phán thường là những người có lòng tự trọng thấp và luôn sợ mạo hiểm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8775510204081632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 263,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000037_000000090.wav",
+      "reference": "chạy lên kia một đoạn thẳng tiếp theo lưới tiếp theo",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9038461538461539,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 264,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000111_000000128.wav",
+      "reference": "nước dâng lên trộn lẫn với đất biến thành bùn lầy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8979591836734694,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 265,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000113_000000903.wav",
+      "reference": "cái máu ở trong cái hệ thống tĩnh mạch do đó nó sẽ làm cho chân của chúng ta cái không cái máu không lưu chuyển tốt nên nó làm nặng nè",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8805970149253731,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 266,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000001412.wav",
+      "reference": "được một lát uống hết hẳn một bên thùng rượu liền gọi tên bán rượu mà bảo rằng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8846153846153846,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 267,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/005_000000029.wav",
+      "reference": "và cuối cùng thì kết thúc ở hai chân xong xuôi tất cả nghi thức ăn mặc của tôi mới chính thức bắt đầu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8712871287128713,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 268,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000154_000000075.wav",
+      "reference": "theo kế hoạch tàu chỉ hoạt động trong vòng hai giờ lặn xuống vài giờ khám phá tàu titanic",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.898876404494382,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 269,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/046_000000674.wav",
+      "reference": "tức những điều bạn cho là nhỏ nhặt và thường bỏ qua nhưng chính những điều này lại gây nhiều phiền toái cho bạn nhất",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.896551724137931,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 270,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/079_000000056.wav",
+      "reference": "xử lý cảm xúc của chúng ta trong não của những người hay trì hoãn hơn so với những người chú trọng vào hành động",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8928571428571429,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 271,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4422-23271-0032.wav",
+      "reference": "miss woodley did not fail to give both gentlemen reason to believe a contention of this nature was the actual state of miss milner's mind",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8613138686131386,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 272,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/5136-24633-0038.wav",
+      "reference": "of that nature that it cannot be misconstrued either in its strength or its weakness and for that weakness you despise me said edward",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8872180451127819,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 273,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/104-129578-0018.wav",
+      "reference": "i told him my name edward prendick and how i had taken to natural history as a relief from the dulness of my comfortable independence he seemed interested in this i've done some science myself",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8958333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 274,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/116_000001965.wav",
+      "reference": "khi không cần dùng tới nó nữa những bắp thịt đó là những bắp thịt ta thường dùng tới nhất trong khi làm việc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8981481481481481,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 275,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/126_000004840.wav",
+      "reference": "chị vẫn kêu van thống thiết ối cha ơi cha chết đi con lớn con bé của cha biết trông cậy vào ai cha ơi ời",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8365384615384616,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 276,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2026-22756-0044.wav",
+      "reference": "the old lady then stepped into her seat and mister abel whom they had come to fetch into his",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8369565217391305,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 277,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000006528.wav",
+      "reference": "vả lại dù sao chúng tôi cũng thấy cần phải ở gần bệnh viện để tiện cho nhà tôi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9102564102564102,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 278,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/065_000000026.wav",
+      "reference": "từ những khoản trái phiếu trong chiến tranh và cùng với đó khả năng tiêu thụ của người dân tăng cao và đời sống đi lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8983050847457628,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 279,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/160_000001914.wav",
+      "reference": "các bảo tháp cũng bị đổ nát có hơn một trăm nơi thờ tự của các đạo khác",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8732394366197183,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 280,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000001594.wav",
+      "reference": "và tính khí hung bạo ông ấy đánh đập học sinh chỉ vì những lỗi nhỏ và chỉ sáu tháng sau lại bị đuổi việc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8942307692307693,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 281,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/089_000002905.wav",
+      "reference": "cô tư mời được cụ tuần phủ hưu trí nguyễn nhã ở làng mọc về tận hà nam làm lễ đề chủ long trọng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8631578947368421,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 282,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000002667.wav",
+      "reference": "tôi khuyên nàng nên tái hôn rằng tôi không thể chịu đựng được ý nghĩ nàng sẽ cô đơn một mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8913043478260869,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 283,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/174_000001418.wav",
+      "reference": "các bạn đang lang thang tới đâu hỡi những con người bất hạnh đang tìm kiếm một cuộc sống tốt hơn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8854166666666666,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 284,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4948-28015-0015.wav",
+      "reference": "blake said nothing thinking it possible that it was an accident but he remained near redmond to give him a chance to repeat the insult if such had been his intention",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.896969696969697,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 285,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000002172.wav",
+      "reference": "ông ấy là người rất tốt bụng đã mở hẳn một trường học dành cho trẻ em khuyết tật giúp chúng gây dựng lại cuộc sống",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8947368421052632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 286,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000139_000000315.wav",
+      "reference": "hai người các vị đã biết là kangjuro và ryzo cùng với ba người tại hạ đang ngồi ở đây",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8705882352941177,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 287,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1331-155890-0045.wav",
+      "reference": "going about her business with some self assurance in the thought of acquiring another horse for her father by an occupation which would not be onerous",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.88,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 288,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000003_000001369.wav",
+      "reference": "còn bây giờ dung về nhà liền coi thử chị khánh về chưa vậy đi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8524590163934426,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 289,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/352_000000039.wav",
+      "reference": "trọng nhiều nhớ ít một tại sao bạn nên quan tâm đến điều này",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8833333333333333,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 290,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7679-113325-0035.wav",
+      "reference": "mister tulkinghorn of course had many specimens of the copyist's hand and after much search he found a man who had once been a fellow soldier of the captain's he was called mister george and kept a shooting gallery",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9018691588785047,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 291,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000061_000000490.wav",
+      "reference": "thậm chí tao bị lừa nhiều hơn mày nữa mày nhìn lại mày đi mày may mắn hơn tao nhiều",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8674698795180723,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 292,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1110-134828-0025.wav",
+      "reference": "which was hidden behind him could be seen thus he remained for nearly a minute without his presence being perceived all at once fantine raised her eyes saw him",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8805031446540881,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 293,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/060_000006400.wav",
+      "reference": "với mảnh giấy đầu bài mới lĩnh ở nhà cụ nghè quỳnh lâm kỳ này tập theo thể lệ của kỳ đệ tam trong chương trình thi hội",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8983050847457628,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 294,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/712-123615-0041.wav",
+      "reference": "we ranked by fours and even then we made a long procession there was a wide path mowed for us across the field and as we moved along",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8484848484848485,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 295,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2050-157659-0040.wav",
+      "reference": "mat monmouth called time dick milton made a tiger leap at william and landed with his right eye on the right knuckles of the stratford citizen",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8732394366197183,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 296,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2607-87140-0007.wav",
+      "reference": "its circumference was twice as great and by reason of the double supply of bowman's slits equally as effective in withstanding a siege",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8805970149253731,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 297,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000129_000000080.wav",
+      "reference": "anh xin lỗi nha anh xin lỗi vì ba mẹ phải chịu khổ mà",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8490566037735849,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 298,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000163_000000005.wav",
+      "reference": "em xin được giới thiệu đây là chồng của chị",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9302325581395349,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 299,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000010_000000022.wav",
+      "reference": "song cũng không thể cụ thể hóa thành bàn thắng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9347826086956522,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 300,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000005177.wav",
+      "reference": "anh bạn của tôi ơi dù sao với tôi tặng anh một bộ còn dễ hơn là đi mua",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8428571428571429,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 301,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000067_000000180.wav",
+      "reference": "trải nghiệm thế giới thể thao không giới hạn cùng fpt play",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.896551724137931,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 302,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/539_000000134.wav",
+      "reference": "bởi vì nó chỉ giúp cho học sinh dễ nhớ các sự kiện hơn chứ nó không thay đổi bản chất của môn học là một công cụ để phục",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8916666666666667,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 303,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/5439-31625-0071.wav",
+      "reference": "the glare from the glowing lava and the burning trees together was discernible by night at a distance of two hundred miles from the island the lava flow of eighteen eighty",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8830409356725146,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 304,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/082_000000442.wav",
+      "reference": "từ nhỏ đến lớn mẹ miên một tay chăm sóc cô cô xem bà như mẹ ruột chuyện gì cũng tâm sự với bà",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8817204301075269,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 305,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/142_000000434.wav",
+      "reference": "mắt tôi xốn lên dõi nhìn tốp lính giặc đang rút đi trên đầu bãi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8412698412698413,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 306,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/188_000003898.wav",
+      "reference": "lập tức tôi viết thư cho cậu mốt tần và giờ đây tôi chỉ còn mỗi một việc",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 307,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000079_000000043.wav",
+      "reference": "em đi công tác mấy ngày cơ mà anh không vui khi thấy em về à",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 308,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000155_000000110.wav",
+      "reference": "người ta thích em nhiều người thích em thì em càng phải trân trọng cái tình cảm đó em hiểu không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8958333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 309,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000002_000000615.wav",
+      "reference": "hạnh phúc không như ước mơ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.4615384615384615,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 310,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/157_000000124.wav",
+      "reference": "theo học thuyết này vỏ trái đất không phải là một lớp vỏ liền mạch như vỏ trứng mà đã bị giập vỡ thành các mảnh gắn liền nhau",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.896,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 311,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000010_000000395.wav",
+      "reference": "thì ra là cảm giác này thì ra là cảm giác này đây cảm giác này đó",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8461538461538461,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 312,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/077_000000616.wav",
+      "reference": "nhưng quả thật đó chỉ là sự hỗ trợ tạm thời và thứ yếu epictetus khuyên ta",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8918918918918919,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 313,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4442-2868-0027.wav",
+      "reference": "as the first man came inside tarpeia stretched forth her hand for her price the soldier lifted high his left arm take thy reward he said and as he spoke he hurled upon her that which he wore upon it down upon her head crashed",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9066666666666666,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 314,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/437_000000211.wav",
+      "reference": "và hiện tại tôi tràn đầy năng lượng sống tôi có nhiều dự định và ước mơ tôi đã tăng từ năm mươi sáukg lên sáu mươi sáukg và",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9024390243902439,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 315,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/144_000001752.wav",
+      "reference": "mỗi giây nó chở từ cao nguyên trung hoa miến điện và lào xuống đây ít nhất ba tạ đất phù sa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8901098901098901,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 316,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000122_000000101.wav",
+      "reference": "anh dũng thì chọn em rồi thành ra khi các bạn trẻ hay nói câu gì",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.859375,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 317,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000013895.wav",
+      "reference": "buổi sáng ăn tại ký túc xá rồi thả bộ dạo xem đường sá la mã khang trang sạch sẽ thật",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8705882352941177,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 318,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/033_000002850.wav",
+      "reference": "những người tình phải sẵn sàng hy sinh vì tình yêu nhưng ít ra giờ đây tôi cũng đã có một phần tình yêu của tôi bên mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 319,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000003_000001590.wav",
+      "reference": "mặc dù là họ đang dẫn trước với khoảng cách là hai điểm và lo lắng đó là có cơ sở khi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8588235294117647,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 320,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/063_000004213.wav",
+      "reference": "một nghìn bảy trăm bảy mươi họa sĩ pháp sinh ở paris vẽ những cảnh mục đồng thôn dã hoặc thần thoại",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8888888888888888,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 321,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000043_000001834.wav",
+      "reference": "thấy vậy con nản quá cho nên là con bỏ học con không đi học luôn con phụ tí",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8666666666666667,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 322,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/039_000005380.wav",
+      "reference": "nó đang rất sợ hãi tất cả lũ ngựa trong chuồng đều sợ hãi và cứ chạy vòng tròn trong",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8809523809523809,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 323,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000016_000000944.wav",
+      "reference": "những người con gái lớn lên trong gia đình với những bà mẹ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.896551724137931,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 324,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/142_000002006.wav",
+      "reference": "tôi chịu trách nhiệm đưa anh em cán bộ vào các cơ sở mà tôi xây dựng lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.875,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 325,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/075_000002237.wav",
+      "reference": "tìm cách giúp họ sử dụng sản phẩm của bạn hiệu quả hơn tốt nhất là liên hệ trực tiếp với công ty bạn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.89,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 326,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000155_000000017.wav",
+      "reference": "dự báo thời tiết các khu vực tỉnh nghệ an đêm nay và ngày mai như thế nào sẽ có trong phần tiếp theo của bản tin",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8839285714285714,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 327,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000005488.wav",
+      "reference": "tôi lúc nhỏ ngây thơ tự ví và thấy mình như một tấm gương còn mới chưa lắm bụi nhiều",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8809523809523809,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 328,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/145_000000935.wav",
+      "reference": "nhờ vậy nhiều người cũng đã khấm khá lên rồi họ đứng mũi chịu sào mở chợ tổ chức cho bà con mình buôn bán tập trung",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8869565217391304,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 329,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000094_000000074.wav",
+      "reference": "trưu bộ phận truyền hồng chúng tôi biết rõ ngày hôm nay chúng tôi sẽ bị đám nhà bảo anh làm thịt vì vậy chúng tôi đã bàn luận phương án tác chiến",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9103448275862069,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 330,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/377-129292-0054.wav",
+      "reference": "as he had seen the dodger hold it and drew the handkerchief lightly out of it with the other is it gone cried the jew here it is sir said oliver showing it in his hand",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8802395209580839,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 331,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000046_000000048.wav",
+      "reference": "trời tối dần và đường tới bản phùng thì còn xa lắm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.84,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 332,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000007_000000098.wav",
+      "reference": "trách nhiệm với bản thân rồi với gia đình với xã hội đôi khi mình lỡ đặt nó lại cao",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8674698795180723,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 333,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8432-54083-0010.wav",
+      "reference": "what is it the poet called her infinite variety show or something of that sort a perpetual vaudeville a continuous performance as it were from twelve to twelve",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8742138364779874,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 334,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7607-89899-0036.wav",
+      "reference": "for so it will come to pass that after you have held sway in a temporal kingdom the blessed chief of the apostles will also willingly open to you and yours with all the elect the entrance into the heavenly kingdom",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9061032863849765,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 335,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/146_000002049.wav",
+      "reference": "anh bảo đến chừng nào hoàn toàn độc lập về quê anh chơi thế nào cũng được gặp bác hồ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8690476190476191,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 336,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000001671.wav",
+      "reference": "mấy sinh viên tranh luận về việc cắt đi phần chúng tôi tuyên thệ phải đặt lợi ích của bệnh nhân lên trên bản thân mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8898305084745762,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 337,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/072_000002605.wav",
+      "reference": "và nghiêm cấm tình trạng nô lệ không tự nguyện một người lính có khả năng bị chết khi là lính quân dịch",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.883495145631068,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 338,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/051_000000836.wav",
+      "reference": "thì tôi sẽ càng trở nên giàu hơn với ngày càng nhiều thu nhập từ những nguồn khác ngoài sức lao động của mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8899082568807339,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 339,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000010_000000615.wav",
+      "reference": "là do anh ta làm không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.6363636363636365,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 340,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2733-28252-0049.wav",
+      "reference": "lieutenant procope pronounced his decided conviction that it would be impossible for the tartan to resist the pressure of the ice in the harbor of the shelif and that there would be far more safety in the proximity of the volcano",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8995633187772926,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 341,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/477_000000135.wav",
+      "reference": "thợ săn trung quốc từ mãn châu không chỉ bắt những động vật nhiễm bệnh mà còn ăn mỡ của chúng vì cho đó là món ăn tinh khiết",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9112903225806451,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 342,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/067_000001472.wav",
+      "reference": "anh sẽ mua gì sẽ sử dụng như thế nào để duy trì số tiền này và bảo đảm một cuộc đời giàu có cho anh",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.898989898989899,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 343,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/139_000014413.wav",
+      "reference": "mà chủ ý người nước pháp lúc bấy giờ thì không những là chỉ giữ lấy ba tỉnh mà thôi lại còn định mở rộng thêm ra nữa",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8879310344827587,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 344,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000013677.wav",
+      "reference": "tuy nhiên sự suy yếu của quân anh xem chừng không cứu chữa nổi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8709677419354839,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 345,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/026_000003995.wav",
+      "reference": "đứa nào hơi bí xí với anh anh cứ bảo tôi mẹ cóc tôi cứ trần cho chúng không còn một cái xương nào đành",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 346,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000006443.wav",
+      "reference": "anh muốn nói rằng trong cuộc sống của những gia đình khá giả có một cái gì đó không lành mạnh",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8924731182795699,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 347,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000009543.wav",
+      "reference": "tuy vậy tiền hung hậu kiết vì nhờ nạn bố ráp nầy mình xin được sở canh nông cho phép cất một căn nhà lá tạm giá một nghìn tám trăm đô",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9022556390977443,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 348,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000084_000001168.wav",
+      "reference": "bây giờ ông nào đồng ý không đồng ý mua với giá mười hai triệu thì bỏ tay xuống ông nào đồng ý mua với giá mười hai triệu thì để nguyên tay đấy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9020979020979021,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 349,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000016_000001963.wav",
+      "reference": "cái này bình thường này nó là câu cúi ừ trong lúc chúng tôi đang nói chuyện",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8533333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 350,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000165_000000067.wav",
+      "reference": "sự thật là liệu ông trump có được tuyên án vô tội hay không liệu ông ấy có bị bồi thẩm đoàn phán bàn án phạm tội hay không",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8934426229508197,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 351,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/956-127929-0041.wav",
+      "reference": "ronald breton is the son of the murdered man and ronald breton is engaged to be married to the daughter of the man charged with the murder do you hear that",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8838709677419355,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 352,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/763_000000064.wav",
+      "reference": "nhóm bạn của anh thì luôn rực sáng với sự tự tin còn nhóm của tôi thì tràn ngập sự bất an",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8764044943820225,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 353,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7215-91628-0003.wav",
+      "reference": "me that's true him and i'm going to tell you before beginning he sighs deeply and puts both hands on his forehead",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8672566371681416,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 354,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000036_000000062.wav",
+      "reference": "trụ sở cơ quan nhà nước như là",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.2333333333333334,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 355,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/097_000001883.wav",
+      "reference": "nhưng lúc này tôi đã nghe mọi người di chuyển xung quanh và bắt đầu nói chuyện",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8846153846153846,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 356,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/790_000000025.wav",
+      "reference": "bốn những buổi hẹn hò được duy trì thường xuyên diễn ra tốt đẹp và cả hai bắt đầu có những đụng chạm về cơ thể",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8818181818181818,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 357,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000125_000000172.wav",
+      "reference": "gần nhà thờ thì chúng ta thấy càng đông người",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9111111111111111,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 358,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/206_000000100.wav",
+      "reference": "ý kiến cho rằng mục đích của việc xem tin tức là để có thêm kiến thức do đó sáo rỗng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8452380952380952,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 359,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000079_000000441.wav",
+      "reference": "hãy biết lượng sức mình",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 1.608695652173913,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 360,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/086_000007413.wav",
+      "reference": "anh đã ra khỏi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.25,
+      "cer": 2.7142857142857144,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 361,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/039_000000697.wav",
+      "reference": "từ thư viện về khuôn mặt to với nước da nâu và nét mặt rất mực ôn hòa của người bạn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8554216867469879,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 362,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000009_000000169.wav",
+      "reference": "vì cái tội là giấu giếm mẹ có bất cứ chuyện gì xảy ra thì cũng phải thành thật",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8717948717948718,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 363,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000011805.wav",
+      "reference": "thành đắc thần đóng quân ở phía nam sông hoằng thủy đến ngày khai chiến đấu bột nói với thành đắc thần",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8921568627450981,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 364,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000033_000000039.wav",
+      "reference": "bây giờ mọi thứ đã khác người ta có câu mình có thể làm tất cả mọi thứ cho người mình yêu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8764044943820225,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 365,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000002051.wav",
+      "reference": "tướng quân nguyễn văn tuyết đem quân ra đánh tôi treo cờ trắng và bỏ khí giới tuyết tướng quân cho đóng tạm trong đầm đạm thủy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8968253968253969,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 366,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/271_000000065.wav",
+      "reference": "các giáo hội về cơ bản là bình đẳng với nhau và không được can dự vào công việc nội bộ trong phạm vi giáo phận của nhau",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 367,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6754-107482-0023.wav",
+      "reference": "there were flowers everywhere and hanging from tree to tree from one end of their twenty acres to the other were long and graceful garlands of multicolored electric lights that when night came down upon the fete made the scene appear like a veritable glimpse of fairyland",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9114391143911439,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 368,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/982-133222-0024.wav",
+      "reference": "mother of pearl is the inner layer of several sorts of shell and in some cases the matrix of the pearl sealing wax is not wax at all nor does it contain wax it is made of shellac",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8707865168539326,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 369,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000095_000000786.wav",
+      "reference": "đặc biệt trong những tháng gần đây tổng thống mỹ đã không ít lần cảnh báo ông nan chahu không tiến hành chiến dịch",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9035087719298246,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 370,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/227_000000019.wav",
+      "reference": "sau đó có một ai đó giúp đỡ bạn mạnh nước một hai từ khoá giải quyết vấn đề và thế là bạn lại làm được điều đó",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8727272727272727,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 371,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/139_000014418.wav",
+      "reference": "phạm phú thứ và quan án sát sứ tỉnh quảng nam là ngụy khắc đản",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8548387096774194,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 372,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/585-294811-0122.wav",
+      "reference": "all off for a buster armstrong hollering down the street bonafides where you slep las nigh timothy of the battered naggin",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8760330578512396,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 373,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/319-134959-0104.wav",
+      "reference": "but they had hardly taken their places facing one another and the whole court had only just had time to rush out upon the balconies to watch what was going on",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8670886075949367,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 374,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1815-143381-0012.wav",
+      "reference": "was derived from his nocturnal converse with the nymph egeria the civil law is attributed to the experience of servius",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.864406779661017,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 375,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/039_000003266.wav",
+      "reference": "nhìn thẳng vào mặt ông ta nghiêng đầu rất nhẹ để cho ông ta thấy sắc đẹp của mình và xoáy những gì cô biết vào ông ta",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8717948717948718,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 376,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/039_000000974.wav",
+      "reference": "thì ông ta sẽ cho cô xem chiếc xe không cần lệnh và không cần phiền người tới làm nhân chứng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9021739130434783,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 377,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000016_000000080.wav",
+      "reference": "nguyên quyền tổng giám đốc scb trần thị mỹ dung nguyên phó tổng giám đốc scb",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.881578947368421,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 378,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/020_000001071.wav",
+      "reference": "thực sự chỉ đơn giản như vậy quá đơn giản đến độ thậm chí nó làm cho người ngày nay có chút hoài nghi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8910891089108911,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 379,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000004364.wav",
+      "reference": "cha anh ngồi trên ghế cho bú của tôi mẹ anh và tôi ngồi ở sofa gần đó paul",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8783783783783784,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 380,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/092_000001889.wav",
+      "reference": "vội vã sai người đuổi theo mời lại rồi cùng úy liêu lập đàn lập lời thề bái làm thái úy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8850574712643678,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 381,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/534_000000038.wav",
+      "reference": "tôi vốn không sợ thất bại nhưng mà tôi sợ những suy nghĩ khiến cho mình không dám cố gắng đứng lên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9183673469387755,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 382,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/171_000001339.wav",
+      "reference": "mỗi ngày ở trường tomoe gaku en lại có thêm một điều ngạc nhiên mới đối với em",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8717948717948718,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 383,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000090_000001164.wav",
+      "reference": "là mình cũng khép lòng hơi nhiều hoặc là mình cứ nghĩ quá mình nghĩ là người ta chắc cũng không không cần nghe hoặc là mình cảm thấy những cái công việc mình làm nó bình thường quá đi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9234972677595629,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 384,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000102_000000361.wav",
+      "reference": "sẽ được chọn trả lời hoặc không trả lời dạ vâng mời anh quay cái lòng cầu rồi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8441558441558441,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 385,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/202-130622-0039.wav",
+      "reference": "we smiled sadly at one another and said we supposed we had better try to swallow a bit harris said a little something in one's stomach often kept the disease in check and missus poppets brought the tray in",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8975609756097561,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 386,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2273-152363-0021.wav",
+      "reference": "which was fought for no less a stake than the dominion of the world the fleet of octavianus caesar and the fleet of antonius including the egyptian division",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8846153846153846,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 387,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000059_000000864.wav",
+      "reference": "kế hoạch cho dự án chuỗi nhà hàng ẩm thực đã hoàn chỉnh cần chủ tịch phê duyệt",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8717948717948718,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 388,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/174_000000320.wav",
+      "reference": "nhưng khi nó được khắp lên y trở nên mạnh mẽ và tự do dĩ nhiên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8870967741935484,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 389,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/160_000000822.wav",
+      "reference": "những kết quả của vua em làm đã tạo nên những việc loạn dâm trong triều đình cung nội",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8588235294117647,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 390,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000004446.wav",
+      "reference": "vương luân cầm lấy thư bóc xem rồi mời lâm xung ngồi vào ghế thứ tư còn chu quý thì ngồi vào ghế thứ năm",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8942307692307693,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 391,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000082_000000246.wav",
+      "reference": "về nhà tao đi nhà tao vẫn còn chỗ đấy về đấy ở xong rồi tu tâm làm ăn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8405797101449275,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 392,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/077_000002044.wav",
+      "reference": "và sự khổ trong thế giới bên ngoài và trong những cảm xúc bất thường của mình sống đời cao thượng",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8762886597938144,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 393,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000044_000001217.wav",
+      "reference": "khiến nó đau lòng tới mức hai ngày nay nó bỏ không ăn uống cái gì hết cậu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8767123287671232,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 394,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8250-279777-0025.wav",
+      "reference": "replied furibon and if ever you come into my presence again you shall surely die leander made no answer but retired sad and pensive to his own home",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8775510204081632,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 395,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/132_000008795.wav",
+      "reference": "nhân dân đông xe ngựa nhiều ngày đêm đi không ngớt rầm rập như ba quân ra trận",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8589743589743589,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 396,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/004_000001021.wav",
+      "reference": "không phải lúc nào bạn cũng có thể giữ được thái độ thích thực hay là đủ sáng suốt để vượt qua mọi vấn đề của cuộc sống",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8907563025210085,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 397,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/160_000004961.wav",
+      "reference": "đây là nơi mà như lai đã hiện hai chân ra cho ngài đại ca diếp thấy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.835820895522388,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 398,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/020_000002106.wav",
+      "reference": "của lưu vũ tích trong đó tác giả tả về phong thái ung dung của các đại học sĩ trung quốc qua các thời đại",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8761904761904762,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 399,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/102_000005899.wav",
+      "reference": "hệ thống này dường như bắt đầu với một cơ chế rất đơn giản có thể vận hành tốt trong hệ thống chức",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8979591836734694,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 400,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000056_000000820.wav",
+      "reference": "nhà thì người làm cả đống thì mày gửi trời ơi lẹ lẹ đi liền đi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8870967741935484,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 401,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/064_000003144.wav",
+      "reference": "chúng ta có thể nhận thấy ít nhất tồn tại ba cấu trúc kết hợp có thể sẽ hấp dẫn hơn đối với các nhà kinh doanh tương lai",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9083333333333333,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 402,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/544_000000232.wav",
+      "reference": "rất nhiều người trên khắp trung quốc đã bày tỏ sự tiếc thương to lớn với sự ra đi của vị cựu lãnh tụ này",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8942307692307693,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 403,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000001_000000470.wav",
+      "reference": "tôi cũng không mơ ước nhờ vào sự học đó để sau này thoát khỏi kiếp ở",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 404,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/5951-233090-0028.wav",
+      "reference": "to loose sails while the others manned the halyard and the braces in a very short time the topsail was drawing full and the speed of the vessel was sensibly increased",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.891566265060241,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 405,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/165_000001613.wav",
+      "reference": "chiếc xe jeep đưa tôi từ tân sơn nhất về bệnh viện cộng hòa chạy trong nóng bức ồn ào của thành phố sài gòn",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8878504672897196,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 406,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000009291.wav",
+      "reference": "gian phòng tối om ông tỳ khuỷu tay xuống bàn đưa bàn tay đỡ trán ngồi suy nghĩ",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8974358974358975,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 407,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/015_000004274.wav",
+      "reference": "ba hôn nhân là sự kết hợp giữa một người đàn ông và một người đàn bà",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9117647058823529,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 408,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000005945.wav",
+      "reference": "tiếng máy gần hơn và chúng tôi thấy qua màn mưa một chiếc thuyền máy ngay sau thuyền chúng tôi",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8617021276595744,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 409,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000038_000000205.wav",
+      "reference": "chúng ta nên cẩn thận để sau này nếu ai muốn kiện tụng thì cũng không được tuy nhiên",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8928571428571429,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 410,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000044_000000993.wav",
+      "reference": "nghe những gì con kể về tiểu quyên ta thấy con bé ấy cũng rất thật lòng yêu thương con",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8488372093023255,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 411,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2051-153962-0001.wav",
+      "reference": "i asked them where they were going they answered with a certain air of reserve that they were going to the bank to get some money",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8837209302325582,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 412,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/448-122800-0064.wav",
+      "reference": "he did not know if he had dreamed or not or if he had been listening while someone told him the story the tea pot was standing on the table but no elder tree was growing out of it and the old man who had been talking",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9074074074074074,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 413,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/697_000000042.wav",
+      "reference": "chính yếu tố không có tình cảm chân thật ấy lại làm cho các chị em mong muốn tình yêu chân thật đứ đừ từ các nông dân",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8974358974358975,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 414,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/053_000002843.wav",
+      "reference": "cháu là một thằng bé phức tạp nhưng ta phải thú nhận rằng cháu khiến cho trái tim già nua này tràn ngập niềm vui thật đấy",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9008264462809917,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 415,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000040_000000281.wav",
+      "reference": "chắc là cậu lo xa quá cho nên mới vậy thôi nhưng mình đâu phải là đứa con nít",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8831168831168831,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 416,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000010567.wav",
+      "reference": "sao gặp hội binh kiêu dân oán sửa kỷ cương tài cả chẳng ra",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8448275862068966,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 417,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000007_000000816.wav",
+      "reference": "em thiệt hai bác có chuyện gì hả cháu có giúp được gì không không không có chuyện gì đâu cháu",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9032258064516129,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 418,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/063_000000720.wav",
+      "reference": "zerlines những nhân vật truyền thống của hài kịch ý cổ xuất hiện trong tất cả mọi vở hài kịch cổ của ý",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8823529411764706,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 419,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/162_000000049.wav",
+      "reference": "tại sao họ cứ ngốc nghếch chưa gọi điện xin lỗi ta tại sao họ cứ không hiểu ta khi ta không giải thích",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8529411764705882,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 420,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000016_000002683.wav",
+      "reference": "và trong khoảng thời gian đó cô ta luôn ở cùng trọng bình để điều tra vụ án có bằng chứng ngoại phạm hoàn hảo",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8807339449541285,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 421,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/578_000000142.wav",
+      "reference": "nên hoàn toàn dễ hiểu khi một ai đó mất mạng bởi những thanh kiếm này nhưng nhờ vào kịch nghệ kabuki những thanh kiếm muramasa đã bị",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.8939393939393939,
+      "language": "error",
+      "match": false
+    },
+    {
+      "sample_id": 422,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/145_000000708.wav",
+      "reference": "những ngày gió mùa đông bắc rét thấu xương chàng thanh niên nào khoác chiếc áo lông đông đức thì cứ gọi là khối cô gái phải xuýt xoa nhìn theo",
+      "prediction": "[ERROR: Invalid CUDA allocator cuda_malloc]",
+      "wer": 1.0,
+      "cer": 0.9084507042253521,
+      "language": "error",
+      "match": false
+    }
+  ],
+  "current_progress": {
+    "completed": 423,
+    "total": 32818,
+    "percentage": 1.2889268084587726
+  },
+  "current_metrics": {
+    "average_wer": 1.0021670606776991,
+    "average_cer": 0.9124900758325114,
+    "perfect_matches": 0,
+    "perfect_match_rate": 0.0
+  }
+}

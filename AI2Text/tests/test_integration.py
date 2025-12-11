@@ -20,12 +20,9 @@ from database.db_utils import ASRDatabase
 from preprocessing.audio_processing import AudioProcessor
 from preprocessing.text_cleaning import Tokenizer, VietnameseTextNormalizer
 from preprocessing.bpe_tokenizer import BPETokenizer
-from models.lstm_asr import LSTMASRModel
 from models.asr_base import ASRModel
-from models.enhanced_asr import EnhancedASRModel
 from training.dataset import ASRDataset, create_data_loaders
 from decoding.beam_search import BeamSearchDecoder, generate_nbest
-from decoding.rescoring import rescore_nbest, contextual_biasing
 from utils.metrics import calculate_wer, calculate_cer
 
 
@@ -114,39 +111,16 @@ class TestIntegration:
         seq_len = 100
         input_dim = 80
         
-        # LSTM model
-        lstm_model = LSTMASRModel(
-            input_dim=input_dim,
-            vocab_size=vocab_size,
-            hidden_size=128
-        )
-        x_lstm = torch.randn(batch_size, seq_len, input_dim)
-        lengths = torch.tensor([seq_len, seq_len])
-        logits_lstm, _ = lstm_model(x_lstm, lengths)
-        assert logits_lstm.shape == (batch_size, seq_len, vocab_size)
-        
-        # Transformer model
+        # Transformer model (only architecture supported)
         transformer_model = ASRModel(
             input_dim=input_dim,
             vocab_size=vocab_size,
             d_model=128
         )
         x_trans = torch.randn(batch_size, seq_len, input_dim)
+        lengths = torch.tensor([seq_len, seq_len])
         logits_trans, _ = transformer_model(x_trans, lengths)
         assert logits_trans.shape == (batch_size, seq_len, vocab_size)
-        
-        # Enhanced model
-        enhanced_model = EnhancedASRModel(
-            input_dim=input_dim,
-            vocab_size=vocab_size,
-            d_model=128,
-            use_contextual_embeddings=True,
-            use_cross_modal_attention=True
-        )
-        x_enhanced = torch.randn(batch_size, seq_len, input_dim)
-        text_context = torch.randint(0, vocab_size, (batch_size, 20))
-        output = enhanced_model(x_enhanced, lengths, text_context=text_context)
-        assert output['logits'].shape == (batch_size, seq_len, vocab_size)
     
     def test_beam_search_decoding(self):
         """Test beam search decoding."""
@@ -174,72 +148,6 @@ class TestIntegration:
         nbest = generate_nbest(logits, decoder, n=5, lengths=lengths)
         assert len(nbest) == batch_size
         assert len(nbest[0]) <= 5
-    
-    def test_embeddings_integration(self, temp_db):
-        """Test embeddings training and usage (mock)."""
-        db_path, db = temp_db
-        
-        # Note: Full Word2Vec/Phon2Vec training requires gensim
-        # This test verifies the interface
-        
-        # Test phonetic tokenization (used by Phon2Vec)
-        from preprocessing.phonetic import phonetic_tokens
-        
-        text = "xin chào việt nam"
-        ph_tokens = phonetic_tokens(text, telex=True, tone_token=True)
-        assert len(ph_tokens) > 0
-        assert isinstance(ph_tokens, list)
-    
-    def test_nbest_rescoring_mock(self):
-        """Test N-best rescoring with mock embeddings."""
-        # Create mock N-best list
-        nbest = [
-            {"text": "toi muon dat ban", "am_score": -12.5, "lm_score": -1.1},
-            {"text": "toi muon dat banh", "am_score": -12.8, "lm_score": -1.0}
-        ]
-        
-        # Rescore without embeddings (baseline)
-        rescored_baseline = rescore_nbest(
-            nbest,
-            semantic_kv=None,
-            phon_kv=None,
-            alpha=1.0,
-            beta=0.0
-        )
-        assert len(rescored_baseline) == len(nbest)
-        assert "re_score" in rescored_baseline[0]
-        
-        # With context text (still works without embeddings)
-        rescored_context = rescore_nbest(
-            nbest,
-            semantic_kv=None,
-            phon_kv=None,
-            context_text="đặt bánh gato",
-            alpha=1.0,
-            beta=0.0,
-            gamma=0.5,
-            delta=0.5
-        )
-        assert len(rescored_context) == len(nbest)
-    
-    def test_contextual_biasing_mock(self):
-        """Test contextual biasing (mock)."""
-        nbest = [
-            {"text": "toi muon dat ban", "am_score": -12.5},
-            {"text": "toi muon dat banh", "am_score": -12.8}
-        ]
-        
-        bias_list = ["bánh", "gato"]
-        
-        # Biasing works even without embeddings (uses text matching)
-        biased = contextual_biasing(
-            nbest,
-            bias_list=bias_list,
-            semantic_kv=None,
-            phon_kv=None,
-            bias_weight=0.3
-        )
-        assert len(biased) == len(nbest)
     
     def test_metrics_calculation(self):
         """Test WER/CER calculation."""
@@ -280,7 +188,7 @@ class TestIntegration:
         features = processor.extract_features(dummy_audio)
         
         # 3. Model inference
-        model = LSTMASRModel(input_dim=80, vocab_size=len(tokenizer), hidden_size=128)
+        model = ASRModel(input_dim=80, vocab_size=len(tokenizer), d_model=128)
         model.eval()
         x = torch.from_numpy(features).unsqueeze(0)
         logits, lengths = model(x)

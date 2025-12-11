@@ -61,6 +61,7 @@ def main():
         num_workers=args.num_workers,
         pin_memory=pin_memory,
         persistent_workers=args.num_workers > 0,  # Keep workers alive between epochs
+        prefetch_factor=2 if args.num_workers > 0 else None,  # Prefetch batches to reduce GPU starvation
     )
     model = CRNNCTC(n_mels=80, vocab_size=len(ds.vocab)).to(device)
     ctc = nn.CTCLoss(blank=0, zero_infinity=True)

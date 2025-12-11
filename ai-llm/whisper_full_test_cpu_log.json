@@ -1,0 +1,1921 @@
+{
+  "model_path": "./models/final/whisper-vi-en-ct2",
+  "test_dataset": "data/processed_finetune/whisper_test.jsonl",
+  "timestamp": "2025-12-10T10:55:51.167682",
+  "device": "cpu",
+  "compute": "int8",
+  "total_samples": 32818,
+  "results": [
+    {
+      "sample_id": 0,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000007975.wav",
+      "reference": "tiến vào thế kỷ hai mươi",
+      "prediction": "tiến vào thế kỉ hai mươi",
+      "wer": 0.16666666666666666,
+      "cer": 0.041666666666666664,
+      "language": "da",
+      "match": false
+    },
+    {
+      "sample_id": 1,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6689-64264-0014.wav",
+      "reference": "when turnbull in the narrow space behind the counter would push his way past her without other pretense of apology than something like a sneer she did feel for a moment as if evil were about to have the victory over her",
+      "prediction": "when turnbull in the narrow space behind the counter would push his way past her without other pretence of apology than something like a sneer she did feel for a moment as if evil were about to have the victory over her",
+      "wer": 0.023809523809523808,
+      "cer": 0.0045662100456621,
+      "language": "el",
+      "match": false
+    },
+    {
+      "sample_id": 2,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000011_000000221.wav",
+      "reference": "giống hệt như năm xưa bà nội và mẹ thằng thanh cứ cãi nhau ầm ĩ",
+      "prediction": "giống hệt như năm xưa bà nội và mẹ thắng thanh cứ cãi nhau ầm ĩ",
+      "wer": 0.0625,
+      "cer": 0.015873015873015872,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 3,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/113_000002146.wav",
+      "reference": "thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền",
+      "prediction": "thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 4,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000027_000000578.wav",
+      "reference": "con ơi con con ơi con đâu rồi con con",
+      "prediction": "con ơi con con ơi con đâu rồi con con ơi",
+      "wer": 0.1,
+      "cer": 0.08108108108108109,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 5,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000130_000000073.wav",
+      "reference": "người gì đâu á người đẹp trai",
+      "prediction": "người gì đau á người đẹp trai",
+      "wer": 0.14285714285714285,
+      "cer": 0.034482758620689655,
+      "language": "da",
+      "match": false
+    },
+    {
+      "sample_id": 6,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000003849.wav",
+      "reference": "tôi là một tên đần độn anh ta mất tới hai mươi ba tiếng đồng hồ mới sắp xếp được một cuộc phỏng vấn đó là lần đầu tiên",
+      "prediction": "tôi là một tên đần độn anh ta mất tới hai mươi ba tiếng đồng hồ mới sắp xếp được một cuộc phổng quấn đó là lần đầu tiên",
+      "wer": 0.06896551724137931,
+      "cer": 0.025423728813559324,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 7,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000006586.wav",
+      "reference": "và qua những con số đó mụ thì thầm hát âu phải thế chàng trai thỏ thẻ",
+      "prediction": "và qua những con số đó mụ thì thầm hát âu phải thế chàng trai thỏ thẻ",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "fa",
+      "match": true
+    },
+    {
+      "sample_id": 8,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/668_000000012.wav",
+      "reference": "một nguyên tử hydro có khối lượng nhỏ hơn tổng khối lượng của các proton và electron tạo nên nó",
+      "prediction": "một nguyên tử hydro có khối lượng nhỏ hơn tổng khối lượng của các proton và electron tạo nên nó",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ms",
+      "match": true
+    },
+    {
+      "sample_id": 9,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/009_000000790.wav",
+      "reference": "cuối cùng có thể khẳng định dạng câu hỏi giả định này có rất nhiều tác dụng ở những thời điểm cuộc trò chuyện đang kéo dài lê thê",
+      "prediction": "cuối cùng có thể khẳng định dặn câu hỏi gia định này có rất nhiều tác dụng ở những thời điểm cuộc trò chuyện đang kéo dài lê tê",
+      "wer": 0.10344827586206896,
+      "cer": 0.031007751937984496,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 10,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000006005.wav",
+      "reference": "mà em có giấy thông hành chứ dĩ nhiên thôi đừng bàn đến việc ấy nữa hãy tận hưởng hạnh phúc đi đã",
+      "prediction": "à má má má có giấy thông hành chứ dĩ nhiên thôi đừng bàn ném việc ấy nữa hay tần hưởng hạnh phúc đi tác",
+      "wer": 0.34782608695652173,
+      "cer": 0.15463917525773196,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 11,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000008730.wav",
+      "reference": "con ranh nó không biết áp ty đến đây lại còn nói láo nói hỗn ở đây để áp ty lại thêm phiền lòng",
+      "prediction": "còn ranh nó không biết atti đến đây lại còn nói láo nói hổ ở đây để atti lại thêm phiền long",
+      "wer": 0.2916666666666667,
+      "cer": 0.12631578947368421,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 12,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/057_000010342.wav",
+      "reference": "những gốc rễ của niềm tin tôn giáo có thể nhìn thấy trong thời thơ trẻ không tự động có nghĩa nó phá hại mọi hình thức tôn giáo trưởng thành",
+      "prediction": "những gốc rễ của niềm tin tôn giáo có thể nhìn thấy trong thời thơ trẻ không tự động có nghĩa nó phá hại mọi hình thức tôn giáo trưởng thành",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 13,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000100_000000259.wav",
+      "reference": "quay trở lại với chương trình quýt làm cam chịu và đây là vòng ba các bạn đang chênh lệch nhau có mười điểm thôi cho nên là cố gắng lên",
+      "prediction": "quay lại với chương trình khuất làm cảm chịu và đây là vòng ba các bạn đang chênh lệch nhau có mười điểm thôi cho nên là cố gắng lên",
+      "wer": 0.0967741935483871,
+      "cer": 0.05925925925925926,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 14,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/846-130984-0031.wav",
+      "reference": "there are rights of great moment to the trade of america which are rights of the union i allude to the fisheries to the navigation of the western lakes and to that of the mississippi",
+      "prediction": "are rights of great moment to the trade of america which are rights of the union i allude to the fisheries to the navigation of the western lakes and to that of the mississippi",
+      "wer": 0.02857142857142857,
+      "cer": 0.03296703296703297,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 15,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/215_000000125.wav",
+      "reference": "em thấy đó bây giờ em đang phải trông quán cho mẹ nhưng đồng thời em có thể đóng cửa quán em xách xe máy chạy một mạch lên đà lạt cũng được",
+      "prediction": "em thấy đây bây giờ em đang phải trông quán cho mẹ nhưng đồng thời em có thể đóng cửa quán em xách xe máy chạy một mạch lên đà lạt cũng được",
+      "wer": 0.030303030303030304,
+      "cer": 0.014388489208633094,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 16,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/296_000000040.wav",
+      "reference": "khi tổ tiên ta vẫn còn sống trong hoang động lang thang khắp nơi để tìm về miền đất hứa khi họ đã bắt kiệt các nguồn tài nguyên tại vùng đất cũ",
+      "prediction": "khi tổ tiên ta vẫn còn sống trong hang động lang thang khắp nơi để tìm về bên đất hứa khi họ đã bắt kiệt các nguồn tài nguyên tại vùng đất cũ",
+      "wer": 0.06060606060606061,
+      "cer": 0.027972027972027972,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 17,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000002983.wav",
+      "reference": "nỗi lo lắng khi đối mặt với các chết không tìm thấy phương thuốc chữa trị trong xác xuất thống kê",
+      "prediction": "nỗi lo lắng khi đối mặt với cái chết không tìm thấy phương thuốc chữa trị trong xác suất thống kê",
+      "wer": 0.09523809523809523,
+      "cer": 0.020618556701030927,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 18,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3488-85273-0035.wav",
+      "reference": "first i don't think that the man kemsley although an impostor was the actual assassin",
+      "prediction": "first i don't think that the man kensley although an impostor was the actual assassin",
+      "wer": 0.06666666666666667,
+      "cer": 0.011764705882352941,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 19,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/029_000004224.wav",
+      "reference": "anh vội vàng nói đừng gieo mình xuống đó chẳng đáng đâu không đáng ngay cả khi cô bất hạnh vô cùng",
+      "prediction": "anh dội và nói đừng ghéo mình xuống đó chán đán đâu không đán ngay cả khi cô bất hạnh vô cùng",
+      "wer": 0.2727272727272727,
+      "cer": 0.09183673469387756,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 20,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/799_000000039.wav",
+      "reference": "trong suốt hơn hai mươi năm qua và trở thành một phần quan trọng trong cuộc sống của người tiêu dùng trên khắp việt nam",
+      "prediction": "trong suốt hơn hai mươi năm qua và trở thành một phần quan trọng trong cuộc sống của người tâu dùng trên khắp việt nam",
+      "wer": 0.04,
+      "cer": 0.01680672268907563,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 21,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/137_000005996.wav",
+      "reference": "dọc các khe gỗ dòng nước rỉ từ đợt mưa cuối cùng để lại những vệt đất màu vàng chưa khô hẳn",
+      "prediction": "dọc các khe gỗ dòng nước rỉ từ đợt mưa cuối cùng để lại những vịt đất màu vàng chưa khô hẳn",
+      "wer": 0.045454545454545456,
+      "cer": 0.01098901098901099,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 22,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/427_000000145.wav",
+      "reference": "bản thân mình cũng đã học được cái cách để tận hưởng những khoảnh khắc vui vẻ của cuộc sống nhiều hơn",
+      "prediction": "bản thân mình cũng đã học được cái cách để tận hưởng những khoảnh khắc vui vẻ của cuộc sống nhiều hơn",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 23,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000042_000000035.wav",
+      "reference": "trung quốc có thể đang chờ đợi thời điểm thích hợp để can dự sâu hơn vào việc",
+      "prediction": "trung quốc có thể đang chờ đợi thời điểm thích hợp để can dự sâu hơn vào việc",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 24,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/031_000004397.wav",
+      "reference": "lạp rời rã lúc ấy mặt lạp chắc hoảng hốt lắm nhưng trời đã tối nhàn không thấy",
+      "prediction": "lạp rời rã lúc ấy mặt lạp chắc hoảng hốt lắm nhưng trời đã tối nhàn không thấy",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 25,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7408-256039-0016.wav",
+      "reference": "you will excite your blood and that would produce an appetite it would require a million a day to satisfy be more economical but when i have no more money left to pay you",
+      "prediction": "you will excite your blood and that would produce an appetite it would require a million a day to satisfy be more economical but when i have no more money left to pay you",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ar",
+      "match": true
+    },
+    {
+      "sample_id": 26,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000026_000000087.wav",
+      "reference": "nếu như mà không muốn giúp hai vợ chồng bay á cần gì ta phải cho tụi bay thuê tạo điều kiện cho tụi bay làm gì tôi bay dở quá",
+      "prediction": "nếu như mà không muốn giúp hai vợ chồng bây á cần vậy ta phải cho tôi bay thuê tao đều kiện cho tôi bay làm gì tôi bay vỡ quá",
+      "wer": 0.22580645161290322,
+      "cer": 0.08,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 27,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000003237.wav",
+      "reference": "tôi gặp hồ hữu tường lấy ra hỏi tương cũng không hiểu bốn chữ kín ấy nghĩa gì khi",
+      "prediction": "tôi gặp hồ hữu tường lấy ra hỏi tường cũng không hiểu bốn chương kín ấy nghĩa là gì",
+      "wer": 0.21052631578947367,
+      "cer": 0.12345679012345678,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 28,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/004_000000432.wav",
+      "reference": "để có tiền tiêu vặt tôi nhận chân dọn dẹp phụ cha ở cửa hàng mỗi thứ tư sau giờ học",
+      "prediction": "để có tiền tiêu vặt tôi dẫn dần dần dẹp phụ cha ở cửa hàng mỗi thứ tư sau giờ học",
+      "wer": 0.14285714285714285,
+      "cer": 0.08433734939759036,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 29,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000055_000000019.wav",
+      "reference": "đó là anh hải ơi à anh đem hàng xuống để cho em bán với",
+      "prediction": "đó là anh hải ơi à anh đem hàng chúng để cho em bán với",
+      "wer": 0.06666666666666667,
+      "cer": 0.05454545454545454,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 30,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/104_000000035.wav",
+      "reference": "xuất phát từ một tuổi thơ được yêu thương và có sự chăm sóc đầy đủ nhất là về đời sống tinh thần",
+      "prediction": "xuất phát từ một tuổi thơ được yêu thương và có sự chăm sóc đầy đủ nhất là về đời sống tinh thần",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 31,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000001121.wav",
+      "reference": "huệ trầm ngâm nói nếu ta có con đường thượng đạo ấy bất ngờ đánh vào sau lưng kẻ địch ví như cọp vồ từ sau lưng tướng quân đó",
+      "prediction": "huệ trầm ngâm nói nếu ta có con đường thượng đạo ấy bất ngờ đánh vào sau lưng kẻ địch ví như cọp vồ từ sau lưng tướng quân đó",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 32,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000004715.wav",
+      "reference": "bạn hoàn toàn có thể hi vọng mức phản hồi không phẩy năm đến một phẩy năm phần trăm từ quảng cáo của bạn trên tạp chí",
+      "prediction": "bạn hoàn toàn có thể hy vọng mức phản hồi không phích năm đến một phẩy năm phần trăm từ quảng cáo của bạn trên tạp chí",
+      "wer": 0.07407407407407407,
+      "cer": 0.03418803418803419,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 33,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/148_000002085.wav",
+      "reference": "espn lại không nhẩy cẫng lên khi quay được cảnh những anh chàng đẹp trai mặc",
+      "prediction": "lại không nhảy cẩn lên khi quay được cảnh những anh chàng đẹp chai mặt",
+      "wer": 0.3125,
+      "cer": 0.14473684210526316,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 34,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/181_000003232.wav",
+      "reference": "kể lại câu chuyện riêng của tôi và xin rằng sẽ kết lại duyên cũ nhưng đều không tiếp được thư trả lời",
+      "prediction": "kể lại câu chuyện riêng của tôi và xin rằng sẽ kết là duyên cũ nhưng đều không tiếp được thư trả lời",
+      "wer": 0.043478260869565216,
+      "cer": 0.019801980198019802,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 35,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1051-133881-0039.wav",
+      "reference": "he dropped a hot cent down mary ann's back as that pretty maid was waiting at table one day when there were gentlemen to dinner whereat the poor girl upset the soup and rushed out of the room in dismay leaving the family to think that she had gone mad",
+      "prediction": "dropped a hot scent down mary ann's back as that pretty maid was waiting a table one day when they were gentlemen to dinner whereat the poor girl upset the soup and rushed out of the room in dismay leaving the family to think that she had gone mad",
+      "wer": 0.08,
+      "cer": 0.027888446215139442,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 36,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000005489.wav",
+      "reference": "ta không sợ ta không sợ nói đoạn lại xông vào đánh nhau ngô dụng hết sức can ngăn cũng không được",
+      "prediction": "ta không sợ ta không sợ nói đoạn lại xông vào đánh nhau ngô dụng hết sức can ngăn cũng không được",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 37,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/147_000007947.wav",
+      "reference": "chị ra trông đau lòng tiếp tục bước lên thang chị thở dài thườn thượt như đang cố trút bỏ lời trách móc",
+      "prediction": "chị ra trông đau lòng tiếp tục bước lên thang chị thở dài thường thuật như đang cố trút bỏ lời trách móc",
+      "wer": 0.08695652173913043,
+      "cer": 0.02912621359223301,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 38,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/160_000004748.wav",
+      "reference": "nghe người xưa thuật lại rằng ngày xưa ở đây có một vị tỳ kheo đã gọi mời bạn của mình đến",
+      "prediction": "nghe người xưa thuật lại rằng ngày xưa ở đây có một vị tỳ kheo đã gọi mời bạn của mình đến",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ms",
+      "match": true
+    },
+    {
+      "sample_id": 39,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/5285-48598-0020.wav",
+      "reference": "o zumurrud whilst the small boys flocked round him calling out a madman a madman and all who knew him wept for him saying",
+      "prediction": "mured what's the small boys flocked round him calling out a madman a madman and all who knew him wet for him saying",
+      "wer": 0.16666666666666666,
+      "cer": 0.09090909090909091,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 40,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000034_000000102.wav",
+      "reference": "ở đằng kia",
+      "prediction": "ở đằng kia",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ta",
+      "match": true
+    },
+    {
+      "sample_id": 41,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/188_000001619.wav",
+      "reference": "thì đường bị nghẽn và vì có đàn bò lớn đi từ đồng cỏ về",
+      "prediction": "dường bị nghẽn và vì có đàn bò lớn đi từ đồng cỏ về",
+      "wer": 0.13333333333333333,
+      "cer": 0.09090909090909091,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 42,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/313-122804-0005.wav",
+      "reference": "and looked at her little sick child that drew its breath so deep and raised its little hand",
+      "prediction": "and looked at a little sick child that drew its breath so deep and raised its little hand",
+      "wer": 0.05555555555555555,
+      "cer": 0.03296703296703297,
+      "language": "pa",
+      "match": false
+    },
+    {
+      "sample_id": 43,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000000496.wav",
+      "reference": "mẹ cô tất cả họ hàng hàng xóm đều nói anh trai của cô đã qua đời hai năm trước khi cô sinh ra",
+      "prediction": "mẹ cô tất cả họ hàng hàng xóm đều nói anh trai của cô đã qua đợi hai năm trước khi cô sinh ra",
+      "wer": 0.041666666666666664,
+      "cer": 0.010752688172043012,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 44,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8307-120456-0017.wav",
+      "reference": "he put in his fingers and pulled nothing happened then he did so again considerably harder and the screen went sailing out of the window",
+      "prediction": "put in his fingers and pulled nothing happened then he did so again considerably harder and the screen went sailing out of the window",
+      "wer": 0.04,
+      "cer": 0.022058823529411766,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 45,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000073_000001322.wav",
+      "reference": "bạn bè của em á hai nháy thì có chồng xong rồi đi làm thông dịch viên",
+      "prediction": "bạn bè của em á hai nhái thì có chồng xong rồi đi làm thông dịch viên",
+      "wer": 0.058823529411764705,
+      "cer": 0.014492753623188406,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 46,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000005997.wav",
+      "reference": "chẳng có nguyên nhân cũng chẳng cần kết quả chỉ đơn giản là làm việc gì đó thật là thoải mái anh sống một năm",
+      "prediction": "chẳng có nguyên nhân cũng chẳng cần kết quả chỉ đơn giản là việc gì đó thật là thoải mái anh sống một năm",
+      "wer": 0.04,
+      "cer": 0.03669724770642202,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 47,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/100_000002410.wav",
+      "reference": "nhưng tại sao xu hướng biến thành quark lại nhiều hơn tạo thành phản quark",
+      "prediction": "nhưng tại sao xu hướng biến thành quark lại nhiều hơn tạo thành phản quark",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "hu",
+      "match": true
+    },
+    {
+      "sample_id": 48,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000125_000000027.wav",
+      "reference": "anh là đàn ông nhưng mà anh đâu phải phụ nữ đâu có thể nào làm những cái chuyện mà nó mạnh mẽ hơn để nó kiếm ra tiền được không thôi",
+      "prediction": "anh là đàn ông mà anh đâu phải phụ nữ đâu có thể nào làm những cái chuyện mà nó mạnh mẽ hơn để nó kiếm ra tiền được không thôi",
+      "wer": 0.03125,
+      "cer": 0.045454545454545456,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 49,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/216_000000166.wav",
+      "reference": "lúc này ông chú tâm vào chăm sóc người mẹ già cũng như nuôi nấng miki no suke chuyên dạy những gì ông biết về kiến thức",
+      "prediction": "lúc này ông chú tâm vào chăm sóc người mẹ già cũng như nuôi nấng miki no suke truyền dạy những gì ông biết về kiến thức",
+      "wer": 0.037037037037037035,
+      "cer": 0.025210084033613446,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 50,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/015_000005163.wav",
+      "reference": "sẽ thế nào nếu bức thư ramona nhận được hoàn toàn sai sự thật",
+      "prediction": "sẽ thế nào nếu bất cứ brahman á nhận được hoàn toàn sai sự thật",
+      "wer": 0.2857142857142857,
+      "cer": 0.16393442622950818,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 51,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/150_000002324.wav",
+      "reference": "người vòng trong vòng ngoài vây kín ông khổng tử ngồi đó ca hát khảy đàn mà không nói gì",
+      "prediction": "người vòng trong vòng ngoài vây kín ông khổng tử ngồi đó ca hát khẩy đàn mà không nói gì",
+      "wer": 0.05,
+      "cer": 0.011363636363636364,
+      "language": "ps",
+      "match": false
+    },
+    {
+      "sample_id": 52,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/189_000004191.wav",
+      "reference": "xảy ra xung quanh chính mấy con chó báo cho tôi biết tàu tới và chúng đã đánh hơi thấy chủ chúng tôi",
+      "prediction": "xảy ra xung quanh chính mấy còn cho báo cho tôi biết tàu tới và chúng đã đánh hơi thấy chủ chúng tôi",
+      "wer": 0.08695652173913043,
+      "cer": 0.02,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 53,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000155_000000212.wav",
+      "reference": "mày biết điều đó mà",
+      "prediction": "mày biết điều đó mà",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 54,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000042_000001155.wav",
+      "reference": "tôi đã dùng vũ lực tôi hứa với nhóc đó sẽ là lần cuối cùng",
+      "prediction": "tôi đã dùng chủ lực tôi hứa với nhóc đó sẽ là lần cuối cùng",
+      "wer": 0.06666666666666667,
+      "cer": 0.05172413793103448,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 55,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/111_000000937.wav",
+      "reference": "cuối cùng suy đi nghĩ lại thợ săn quyết định thả một bầy sói vào khu rừng",
+      "prediction": "cuối cùng sư đi nghĩ lại thợ săn quyết định thả một bầy sói vào khu rừng",
+      "wer": 0.058823529411764705,
+      "cer": 0.0273972602739726,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 56,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000056_000000243.wav",
+      "reference": "vâng không hiểu ý rồi",
+      "prediction": "không hiểu ý rồi",
+      "wer": 0.2,
+      "cer": 0.23809523809523808,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 57,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000007967.wav",
+      "reference": "mà ở trong phật pháp tôi tuy xem nước nhưng tâm vẫn tại phật",
+      "prediction": "mà ở trong phật pháp tôi tuy xem nước nhưng tâm vẫn tại phật",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "lt",
+      "match": true
+    },
+    {
+      "sample_id": 58,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000001516.wav",
+      "reference": "lỗ trí thâm lại bảo với phó rèn rằng ta còn ít tiền lẻ ở đây anh đi mua rượu về uống với ta một thể cho vui",
+      "prediction": "lỗ trí thâm lại bảo với phó rèn rằng ta còn ít tiền lẽ ở đây anh đi mua rượu về uống với ta một thể cho vui",
+      "wer": 0.03571428571428571,
+      "cer": 0.009345794392523364,
+      "language": "ms",
+      "match": false
+    },
+    {
+      "sample_id": 59,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/076_000001267.wav",
+      "reference": "tại sao anh ta có thể làm được như vậy khi chưa từng làm việc trong lĩnh vực đó làm thế nào anh có thể bán hàng giỏi hơn những chuyên gia đã có kinh nghiệm cả chục năm",
+      "prediction": "tại sao anh ta có thể làm được như vậy khi chưa từng làm việc trong lĩnh vực đó làm thế nào anh có thể bán hàng giỏi hơn những chuyên gia đã có kinh nghiệm cả chục năm",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 60,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1726-142316-0004.wav",
+      "reference": "putting the sight that she would have to encounter out of the question mister bell sate over the fire considering what he had better do margaret lay motionless",
+      "prediction": "putting the sight that she would have to encounter out of the question mister bell sat over the fire considering what he had better do margaret lay motionless",
+      "wer": 0.03571428571428571,
+      "cer": 0.006289308176100629,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 61,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000145_000000303.wav",
+      "reference": "trở lại bình thường hiện giờ thì có lẽ họ đang đoàn tụ với gia đình của mình",
+      "prediction": "hiện giờ thì có lẽ họ đang đoàn tụ với gia đình của mình",
+      "wer": 0.2222222222222222,
+      "cer": 0.2631578947368421,
+      "language": "ta",
+      "match": false
+    },
+    {
+      "sample_id": 62,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000006397.wav",
+      "reference": "trước khi vua vào nam bicail khoe với tôi rằng vốn cùng vua học chung một thầy",
+      "prediction": "trước khi vua vào nam bi ken khoe với tôi rằng vốn cùng vua học chung một thầy",
+      "wer": 0.11764705882352941,
+      "cer": 0.05128205128205128,
+      "language": "ps",
+      "match": false
+    },
+    {
+      "sample_id": 63,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000002481.wav",
+      "reference": "đã trao cho hoa kỳ quyền truy cập và các quyền hạn khác đối với các căn cứ của họ",
+      "prediction": "đã trao cho hoa kỳ quyền truy cập và các quyền hạn khác đối với các căn cứ của họ",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ms",
+      "match": true
+    },
+    {
+      "sample_id": 64,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/050_000001919.wav",
+      "reference": "hay khi một đứa trẻ bắt chước phong cách riêng của một đứa trẻ khác mà nó ngưỡng mộ thì johnny vậy không phải con",
+      "prediction": "hay khi một đứa trẻ bắt chước phong cách riêng của một đứa trẻ khác mà nó ngưỡng mộ thì rooney vậy không phải con",
+      "wer": 0.04,
+      "cer": 0.02654867256637168,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 65,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000033_000000558.wav",
+      "reference": "tai nạn chết người hiệu trưởng trong lúc đi bộ đã dấp trúng cục đá trong công vi và té ngã trong khi ông ấy đang bê hồ cá",
+      "prediction": "ta nạn chết người hiệu trưởng trong lúc đi bộ đã dắp trúng cục đá trong con vi và té ngả trong khi ông ấy đăng bê hồ cá",
+      "wer": 0.1724137931034483,
+      "cer": 0.049586776859504134,
+      "language": "lt",
+      "match": false
+    },
+    {
+      "sample_id": 66,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000093_000000199.wav",
+      "reference": "còn mềm không quá cứng mà nó vẫn có vị béo mình làm món này mới ngon",
+      "prediction": "còn mềm không quá cứng mà nó vẫn có vị béo mình làm món này mới ngon",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "de",
+      "match": true
+    },
+    {
+      "sample_id": 67,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/424_000000026.wav",
+      "reference": "theo đó ở thời cổ xưa các bài báo câu chuyện dài sẽ được viết ra khi xung đột hoặc cuộc chiến đã kết thúc",
+      "prediction": "theo đó ở thời cổ xưa các bài báo câu chuyện dài sẽ được viết ra khi xung đột hoặc cuộc chiến đã kết thúc",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 68,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/064_000000278.wav",
+      "reference": "haisự vươn lên của một cá nhân sáng tạo hãy cho tôi một điểm tựa và một đòn bẩy tôi sẽ nâng bổng trái đất lên",
+      "prediction": "sự vươn lên của một cá nhân sáng tạo hãy cho tôi một điểm tự và một đoàn bẫy tôi sẽ nâng bỗng trái đất lên",
+      "wer": 0.19230769230769232,
+      "cer": 0.07339449541284404,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 69,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000010_000000034.wav",
+      "reference": "đồng thời sư tử cũng là một người tràn đầy sự sáng tạo",
+      "prediction": "đồng thời sư tử cũng là một người tràn đầy sức sắc",
+      "wer": 0.23076923076923078,
+      "cer": 0.16666666666666666,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 70,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/137_000012351.wav",
+      "reference": "thằng kiếm tự hỏi ai đã lay gọi hắn thức dậy giữa cơn mê man trong chiến hào",
+      "prediction": "thằng kiếm tự hỏi ai đã lay gọi hắn thức dậy giữa cơn mê man trong chiến hào",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "da",
+      "match": true
+    },
+    {
+      "sample_id": 71,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000036_000000075.wav",
+      "reference": "khiến em không thể nào sống hòa thuận trong căn nhà này",
+      "prediction": "khiến em công tệ nào sống qua thuận trong căn nhà nè",
+      "wer": 0.3333333333333333,
+      "cer": 0.14545454545454545,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 72,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000008494.wav",
+      "reference": "vân công thấy tôi nói như thị tôi gặp vân công chứng như thị vân công và tôi đều như thị",
+      "prediction": "công thấy tôi nói như thì tôi gặp dân công chứng như thì dân công và tôi đều như thì",
+      "wer": 0.2857142857142857,
+      "cer": 0.10227272727272728,
+      "language": "kn",
+      "match": false
+    },
+    {
+      "sample_id": 73,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7327-96491-0029.wav",
+      "reference": "they looked at him in consternation he explained i have been reading up the experience of the past few centuries in such cases",
+      "prediction": "they looked at him in consternation he explained i have been reading up the experience of the past few centuries in such cases",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ar",
+      "match": true
+    },
+    {
+      "sample_id": 74,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000002087.wav",
+      "reference": "được giải thích bằng địa lý và bởi lịch sử về quá trình thống nhất của hợp chủng quốc hoa kỳ",
+      "prediction": "thể được giải thích bằng điện lý và bởi lịch sử về quá trình thống nhất của hợp chủng quốc hoa kỳ",
+      "wer": 0.09523809523809523,
+      "cer": 0.07608695652173914,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 75,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/264_000000187.wav",
+      "reference": "nhà càng gần ga gần trung tâm thì càng đắt khi vào nhà sẽ mất một khoản phí gọi là tiền lễ rất cao",
+      "prediction": "nhà càng gần ga gần trung tâm thì càng đắt khi vào nhà sẽ mất một khoản phí gọi là tiền lễ rất cao",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 76,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000011409.wav",
+      "reference": "ngày xưa tề hoàn công đánh nam dẹp bắc chỉ còn có nước đông di là chưa đánh nổi",
+      "prediction": "ngày xưa tề hoàn công đánh nam dẹp bắc chỉ còn có nước đông di là chưa đánh nổi",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 77,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000005511.wav",
+      "reference": "đôi khi tôi bực mình trước sự xoi mói liên tục của bà ấy đến nỗi chỉ muốn băng miệng bà ấy lại",
+      "prediction": "đôi khi tôi bực mình trước sự soi mói liên tục của bà ấy đến nỗi chỉ muốn băng miệng bà ấy lại",
+      "wer": 0.043478260869565216,
+      "cer": 0.010638297872340425,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 78,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000013988.wav",
+      "reference": "từ phòng ngủ ra phòng khách của khách sạn plaza nầy phải nói là lên vì phòng ở dưới hầm sâu",
+      "prediction": "tự phòng ngủ ra phòng khách của khách sạn plaza nét phải nói là lên vì phòng ở dưới hầm sâu",
+      "wer": 0.09523809523809523,
+      "cer": 0.03296703296703297,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 79,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/113_000002012.wav",
+      "reference": "điều tất nhiên là khi ta nghiêng về một bên ta sẽ vấp phải sức phản kháng từ phía bên kia",
+      "prediction": "điều tất nhiên là khi ta nghiên về một bên ta sẽ dắp phải sức phản khán từ phía bên kia",
+      "wer": 0.14285714285714285,
+      "cer": 0.0449438202247191,
+      "language": "cs",
+      "match": false
+    },
+    {
+      "sample_id": 80,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000003430.wav",
+      "reference": "sang tường bên kia để phơi quần áo có những chiếc sơ mi ống tay nặng trĩu",
+      "prediction": "sang tường bên kia để phơi quần áo có những chiếc sơ mi óng tay nặng trĩu",
+      "wer": 0.058823529411764705,
+      "cer": 0.0136986301369863,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 81,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/059_000010466.wav",
+      "reference": "trái lại rõ ràng tôi đang khẳng định thế giới vật chất tuy nhiên tôi cho rằng vật chất có điểm cuối",
+      "prediction": "trái lại rõ ràng tôi đang khẳng định thế giới vật chất tuy nhiên tôi cho rằng vật chất có điểm cuối",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "cs",
+      "match": true
+    },
+    {
+      "sample_id": 82,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/705-157945-0029.wav",
+      "reference": "mademoiselle bourienne was the first to recover herself after this apparition and began speaking about the prince's indisposition",
+      "prediction": "mademoiselle bourienne was the first to recover herself after this apparition and began speaking about the princess's intersposition",
+      "wer": 0.1111111111111111,
+      "cer": 0.03875968992248062,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 83,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/007_000001360.wav",
+      "reference": "người thợ máy hoá điên từ đó suốt ngày đêm cầm chiếc đèn đi lang thang phố phường miệng luôn luôn lẩm bẩm",
+      "prediction": "người thợ mái hoá điên từ đó suốt ngày đêm cầm chiếc đèn đi lang thang phố phường miệng luôn luôn lẩm bẩm",
+      "wer": 0.043478260869565216,
+      "cer": 0.009523809523809525,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 84,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000119_000000224.wav",
+      "reference": "sao chị ai thấy được không",
+      "prediction": "sao chá thấy được không",
+      "wer": 0.3333333333333333,
+      "cer": 0.15384615384615385,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 85,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/031_000004846.wav",
+      "reference": "giời đất này người như con kiến chết thì lấp đi lại còn gọi ai khóc ai",
+      "prediction": "giời đất này người như con kiến chết thì lấp đi lại còn gọi ai khóc ai",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 86,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000006085.wav",
+      "reference": "thì tôi chắc chắn cậu có thể sẽ tin cậy tôi trong câu hỏi số mười số mười một và mười hai",
+      "prediction": "thì tôi chắc chắn cậu có thể sẽ tin cậy tôi trong câu hỏi số mười số mười một và mười hai",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 87,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/164_000004807.wav",
+      "reference": "ngày trước trai đất thánh gặp nhau trong rừng mắc võng nằm cạnh nhau",
+      "prediction": "ngày trước trai đất thánh gặp nhau trong rừng mắt võng nằm cạnh nhau",
+      "wer": 0.07142857142857142,
+      "cer": 0.014705882352941176,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 88,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/157_000000681.wav",
+      "reference": "khi ta nhìn thấy cột bê tông hình tháp nhọn ghi độ cao của đỉnh núi ba nghìn bốn trăm mười ba m",
+      "prediction": "khi ta nhìn thấy cột bê tông hình tháp nhọn ghi độ cao của đỉnh núi ba nghìn một trăm bốn mươi ba",
+      "wer": 0.17391304347826086,
+      "cer": 0.10526315789473684,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 89,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/083_000001956.wav",
+      "reference": "việc biến một mỏm đá ngầm thành một sân bay đơn giản không đem lại các quyền hạn về chủ quyền lãnh thổ cũng chẳng được",
+      "prediction": "việc biến múc mỏm đá ngầm thành một sân bay đơn giản không đem lại các quyền hạn về chủ quyền lãnh thổ cũng chẳng được",
+      "wer": 0.038461538461538464,
+      "cer": 0.01694915254237288,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 90,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000043_000002363.wav",
+      "reference": "mình phải về quê một chuyến để cho tất cả mọi người dưới quê người ta biết được thằng thanh lịch",
+      "prediction": "mình phải về quê một chuyến để cho tất cả mọi người dưới quê người ta biết được thằng thanh lệnh",
+      "wer": 0.047619047619047616,
+      "cer": 0.020833333333333332,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 91,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/956-127932-0010.wav",
+      "reference": "they haven't gone to paris that was all a blind for the present let's go back to your chambers then i'll talk to you once within breton's inner room with the door closed upon them",
+      "prediction": "haven't gone to paris that was all a blind for the present let's go back to your chambers then i'll talk to you once within breton's inner room with a door closed upon them",
+      "wer": 0.05714285714285714,
+      "cer": 0.0446927374301676,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 92,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/102_000005979.wav",
+      "reference": "điều này cải thiện đáng kể độ phân giải của bộ máy này mà không đòi hỏi phải có",
+      "prediction": "điều này cải thiện đáng kể độ phân giải của bộ máy này mà không đòi hỏi",
+      "wer": 0.10526315789473684,
+      "cer": 0.10126582278481013,
+      "language": "cs",
+      "match": false
+    },
+    {
+      "sample_id": 93,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/141_000004105.wav",
+      "reference": "bước đường đi còn trăm nghìn gian khổ chúc th vững bước đi lên đạp bằng mọi trở lực để xứng đáng làm một đảng viên chân chính nhất",
+      "prediction": "bước đường đi còn trăm nghìn gian khổ chúc th vững bước đi lên đạp bằng mọi trợ lực để xứng đáng là một đảng viên chân chính nhất",
+      "wer": 0.06896551724137931,
+      "cer": 0.015384615384615385,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 94,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/175_000001109.wav",
+      "reference": "trời nghiêm trọng vậy sao thấy có chút xíu à không có đau do chú bị tiểu đường lâu ngày không biết",
+      "prediction": "trời nghiêm trọng vậy sao thấy có chút xíu à không có đau do chú bị tiểu đường lâu ngày không biết",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 95,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/182_000002902.wav",
+      "reference": "thì trước những cặp mắt ngơ ngác của một bầy con cháu chí hiếu chỉ óng ruột đem chôn cho chóng cái xác chết của cụ tổ",
+      "prediction": "thì trước những cặp mắt ngơ ngác của một bầy con cháu chí hiếu chỉ nóng ruột đem chôn cho chóng cái xác chết của cụ tổ",
+      "wer": 0.037037037037037035,
+      "cer": 0.008547008547008548,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 96,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/108_000002786.wav",
+      "reference": "hay là họ không ở trong các kim tự tháp mà là ở dưới đó dưới các kim tự tháp",
+      "prediction": "hay là họ không ở trong các kim tự tháp mà là ở dưới đó dưới các kim tự tháp",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "hu",
+      "match": true
+    },
+    {
+      "sample_id": 97,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000022_000001018.wav",
+      "reference": "như từ phần lớn phương tây bài báo chỉ ra rằng một phần lý do có thể là các quốc gia châu á từ lâu đã hoài nghi về việc",
+      "prediction": "như từ phần lớn phương tây bài báo chỉ ra rằng một phần lý sau có thể là các quốc gia châu á từ lâu đã hoài nghi về việc",
+      "wer": 0.03333333333333333,
+      "cer": 0.025210084033613446,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 98,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000110_000000020.wav",
+      "reference": "thì khi cắt xong mình sẽ uốn một chút ở trên này để tạo điểm nhấn và tạo độ bồng bềnh cho tóc mái tóc mình sẽ thêm ấn tượng",
+      "prediction": "thì khi cắt xong mày sẽ uống một chút ở chân này để tạo điểm dấn và tạo độ bồng bề cho tóc mái tóc mình sẽ thêm mấn tượng",
+      "wer": 0.2,
+      "cer": 0.0975609756097561,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 99,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000005538.wav",
+      "reference": "nếu không đỗ thành nhân sẽ giết chết hoàng thân trong thành thì cháu cũng mang tiếng là người bất nhân vậy",
+      "prediction": "nếu không đỗ thành nhân sẽ giết chết hoàng thân trong thành thì cháu cũng mang tiếng là người bất nhân vậy",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 100,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000115_000000334.wav",
+      "reference": "thì nó dính lưới à nó chết rồi thì mấy anh em mới mần ra còn nếu mà biết nó có trứng thì cũng chẳng có bắt nó làm gì đâu",
+      "prediction": "thì nó dính lưới à nó chết rồi thì mấy anh em mới mần nha còn nếu mà biết nó có trứng thì cũng chẳng có bắt nó làm gì đâu",
+      "wer": 0.03225806451612903,
+      "cer": 0.016666666666666666,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 101,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/144_000000186.wav",
+      "reference": "tôi còn nhớ hồi mới tới có cảm tưởng rằng sài gòn không phải là một thành phố việt nam",
+      "prediction": "tôi còn nhớ hồi mới tới có cảm tưởng rằng sài gòn không phải là một thành phố việt nam",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ca",
+      "match": true
+    },
+    {
+      "sample_id": 102,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/081_000009562.wav",
+      "reference": "bỏ quân tiêm nguyễn hai vạn còn lại mấy trăm quân theo chủ tướng chạy về đồn trà tân",
+      "prediction": "bộ quân tiêm nguyễn hai vạn còn lại mấy trăm quân theo chủ tướng chạy về đồn trà tân",
+      "wer": 0.05263157894736842,
+      "cer": 0.011904761904761904,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 103,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000055_000000069.wav",
+      "reference": "đốt nhà hả mày nè mày sống lỗi với con gái tao bây giờ mày vừa",
+      "prediction": "đốt nhà hả mày nè mày sống lỗi với con gái tao bây giờ mày dượng",
+      "wer": 0.0625,
+      "cer": 0.08064516129032258,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 104,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2273-152357-0010.wav",
+      "reference": "stranded within the meaning of this paper stands for a more or less excusable mistake a ship may be driven ashore by stress of weather",
+      "prediction": "stranded within the meaning of this paper stands for a more or less excusable mistake a ship may be driven ashore by stress of weather",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ar",
+      "match": true
+    },
+    {
+      "sample_id": 105,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000005642.wav",
+      "reference": "đó là phẩm chất của một nghệ sĩ lớn cậu có biết tại sao người ta gọi tôi là nữ hoàng phim bi kịch không",
+      "prediction": "đó là phẩm chất của một nghệ sĩ lớn cậu có biết tại sao người ta gọi tôi là nữ hoàng phim bi kịch không",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 106,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000011684.wav",
+      "reference": "fantine sung sướng chị không tỏ vẻ ngạc nhiên hay vui mừng cả người chị là hiện thân của vui mừng",
+      "prediction": "cô rét đâu chị không tỏ vẻ ngạc nhiên hay vui mừng cả người chị là hiện thân của vui mừng",
+      "wer": 0.14285714285714285,
+      "cer": 0.16494845360824742,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 107,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000006852.wav",
+      "reference": "bác madeleine là một người tuổi độ năm mươi có vẻ đăm chiêu và lại hảo tâm",
+      "prediction": "bác madeleine là một người tuổi độ năm mươi có vẻ đăm chiêu và lại hảo tâm",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 108,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000004511.wav",
+      "reference": "liên xưng và quản chí phủ vào thành lập vô tri lên nối ngôi cho liên thị làm phu nhân",
+      "prediction": "liên xưng và quản chí phủ vào thành lập vô tri lên nối ngôi cho liên thị làm phu nhân",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "uk",
+      "match": true
+    },
+    {
+      "sample_id": 109,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000160_000000195.wav",
+      "reference": "và các bạn đừng quên theo dõi các trang mạng xã hội của mai ti vi để cập nhật nhanh nhất và chính xác nhất với các giải thể thao hấp dẫn",
+      "prediction": "và các bạn đừng quên theo dõi các trang mạng xã hội của mai tv để gấp nhiệt nhanh nhất và chính xác nhất về các giải thể thao hấp dẫn",
+      "wer": 0.15625,
+      "cer": 0.0661764705882353,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 110,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2733-28252-0069.wav",
+      "reference": "ben zoof in his turn danced a pas seul often performed in the elysee",
+      "prediction": "ben zoof in his turn danced apas suel often performed in the elsie",
+      "wer": 0.2857142857142857,
+      "cer": 0.07352941176470588,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 111,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000006726.wav",
+      "reference": "khi tôi coi vườn rau giải vũ ở chùa đại tướng quốc gặp báo tử đầu lâm xung bị cao thái úy toan giết hại",
+      "prediction": "khi tôi coi vườn rau giải vũ ở chùa đại tướng quốc gặp báo tử đầu lâm xung bị cao thái úy toan giết hại",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 112,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3757-134141-0029.wav",
+      "reference": "and sylvie and bruno came in with their arms twined lovingly round each other bruno sobbing convulsively with his face hidden on his sister's shoulder and sylvie more grave and quiet",
+      "prediction": "and sylvie and bruno came in with their arms and twined lovingly around each other bruno sobbing convulsingly with his face hidden on his sister's shoulder and sylvie more of grave and quiet",
+      "wer": 0.12903225806451613,
+      "cer": 0.054945054945054944,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 113,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/116_000001322.wav",
+      "reference": "trường ca đủ giọng một bộ iliade của côn trùng một bộ thánh kinh của tạo vật",
+      "prediction": "trường ca đủ giọng một bộ elit của côn trùng một bộ thánh kinh của tạo vật",
+      "wer": 0.058823529411764705,
+      "cer": 0.05263157894736842,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 114,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1621-141593-0008.wav",
+      "reference": "the non natural features of the planet's surface including especially",
+      "prediction": "natural features of the planet's surface including especially",
+      "wer": 0.2,
+      "cer": 0.11594202898550725,
+      "language": "en",
+      "match": false
+    },
+    {
+      "sample_id": 115,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/130_000014488.wav",
+      "reference": "còn người mặc áo vàng đây là con cả khổng thái công tên là mao đầu tinh khổng minh",
+      "prediction": "con người mặc áo vàng đây là con cả khổng thái công tên là mau đầu tinh khổng minh",
+      "wer": 0.10526315789473684,
+      "cer": 0.024390243902439025,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 116,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/174_000001030.wav",
+      "reference": "và những kẻ giàu có người ta học cách nói như thế nào cho đúng",
+      "prediction": "và những kẻ giàu có người ta học cách nói như thế nào cho đúng",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "hu",
+      "match": true
+    },
+    {
+      "sample_id": 117,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000123_000000238.wav",
+      "reference": "tưởng thừa thiên huế đã và đang nỗ lực để bảo vệ diện tích rừng hiện có hạn chế tới mức thấp nhất thiệt hại do cháy rừng gây ra",
+      "prediction": "thượng thượng huế đã và đang nỗ lực để bỏ bị diện tích rừng hiện có hạn chế tới mức thấp nhất thiệt hại do chạy rừng gây ra",
+      "wer": 0.2,
+      "cer": 0.11811023622047244,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 118,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000043_000000050.wav",
+      "reference": "trong đó nổi bật với thông tin về việc điều kiện duy nhất để sanchez quay trở lại man utd",
+      "prediction": "trong đó nội bật với thông tin về việc điều kiện duy nhất để sancho quay trở lại manuel",
+      "wer": 0.2,
+      "cer": 0.06741573033707865,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 119,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/2273-152357-0036.wav",
+      "reference": "he attacked grumpily the steward a lanky anxious youth with a long pale face and two big front teeth what makes this soup so bitter",
+      "prediction": "attacked grumpy the steward a lanky anxious youth with a long pale face and two big front teeth what makes this soup so bitter",
+      "wer": 0.08,
+      "cer": 0.03816793893129771,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 120,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/088_000007125.wav",
+      "reference": "vua nước cử sai người đuổi khánh phủ lại nghĩ đến thụ điêu nước tề khi trước đã từng ăn lễ mà bênh vực cho mình",
+      "prediction": "vua nước cử sai người đuổi khánh phủ lại nghĩ đến thụ điêu nước tề khi trước đã từng ăn lễ và bênh vực cho mình",
+      "wer": 0.038461538461538464,
+      "cer": 0.009009009009009009,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 121,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/070_000004624.wav",
+      "reference": "do vậy sẽ đẩy mức chi phí sản xuất ban đầu lên cao hơn so với tiêu chuẩn của chúng ta",
+      "prediction": "vậy sẽ đẩy mức chi phí sản xuất ban đầu lên cao hơn so với tiêu chuẩn của chúng ta",
+      "wer": 0.047619047619047616,
+      "cer": 0.03529411764705882,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 122,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/132_000010144.wav",
+      "reference": "bình nguyên quân nói phàm kẻ sĩ tài giỏi ở trên đời cũng như cái dùi ở trong túi mũi dùi phải lòi ngay ra chứ",
+      "prediction": "bình nguyên quân nói phàm kẻ sĩ tài dõi ở trên đời cũng như cái dùi ở trong túi mũi dùi phải lòi ngay ra chứ",
+      "wer": 0.038461538461538464,
+      "cer": 0.027522935779816515,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 123,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/3598-180204-0018.wav",
+      "reference": "sir willoughby says when he's married you won't let me hide ah it is wrong to pet a big boy like you",
+      "prediction": "sir willoughby says when he's married you won't let me hide ah it is wrong to pet a big boy like you",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 124,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6251-63840-0019.wav",
+      "reference": "and the member of parliament for his county these medallions gave him some reputation and it was a favorite branch with him as long as he lived",
+      "prediction": "and the member of parliament for his county these medallions gave him some reputation and it was a favourite branch with him as long as he lived",
+      "wer": 0.037037037037037035,
+      "cer": 0.006993006993006993,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 125,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000003_000001287.wav",
+      "reference": "sở hữu ngay cho mình những sản phẩm chính hãng với chất lượng tốt nhất cũng như",
+      "prediction": "sở hữu ngay cho mình những sản phẩm chínhhác với chất lượng tốt nhất cũng như",
+      "wer": 0.11764705882352941,
+      "cer": 0.05063291139240506,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 126,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/061_000010357.wav",
+      "reference": "người ta nhìn người ta vội vã bước nhanh người ta giơ tay giữ lại cái đang trôi qua",
+      "prediction": "người ta nhìn người ta vội vã bước nhanh người ta giơ tay giữ lại cái đang trôi qua",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "hu",
+      "match": true
+    },
+    {
+      "sample_id": 127,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000049_000000602.wav",
+      "reference": "với việc tung vào sân tới bốn cầu thủ ở trong những phút qua của hiệp hai thì tesco hy vọng",
+      "prediction": "một việc thuộc vào sân tới bốn cầu thủ ở trong những phút qua của hiệp hai thì tedesco hy vọng",
+      "wer": 0.14285714285714285,
+      "cer": 0.08791208791208792,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 128,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/100_000003568.wav",
+      "reference": "lúc này hydro kết thành heli nhiệt lượng thoát ra làm tăng áp suất và các đám mây không co lại thêm nữa",
+      "prediction": "lúc này hydro kếch thành heli nhiệt lượng thoát ra làm tăng áp suất và các máy át không co lại thêm nữa",
+      "wer": 0.13043478260869565,
+      "cer": 0.06796116504854369,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 129,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/163_000002121.wav",
+      "reference": "tôi đã chán nghề là ai thủ công thường bị hiếp đáp làm xâu đóng thuế chuộc công sưu nặng nề",
+      "prediction": "ba tôi đã chán nghề làm thủ công thường bị hiếp đáp làm sâu đóng thuế chuột công su nặng nề",
+      "wer": 0.2857142857142857,
+      "cer": 0.0989010989010989,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 130,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000000351.wav",
+      "reference": "của fir một không có những lý do để bắt người theo điều hai mươi hai của hiến pháp đã quy định và ông đã vi phạm điều năm mươi của bộ luật tố tụng hình sự",
+      "prediction": "hít chú thích không có những lý do để bắt người theo điều hai mươi hai của hiến pháp để quy định và ông đã vi phạm điều năm mươi của bộ luật tố tụng hình sự",
+      "wer": 0.10810810810810811,
+      "cer": 0.07792207792207792,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 131,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/050_000001650.wav",
+      "reference": "là bởi một hình ảnh sống động có tầm ảnh hưởng lớn đến thường thức hơn là một ý niệm không chắc",
+      "prediction": "là bởi một hình ảnh sống động có tầm ảnh hưởng lớn đến thường thực hơn là một ý niệm không chắc",
+      "wer": 0.045454545454545456,
+      "cer": 0.010526315789473684,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 132,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/132_000001874.wav",
+      "reference": "nhưng chưa hạ được thành nghe tin trần vương thua chạy quân tần sắp đến bình liền vượt trường giang giả làm mệnh lệnh của trần vương",
+      "prediction": "nhưng chư hạ được thành nghe từng trần vương thua chạy quân tần sắp đến bình liền vượt trường giang giả là mệnh lệnh của trần vương",
+      "wer": 0.1111111111111111,
+      "cer": 0.030303030303030304,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 133,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000039_000000532.wav",
+      "reference": "hôm nay anh làm tốt lắm anh cũng cố gắng hết sức mình rồi mà",
+      "prediction": "hôm nay anh làm tốt lắm anh cũng cố gắng hết sức mình rồi mà",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 134,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7121-86787-0002.wav",
+      "reference": "i cannot tell you all i feel at this moment terror grief madness",
+      "prediction": "i cannot tell you what i feel at this moment terror grief madness",
+      "wer": 0.07692307692307693,
+      "cer": 0.0625,
+      "language": "el",
+      "match": false
+    },
+    {
+      "sample_id": 135,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/165_000004375.wav",
+      "reference": "tôi đứng trên đài cao với một cái loa lá cờ đỏ những tấm bảng có kẻ chữ",
+      "prediction": "tôi đứng trên đài cao với một cái loa lá cờ đỏ những tấm bảng có kẻ chữ",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 136,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000148_000000391.wav",
+      "reference": "sẽ luôn luôn là anh cho đến cuối cuộc đời em",
+      "prediction": "lưu lưu là anh cho đến cuối của đời em",
+      "wer": 0.36363636363636365,
+      "cer": 0.2727272727272727,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 137,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/7147-80028-0055.wav",
+      "reference": "and then i love her and then i tell her so or else she finds it out without my telling was that a sin you can't forgive i never said it was a sin",
+      "prediction": "and then i love her and then i tell her so or else she find it out without my telling was that a sin you can't forgive i never said it was a sin",
+      "wer": 0.029411764705882353,
+      "cer": 0.006896551724137931,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 138,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000019_000000821.wav",
+      "reference": "ngược lại nếu con càng dịu dàng với lam thì lam càng nghĩ con có lỗi nên mới chịu hạ mình như vậy",
+      "prediction": "lại nếu con càng dịu dàng với lam thì làm càng nghĩ con có lỗi nên mới chịu hà mình như vậy",
+      "wer": 0.13043478260869565,
+      "cer": 0.08247422680412371,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 139,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/6030-57826-0015.wav",
+      "reference": "in thus expressing himself the duke wellington meant that bodily vigor power of endurance courage and rapidity of decision are produced by the manly games which are fostered here",
+      "prediction": "thus expressing himself the duke wellington meant that bodily vigor power of endurance courage and rapidity of decision are produced by the manly games which have fostered here",
+      "wer": 0.06896551724137931,
+      "cer": 0.028089887640449437,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 140,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000073_000000086.wav",
+      "reference": "chính xác cao vũ thị hòa cũng đã vượt qua được sự truy cản của hậu vệ bên phía đội tuyển nữ đức",
+      "prediction": "chính xác cả vũ thị hoà cũng đã vượt qua được truy cản của hậu vệ bên phía đội tuyển nữ đức",
+      "wer": 0.13043478260869565,
+      "cer": 0.07368421052631578,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 141,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/369_000000113.wav",
+      "reference": "hay đặc biệt nhất là để hẹn hò nhưng chẳng cần đợi đến bây giờ hồ tây mới lãng mạn đến vậy",
+      "prediction": "hay đặc biệt nhất là để hẹn hò nhưng chẳng cần để đến bây giờ hồ tây mới lãng mạn đến vậy",
+      "wer": 0.045454545454545456,
+      "cer": 0.022222222222222223,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 142,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/155_000006888.wav",
+      "reference": "tại sao cô quá tin như vậy người anh thứ hai lại còn hủy báng khinh nhờn thần phật nữa",
+      "prediction": "tại sao cô quá tin như vậy người anh thứ hai lại còn quỷ bán khinh nhờn thần phật nữa",
+      "wer": 0.1,
+      "cer": 0.046511627906976744,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 143,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/189_000002317.wav",
+      "reference": "phủ rêu mịn như nhung và những cây thạch thảo khô héo và những cây kim tước chi cằn cỗi",
+      "prediction": "phủ riêng mịn như nhung là những cây thạch thảo khô héo và những cây kim tước chi cằn cỗi",
+      "wer": 0.1,
+      "cer": 0.04597701149425287,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 144,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000112_000000048.wav",
+      "reference": "sau vài tuần tham gia ví dụ một cuộc tấn công tên lửa của nga vào tháng ba năm hai nghìn không trăm hai mươi hai đã đánh trúng một căn cứ",
+      "prediction": "sau vài tuần tham giam ví dụ một cuộc tấn công tên lửa của nga vào tháng ba năm hai nghìn lẻ hai mươi hai đã đánh trúng một căn",
+      "wer": 0.125,
+      "cer": 0.10218978102189781,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 145,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/075_000001312.wav",
+      "reference": "có khi họ cũng sai nhưng một người ngoại quốc như bạn mà muốn đoán xem người tiêu dùng bản xứ sẽ phản ứng ra sao",
+      "prediction": "có khi họ cũng sai như một người ngoại quốc như bạn mà muốn đoán xem người tiêu dùng bản xứ sẽ phản ứng ra sao",
+      "wer": 0.038461538461538464,
+      "cer": 0.017857142857142856,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 146,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/067_000001075.wav",
+      "reference": "là người syri mặc dù sử dụng ngôn ngữ của các bạn không thành thạo lắm nhưng tôi rất muốn gọi đúng tên người bạn thương gia vừa rồi",
+      "prediction": "tôi là syri mặc dù sử dụng ngôn ngữ của các bạn không thành thạo lắm nhưng tôi rất muốn gọi đúng tên người bạn thương gia vừa rồi",
+      "wer": 0.06896551724137931,
+      "cer": 0.061068702290076333,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 147,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000013_000001453.wav",
+      "reference": "ổn không anh sợ là thằng nghĩa không chịu tin á thực ra thì em không có định dụ anh nghĩa",
+      "prediction": "ổn không anh sợ là thằng nghĩa không chịu tin á thực ra thì em không có định vụ anh nghĩa",
+      "wer": 0.047619047619047616,
+      "cer": 0.011235955056179775,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 148,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000012_000001377.wav",
+      "reference": "thì ra cậu nghĩa không phải là con ruột của bả vậy có thể bả là hung thủ rồi đó con",
+      "prediction": "thì ra cậu nghĩa không phải là con ruột của bả vậy có thể bả là hung thủ rồi đó con",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 149,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000011_000000237.wav",
+      "reference": "ba món bún không ăn với nước lèo bún thịt nước làm gì ăn với nước lèo bún xào chung với thịt gì đó thịt",
+      "prediction": "ba món bún không ăn với nước lèo bún thịt nướng làm thì ăn với nước lèo bún xào chung với thịt gì đó thịt",
+      "wer": 0.08,
+      "cer": 0.038834951456310676,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 150,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000156_000000215.wav",
+      "reference": "việc làm nhằm tạo điều kiện cho hội viên ổn định cuộc sống và sống hòa nhập với cộng đồng trong nhiệm kỳ qua đã đẩy mạnh công tác lao động sản xuất",
+      "prediction": "việc làm nhằm tạo điều kiện cho hội viên ổn định cuộc sống và sống hòa nhập với cộng đồng trong nhiệm kỳ qua đã đẩy man khốc tạc lao động sản",
+      "wer": 0.12121212121212122,
+      "cer": 0.08163265306122448,
+      "language": "pl",
+      "match": false
+    },
+    {
+      "sample_id": 151,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000090_000000024.wav",
+      "reference": "tại vì cái phim mình ra này chính xác ngay từ đầu mình xác định là làm một cái kỷ niệm đối với tri âm với khán giả của mình thôi chứ không ai nghĩ quá đó và",
+      "prediction": "tại vì cái phim mình ra này chính xác người ta nào mình xác định là là một cái kỷ niệm đối với tri âm với khán giả của mình thôi chứ không ai nghĩ quá hết á",
+      "wer": 0.15789473684210525,
+      "cer": 0.08333333333333333,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 152,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000050_000000533.wav",
+      "reference": "chắc tại vì vậy mà vợ chồng ông sơn mới cương quyết coi đăng duy như là người ngoài",
+      "prediction": "chắc tại vì vậy mà vợ chồng ông sơn mới cương quyết coi đăng duy như là người ngoài",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 153,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/062_000008075.wav",
+      "reference": "tôi thì cậu được gì nào cậu sẽ không có được tiền của cậu giờ hãy bỏ súng xuống và tôi xin hứa sẽ cho phép cậu giành giải thưởng cao nhất",
+      "prediction": "nhưng bắn tôi thì cậu được gì nào cậu sẽ không được tiền của cậu giờ hãy bỏ súng xuống và tôi xin hứa sẽ giúp cậu giành giải thưởng cao nhất",
+      "wer": 0.15625,
+      "cer": 0.145985401459854,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 154,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000017_000000138.wav",
+      "reference": "dạ hay là tối nay chị về bên nhà ngủ với con cháu một đêm cho vui nha",
+      "prediction": "hay là tối nay chị về bên nhà ngồi với con cháu một đêm cho vui nha",
+      "wer": 0.1111111111111111,
+      "cer": 0.07246376811594203,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 155,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/1704-142310-0082.wav",
+      "reference": "open it quick said she to the eldest child it's bolted make no noise be very still",
+      "prediction": "it quick said she to the eldest child it's bolted make no noise be very still",
+      "wer": 0.058823529411764705,
+      "cer": 0.06097560975609756,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 156,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/406_000000120.wav",
+      "reference": "phải đến khi mông cổ chinh phục trung hoa và lập ra nhà nguyên miến điện mới phải đối mặt với cuộc xâm lăng đầu tiên đến từ trung hoa",
+      "prediction": "phải đến khi mông cổ chinh phục trung hoa và lập ra nhà nguyên miến điện mới phải đối mặt với cuộc xâm lăng đầu tiên đến từ trung hoa",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "ro",
+      "match": true
+    },
+    {
+      "sample_id": 157,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000015_000000256.wav",
+      "reference": "rồi người ta cũng mở rồi nhưng mà cũng buổi sáng à cậu thôi được rồi",
+      "prediction": "người ta cũng mở rồi nhưng mà cũng bu sáng hả cậu",
+      "wer": 0.375,
+      "cer": 0.3235294117647059,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 158,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000088_000000281.wav",
+      "reference": "về chứ không được đi đâu hết nhớ chưa",
+      "prediction": "về chứ không được đi đâu hết nhớ chưa",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "tr",
+      "match": true
+    },
+    {
+      "sample_id": 159,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/090_000006697.wav",
+      "reference": "nhưng anh ta đành cắt ngang câu chuyện đó vì có tiếng nhân vật chính vang lên ngoài cửa",
+      "prediction": "nhưng anh ta đành các ngang câu chuyện đó vì có tiếng nhân vật chính vang lên ngoài cửa",
+      "wer": 0.05263157894736842,
+      "cer": 0.022988505747126436,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 160,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/956-157879-0021.wav",
+      "reference": "it's the woman's bargaining instinct you know she wants to get value now i want to hear about miss dalstan where did you meet her and how did you get her to accept your play",
+      "prediction": "it's the woman's bargaining instinct you know she wants to get value now i want to hear about miss dalston where did you meet her and how did you get her to accept your play",
+      "wer": 0.02857142857142857,
+      "cer": 0.005780346820809248,
+      "language": "el",
+      "match": false
+    },
+    {
+      "sample_id": 161,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/040_000001048.wav",
+      "reference": "toong một chung quanh khu vườn vuông ấy những cây chanh những cây hồng và cỏ đều bị phạt đi",
+      "prediction": "nước bê tông chung quanh khu vuông ấy những cây chanh những cây hồng và cỏ đều bị phạt đi",
+      "wer": 0.2,
+      "cer": 0.17582417582417584,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 162,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/046_000003316.wav",
+      "reference": "sáu mươi chín quy luật định vị nhận thức của khách hàng về bạn và công ty sẽ dẫn đến quyết định mua hàng thông qua cách khách hàng suy nghĩ",
+      "prediction": "sáu mươi chín quy luật định vị nhận thức của khách hàng về bạn và công ty sẽ dẫn đến quyết định mua hàng thông qua các khách hàng suy nghĩ",
+      "wer": 0.03225806451612903,
+      "cer": 0.007194244604316547,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 163,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/071_000000034.wav",
+      "reference": "bạn là ai không có gì khác chỉ có ba chữ viết tay với một dấu chấm hỏi to tướng",
+      "prediction": "bạn là ai không có gì khác chỉ có ba chữ viết tay với một dấu chấm hỏi to tướng",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "vi",
+      "match": true
+    },
+    {
+      "sample_id": 164,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/392_000000062.wav",
+      "reference": "chỉ đã quen với hơi thở của nhau thì không có cảm giác khó chịu với lưỡi và nước bọt của đối phương do",
+      "prediction": "khi đã quen với hơi thở của nhau thì không có cảm giác khó chịu với lưỡi và nước bọt của đối phương nữa",
+      "wer": 0.08333333333333333,
+      "cer": 0.049019607843137254,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 165,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000123_000000152.wav",
+      "reference": "một khi nó thức tỉnh thì con ngươi sẽ xuất hiện những hoa văn mang hình thù đặc trưng có thể dễ dàng nhìn thấu thể thuật",
+      "prediction": "một khi nó thất tỉnh thì con ngươi sẽ xuất hiện những hoa văn mang hình thù đặc trưng có thể dễ dàng nhìn thấu thể thuật",
+      "wer": 0.037037037037037035,
+      "cer": 0.016666666666666666,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 166,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4225-144132-0126.wav",
+      "reference": "and arrived at the bureau and glancing round once more carefully packed the cash in one of his money bags where doubtless",
+      "prediction": "and arrived at the bureau and glancing around once more carefully packed the cash in one of his money bags where doubtless",
+      "wer": 0.045454545454545456,
+      "cer": 0.008264462809917356,
+      "language": "el",
+      "match": false
+    },
+    {
+      "sample_id": 167,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4863-258985-0026.wav",
+      "reference": "as a reduction of supply results in a higher price it is possible as is seen in the paradox of value",
+      "prediction": "answer reduction of supply results in a higher praise it is possible as is seen in the paradox of value",
+      "wer": 0.14285714285714285,
+      "cer": 0.06,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 168,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/150_000000524.wav",
+      "reference": "tôi từng đọc một cuốn sách nhan đề là kho báu ẩn giấu cuốn sách kể về câu chuyện của một người mỹ",
+      "prediction": "tôi từng đọc một cuốn sách nhan đề là kho báu ẩn dấu cuốn sách kể về câu chuyện của một người mỹ",
+      "wer": 0.043478260869565216,
+      "cer": 0.020618556701030927,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 169,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4017-6540-0080.wav",
+      "reference": "no more than two hundred or three hundred yards from the land and that it had taken him nearly an hour to get back again",
+      "prediction": "no more than two hundred or three hundred yards from the land and that it had taken him nearly an hour to get back again",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "fi",
+      "match": true
+    },
+    {
+      "sample_id": 170,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/145_000002177.wav",
+      "reference": "sau đó cô bị cơ quan chức năng gửi công văn đến trường và bị ban giám hiệu phê bình trước tập thể",
+      "prediction": "sau đó cô bị cơ quan chức năng gửi công văn đến trường và bị ban giám hiệu phê bình trước tật thể",
+      "wer": 0.043478260869565216,
+      "cer": 0.010309278350515464,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 171,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000003_000000647.wav",
+      "reference": "anh hoàng bảo là con cá này nè nướng ăn rất là ngon",
+      "prediction": "nướng nha tại vì anh hoàng bảo là con cá này nè nướng ăn rất là ngon",
+      "wer": 0.3076923076923077,
+      "cer": 0.3333333333333333,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 172,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/077_000000725.wav",
+      "reference": "khi mong ước rằng một người giúp việc một kẻ thân thích hay một người bạn sẽ không có khuyết điểm đây là mong ước",
+      "prediction": "khi mong út rằng một người dứt việc một kẻ thân thích hay một người bạn sẽ không có khuyết điểm đây là mong út",
+      "wer": 0.12,
+      "cer": 0.08849557522123894,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 173,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/346_000000097.wav",
+      "reference": "chẳng hạn trong trường hợp của my và trang nói trên nếu mà giáo viên lựa chọn để cho hai em cùng đọc những tài liệu như nhau",
+      "prediction": "chẳng hạn trong trường hợp của my và trang nói trên nếu mà giáo viên lựa chọn để cho hai em cùng đọc những tài liệu như nhau",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "hu",
+      "match": true
+    },
+    {
+      "sample_id": 174,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/188_000006005.wav",
+      "reference": "nếu thế tôi sẽ mất cả một ngày tôi tin rằng chẳng có lấy một phần trăm",
+      "prediction": "nếu thế tôi sẽ mất cả một ngày tôi tin rằng chẳng có mấy một phần trăm",
+      "wer": 0.058823529411764705,
+      "cer": 0.014285714285714285,
+      "language": "fr",
+      "match": false
+    },
+    {
+      "sample_id": 175,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000078_000000338.wav",
+      "reference": "em nói lần cuối cùng em không đi bệnh viện anh hiểu không",
+      "prediction": "em đó là cuối cùng em không đi bệnh viện anh hiểu không",
+      "wer": 0.15384615384615385,
+      "cer": 0.07017543859649122,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 176,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000047_000000151.wav",
+      "reference": "anh nghĩ đi nếu là ba anh á ba anh có cho anh làm như vậy không",
+      "prediction": "anh nghĩ đi nếu là ba anh á ba anh có cho anh như vậy không",
+      "wer": 0.058823529411764705,
+      "cer": 0.06349206349206349,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 177,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/156_000002754.wav",
+      "reference": "trên thể lệ ghi gía tiền nó là con ngựa duy nhất với giá một ăn ba mươi lăm",
+      "prediction": "trên thể lệ ghi giá tiền nó là con ngựa duy nhất với giá một ăn ba mươi lăm",
+      "wer": 0.05263157894736842,
+      "cer": 0.02666666666666667,
+      "language": "ro",
+      "match": false
+    },
+    {
+      "sample_id": 178,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000076_000000794.wav",
+      "reference": "vì vậy là điểm số được xác định cho đội tuyển mỹ",
+      "prediction": "vậy là điểm số được xác định cho đội tuyển mỹ",
+      "wer": 0.08333333333333333,
+      "cer": 0.0625,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 179,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000000218.wav",
+      "reference": "đã trải qua những biến chuyển từ kiểu mẫu truyền thống sang kiểu gia đình với những đặc điểm hiện đại",
+      "prediction": "đã trải qua nhiều biến chuyển từ kiểu mẫu truyền thống sang kiểu gia đình với những đặc điểm hiện đại",
+      "wer": 0.047619047619047616,
+      "cer": 0.0297029702970297,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 180,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/120_000000543.wav",
+      "reference": "tôi đã ngồi trên những chiếc ghế rửa tay trong bồn nguệch ngoạc các chỉ dẫn trên bảng thông báo thay đổi lịch công tác",
+      "prediction": "tôi đã ngồi trên những chiếc ghế rửa tay trong bồn nguệch ngoà các chỉ dẫn trên bảng thông báo thay đổi lệch công tác",
+      "wer": 0.08,
+      "cer": 0.025423728813559324,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 181,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/102_000003366.wav",
+      "reference": "sự thông thái của con số trong adn thật sâu sắc",
+      "prediction": "sự thông thái của con số trong adn thật sâu sắc",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "hu",
+      "match": true
+    },
+    {
+      "sample_id": 182,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/015_000001106.wav",
+      "reference": "sẽ bị xóa sạch và không thể tác động gì đến bạn cách tiềm thức điều khiển tất cả các chức năng của cơ thể",
+      "prediction": "sẽ bị xóa sạch và không thể tác động gì đến bà cách tiềm thức điều khiển tất cả các chức năng của cơ thể",
+      "wer": 0.04,
+      "cer": 0.01904761904761905,
+      "language": "vi",
+      "match": false
+    },
+    {
+      "sample_id": 183,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000022_000000053.wav",
+      "reference": "lúc này con nghe nói",
+      "prediction": "lúc này con nghe nói",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "es",
+      "match": true
+    },
+    {
+      "sample_id": 184,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/4009-43916-0012.wav",
+      "reference": "melt in a saucepan a piece of butter in which brown half an onion cut into thin slices to be removed from the butter when browned then add to the butter two teaspoonfuls of flour mix but don't allow to brown",
+      "prediction": "a saucepan a piece of butter in which brown half an onion cut into thin slices to be removed from the butter when browned then add to the butter two teaspoonfuls of flour mix but don't allow to brown",
+      "wer": 0.04878048780487805,
+      "cer": 0.03864734299516908,
+      "language": "ar",
+      "match": false
+    },
+    {
+      "sample_id": 185,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/020_000002504.wav",
+      "reference": "bạn có thể nghe mọi điều bằng một tinh thần cởi mở biết đặt mình vào vị trí của người khác để hiểu những điều họ nói",
+      "prediction": "ban có thể nghe mọi điều bằng một tinh thần cởi mở biết đặt mình vào vị trí của người khác để hiểu những điều họ nói",
+      "wer": 0.037037037037037035,
+      "cer": 0.008620689655172414,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 186,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/8846-305209-0028.wav",
+      "reference": "loved much and prayed unceasingly when the young wives of her acquaintance married like herself to pagan husbands complained of the insults and even blows which they had to bear",
+      "prediction": "loved much and prayed unceasingly when the young wives of her acquaintance married like herself to pagan husbands complained of the insults and even blows which they had to bear",
+      "wer": 0.0,
+      "cer": 0.0,
+      "language": "el",
+      "match": true
+    },
+    {
+      "sample_id": 187,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000040_000000982.wav",
+      "reference": "người dân anh rất là thích hoặc kỷ tử khi mà sử dụng trong cuộc sống hàng ngày giúp cho cải",
+      "prediction": "người dân anh rất là thích hoặc kỷ tử khi mà sử dụng trong cuộc sống hằng ngày giúp cho cải",
+      "wer": 0.047619047619047616,
+      "cer": 0.01098901098901099,
+      "language": "tr",
+      "match": false
+    },
+    {
+      "sample_id": 188,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/124_000005793.wav",
+      "reference": "trong cái trạng thái cuồng nhiệt đó tôi vẫn còn kịp nhìn thấy những thằng người màu xám chì hoảng loạn giạt ra",
+      "prediction": "trong cái trạng thái cuồng nhiệt đó tôi vẫn còn kịp nhìn thấy những thằng người màu xám trì hoảng loạn rạt ra",
+      "wer": 0.08695652173913043,
+      "cer": 0.03636363636363636,
+      "language": "hu",
+      "match": false
+    },
+    {
+      "sample_id": 189,
+      "audio_path": "data/processed/full_merged_dataset/test/audio/000000118_000000058.wav",
+      "reference": "phạm tội thuộc một trong các trường hợp như có tổ chức dùng vũ khí hung khí hoặc có hành vi phá phách",
+      "prediction": "phạm tội thuộc một trong các trường hợp nhược có tổ chức dung vũ khí hung khí hoặc có hành vi phá vách",
+      "wer": 0.13043478260869565,
+      "cer": 0.04950495049504951,
+      "language": "hu",
+      "match": false
+    }
+  ],
+  "current_progress": {
+    "completed": 190,
+    "total": 32818,
+    "percentage": 0.5789505759034675
+  },
+  "current_metrics": {
+    "average_wer": 0.08062384303958899,
+    "average_cer": 0.04362704094774697,
+    "perfect_matches": 51,
+    "perfect_match_rate": 0.26842105263157895
+  }
+}

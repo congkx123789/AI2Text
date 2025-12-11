@@ -8,9 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from src.tools.ai2text_bridge import transcribe
-from src.config import EMBEDDING_MODEL, RERANKER_MODEL, VECTOR_DIR
+from src.config import EMBEDDING_MODEL, RERANKER_MODEL, VECTOR_DIR, GEN_MAX_TOKENS
 from src.rag.indexer import HybridIndex
 from src.rag.pipeline import RAGPipeline
+from src.llm.infer import generate_text
+from src.models.unified import get_unified_manager
 
 class TranscribeRequest(BaseModel):
     audio_path: str = Field(..., description="Path to audio file on server")
@@ -31,6 +33,17 @@ class Citation(BaseModel):
 class AskResponse(BaseModel):
     answer: str = Field(..., description="Generated answer")
     contexts: list[Citation] = Field(..., description="Source citations")
+
+class AudioToAnswerRequest(BaseModel):
+    audio_path: str = Field(..., description="Path to audio file on server")
+    task: Optional[str] = Field("summarize", description="Task type: summarize, answer, translate, analyze, extract")
+    question: Optional[str] = Field(None, description="Optional question if task is 'answer'")
+
+class AudioToAnswerResponse(BaseModel):
+    transcription: str = Field(..., description="Transcribed text from audio")
+    response: str = Field(..., description="Generated response from Qwen")
+    language: str = Field(..., description="Detected language")
+    task: str = Field(..., description="Task that was performed")
 
 class HealthResponse(BaseModel):
     status: str
@@ -212,3 +225,126 @@ def api_ask(req: AskRequest):
         return AskResponse(answer=out.get("answer", ""), contexts=citations)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG error: {type(e).__name__}: {e}")
+
+@app.post("/audio-to-answer", response_model=AudioToAnswerResponse)
+def api_audio_to_answer(req: AudioToAnswerRequest):
+    """
+    Kết hợp Whisper + Qwen: Transcribe audio và xử lý bằng Qwen LLM.
+    Sử dụng UnifiedModelManager để quản lý cả hai models.
+    
+    Workflow:
+    1. Whisper transcribe audio → text
+    2. Qwen xử lý text (summarize, answer, translate, analyze, extract)
+    
+    - **audio_path**: Path to audio file on server
+    - **task**: Task type - "summarize" (default), "answer", "translate", "analyze", "extract"
+    - **question**: Optional question if task is "answer"
+    """
+    try:
+        # Validate audio path
+        p = Path(req.audio_path).expanduser()
+        if not p.is_absolute():
+            p = (Path.cwd() / p).resolve()
+        if not p.exists():
+            raise HTTPException(status_code=400, detail=f"Audio file not found: {p}")
+        
+        # Use unified model manager
+        manager = get_unified_manager()
+        result = manager.process_audio(
+            audio_path=str(p),
+            task=req.task or "summarize",
+            question=req.question
+        )
+        
+        return AudioToAnswerResponse(
+            transcription=result["transcription"],
+            response=result["response"],
+            language=result["language"],
+            task=result["task"]
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = f"Audio-to-answer error: {type(e).__name__}: {str(e)}"
+        print(f"[audio-to-answer] Error: {error_detail}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=error_detail)
+
+@app.post("/audio-to-answer/upload", response_model=AudioToAnswerResponse)
+async def api_audio_to_answer_upload(
+    file: UploadFile = File(...),
+    task: Optional[str] = Form("summarize"),
+    question: Optional[str] = Form(None),
+    language: Optional[str] = Form(None),
+    model_size: Optional[str] = Form("small")
+):
+    """
+    Kết hợp Whisper + Qwen: Upload audio, transcribe và xử lý bằng Qwen LLM.
+    
+    - **file**: Audio file to upload
+    - **task**: Task type - "summarize" (default), "answer", "translate", "analyze", "extract"
+    - **question**: Optional question if task is "answer"
+    - **language**: Language code (e.g., 'vi', 'en', None for auto-detect)
+    - **model_size**: Whisper model size ('tiny', 'base', 'small', 'medium', 'large')
+    """
+    tmp_path = None
+    try:
+        # Save uploaded file
+        suffix = Path(file.filename).suffix if file.filename else ".wav"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
+        
+        # Auto preprocess audio
+        try:
+            import sys
+            audio_processing_path = Path(__file__).parent.parent.parent.parent / "audio_processing"
+            if audio_processing_path.exists():
+                sys.path.insert(0, str(audio_processing_path.parent))
+                from audio_processing import auto_preprocess_audio
+                print(f"[audio-to-answer] Auto preprocessing audio: {tmp_path}")
+                tmp_path = auto_preprocess_audio(
+                    tmp_path,
+                    sample_rate=16000,
+                    model_type='ai-llm'
+                )
+        except Exception as e:
+            print(f"[audio-to-answer] Warning: Auto preprocessing failed: {e}")
+        
+        # Use unified model manager
+        manager = get_unified_manager(asr_model=model_size)
+        result = manager.process_audio(
+            audio_path=tmp_path,
+            task=task or "summarize",
+            question=question,
+            language=language
+        )
+        
+        transcription = result["transcription"]
+        response = result["response"]
+        detected_language = result["language"]
+        task_type = result["task"]
+        
+        # Cleanup
+        Path(tmp_path).unlink(missing_ok=True)
+        
+        return AudioToAnswerResponse(
+            transcription=transcription,
+            response=response,
+            language=detected_language,
+            task=task_type
+        )
+    except HTTPException:
+        if tmp_path:
+            Path(tmp_path).unlink(missing_ok=True)
+        raise
+    except Exception as e:
+        if tmp_path:
+            Path(tmp_path).unlink(missing_ok=True)
+        import traceback
+        error_detail = f"Audio-to-answer error: {type(e).__name__}: {str(e)}"
+        print(f"[audio-to-answer] Error: {error_detail}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=error_detail)

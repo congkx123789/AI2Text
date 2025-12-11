@@ -11,6 +11,7 @@ from .text_cleaning import (
     prepare_text_for_training
 )
 from .bpe_tokenizer import BPETokenizer
+from .sentencepiece_tokenizer import SentencePieceTokenizer
 from .phonetic import (
     strip_diacritics,
     telex_encode_syllable,
@@ -26,6 +27,7 @@ __all__ = [
     'Tokenizer',
     'prepare_text_for_training',
     'BPETokenizer',
+    'SentencePieceTokenizer',
     'strip_diacritics',
     'telex_encode_syllable',
     'vn_soundex',

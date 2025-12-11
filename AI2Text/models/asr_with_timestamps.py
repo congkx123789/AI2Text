@@ -57,7 +57,8 @@ class ASRModelWithTimestamps(ASRModel):
     def __init__(self, input_dim: int, vocab_size: int, 
                  d_model: int = 1024, num_encoder_layers: int = 24,
                  num_heads: int = 16, d_ff: int = 4096, dropout: float = 0.1,
-                 predict_timestamps: bool = True):
+                 predict_timestamps: bool = True, num_languages: int = 2,
+                 use_gradient_checkpointing: bool = True):
         """Initialize ASR model with timestamp support.
         
         Args:
@@ -69,6 +70,8 @@ class ASRModelWithTimestamps(ASRModel):
             d_ff: Feed-forward dimension
             dropout: Dropout rate
             predict_timestamps: If True, add timestamp prediction head
+            num_languages: Number of languages (default: 2 for Vietnamese + English)
+            use_gradient_checkpointing: Enable gradient checkpointing
         """
         # Initialize base model
         super().__init__(
@@ -78,7 +81,9 @@ class ASRModelWithTimestamps(ASRModel):
             num_encoder_layers=num_encoder_layers,
             num_heads=num_heads,
             d_ff=d_ff,
-            dropout=dropout
+            dropout=dropout,
+            num_languages=num_languages,
+            use_gradient_checkpointing=use_gradient_checkpointing
         )
         
         self.predict_timestamps = predict_timestamps

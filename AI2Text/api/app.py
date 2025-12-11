@@ -23,8 +23,6 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from models.asr_base import ASRModel
-from models.lstm_asr import LSTMASRModel
-from models.enhanced_asr import EnhancedASRModel
 from preprocessing.audio_processing import AudioProcessor
 from preprocessing.text_cleaning import Tokenizer, VietnameseTextNormalizer
 from database.db_utils import ASRDatabase
@@ -79,7 +77,7 @@ class TranscriptionResponse(BaseModel):
 class TrainingRequest(BaseModel):
     """Request model for training."""
     config_path: str
-    model_type: str = "transformer"  # transformer, lstm, enhanced
+    model_type: str = "transformer"  # Only transformer architecture supported
     num_epochs: int = 10
     batch_size: int = 16
 
@@ -147,23 +145,11 @@ def load_model(model_path: str, model_type: str = "transformer"):
         vocab_size = len(tokenizer_cache)
         logger.warning(f"无法从checkpoint获取vocab_size，使用tokenizer大小: {vocab_size}")
     
-    # 确定模型类型
-    if model_type == "auto":
-        # 尝试从checkpoint推断模型类型
-        model_type = checkpoint.get('model_type', 'transformer')
-    
+    # Only Transformer architecture supported
+    model_type = "transformer"
     logger.info(f"加载模型: type={model_type}, input_dim={input_dim}, vocab_size={vocab_size}, d_model={d_model}")
     
-    if model_type == "lstm":
-        model = LSTMASRModel(input_dim=input_dim, vocab_size=vocab_size, hidden_size=d_model)
-    elif model_type == "enhanced":
-        model = EnhancedASRModel(
-            input_dim=input_dim,
-            vocab_size=vocab_size,
-            d_model=d_model,
-            use_contextual_embeddings=config.get('use_contextual_embeddings', True)
-        )
-    else:  # transformer
+    # Create Transformer model
         model = ASRModel(input_dim=input_dim, vocab_size=vocab_size, d_model=d_model)
     
     # 加载模型权重
@@ -250,6 +236,7 @@ async def transcribe_audio(
             
             # 尝试多种路径查找模型
             search_paths = [
+                checkpoint_dir / "best_model.pt",  # ưu tiên best_model ở root
                 checkpoint_dir / f"{model_name}.pt",  # 直接路径
                 checkpoint_dir / model_name / "best_model.pt",  # 训练目录下的best_model
                 checkpoint_dir / model_name / f"{model_name}.pt",  # 训练目录下的同名文件

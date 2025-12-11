@@ -1,18 +1,13 @@
 """
-Vietnamese phonetic helpers for "sound-exactly" biasing.
+Vietnamese phonetic helpers for text processing.
 
-This module provides phonetic processing for Vietnamese, used for:
-- Phon2Vec training (phonetic embeddings)
-- Contextual biasing based on sound similarity
-- OOV word handling
+This module provides phonetic processing for Vietnamese.
 
 Provides:
   - strip_diacritics(text): remove Vietnamese diacritics safely
   - telex_encode_syllable(s): Telex-style tone markers (s, f, r, x, j, z)
   - vn_soundex(word): compact sound-like code for fast fuzzy lookup
   - phonetic_tokens(text): convert a sentence to sequence of phonetic tokens
-
-Note: This is rule-based and lightweight; suitable as a backbone for Phon2Vec.
 """
 
 from __future__ import annotations
@@ -160,8 +155,7 @@ def phonetic_tokens(text: str, telex: bool = True, tone_token: bool = True) -> l
     """
     Convert text to sequence of phonetic tokens.
     
-    This function converts Vietnamese text into phonetic tokens that can be
-    used for Phon2Vec training or sound-based similarity matching.
+    This function converts Vietnamese text into phonetic tokens.
     
     Args:
         text: Vietnamese text

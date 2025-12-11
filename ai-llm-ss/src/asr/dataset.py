@@ -5,6 +5,7 @@ except Exception:
     sf = None
 from .features import wav_to_logmelspec, ensure_mono16k
 
+
 class ASRDataset(torch.utils.data.Dataset):
     def __init__(self, audio_dir, text_dir, vocab_path):
         self.audio_paths = sorted(glob.glob(os.path.join(audio_dir, "*.wav")))

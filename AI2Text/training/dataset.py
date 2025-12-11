@@ -606,6 +606,7 @@ def create_data_loaders(train_df: pd.DataFrame,
                        audio_processor: AudioProcessor,
                        tokenizer: Tokenizer,
                        batch_size: int = 16,
+                       val_batch_size: Optional[int] = None,
                        num_workers: int = 4,
                        augmenter: Optional[AudioAugmenter] = None,
                        persistent_workers: bool = True,
@@ -733,9 +734,12 @@ def create_data_loaders(train_df: pd.DataFrame,
         worker_init_fn=worker_init_fn if num_workers > 0 else None  # Balance CPU affinity across all cores
     )
     
+    # Use separate batch size for validation if provided, otherwise use training batch size
+    val_batch = val_batch_size if val_batch_size is not None else batch_size
+    
     val_loader = DataLoader(
         val_dataset,
-        batch_size=batch_size,
+        batch_size=val_batch,
         shuffle=False,
         num_workers=num_workers,
         collate_fn=collate_fn,

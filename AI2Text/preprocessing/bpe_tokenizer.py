@@ -312,8 +312,21 @@ class BPETokenizer:
             best_pair = max(pairs.items(), key=lambda x: x[1])[0]
             
             # Merge pair
-            word_freqs_chars = self._merge_vocab(best_pair, word_freqs_chars)
             merged_token = ''.join(best_pair)
+            
+            # Skip tokens with special space characters (Ġ, ▁, _ prefix)
+            # We don't want these special characters in our vocabulary
+            # Instead, we use regular space ' ' token
+            if 'Ġ' in merged_token or '▁' in merged_token or (merged_token.startswith('_') and len(merged_token) > 1 and merged_token != '_'):
+                # Skip this merge - remove from pairs and try next best
+                pairs.pop(best_pair)
+                if len(pairs) == 0:
+                    break
+                # Get next best pair
+                best_pair = max(pairs.items(), key=lambda x: x[1])[0]
+                merged_token = ''.join(best_pair)
+            
+            word_freqs_chars = self._merge_vocab(best_pair, word_freqs_chars)
             vocab.add(merged_token)
             merges.append(best_pair)
         
@@ -329,7 +342,18 @@ class BPETokenizer:
         # Build final vocabulary
         self.vocab = sorted(list(vocab))
         
+        # Filter out any tokens with special space characters (Ġ, ▁, _ prefix)
+        # These are used by other tokenizers (GPT, SentencePiece) but we don't want them
+        filtered_vocab = []
+        for token in self.vocab:
+            # Skip tokens with special space characters
+            if 'Ġ' in token or '▁' in token or (token.startswith('_') and len(token) > 1):
+                continue
+            filtered_vocab.append(token)
+        self.vocab = filtered_vocab
+        
         # Add special tokens (including space token)
+        # We use regular space ' ' instead of special characters like Ġ or _
         special_tokens = [self.unk_token, self.pad_token, self.blank_token, self.sos_token, self.eos_token, self.space_token]
         for token in special_tokens:
             if token not in self.vocab:

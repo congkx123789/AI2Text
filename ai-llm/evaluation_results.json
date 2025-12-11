@@ -1,0 +1,62 @@
+{
+  "finetuned": {
+    "model": "models/finetuned/whisper-test",
+    "wer": 0.19274663449172982,
+    "cer": 0.11213384985289801,
+    "num_samples": 32818,
+    "predictions": [
+      "tiến vào thế kỷ 21",
+      "when turnbull in the narrow space behind the counter would push his way past her without other pretense of apology than something like a sneer she did feel for a moment as if evil were about to have the victory over her",
+      "rũng hệt như năm xưa bà nội và mẹ thằng thanh choi cãi nhau ẳn bí",
+      "thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền",
+      "con ơi con con ơi con đâu rồi con con ơi",
+      "ngồ gì đau quá người đẹp trai",
+      "tôi là một tên đần độn anh ta mất tới hai mươi ba tín đồng hồ mới sắp thép được một cổ phổng quấn đó là lần đầu",
+      "và quan những con số đó mộ thị thầm hát âu phải thế chẳng chai thò thể",
+      "một nguyên tử hero có khối lượng nhỏ hơn tẩm khối lượng của các rô thông và elektrôn tại nơi nó",
+      "cúc cùng có thể khẳng định dạng câu hỏi giả định này có rất nhiều tác dụng ở những thời điểm cuộc trò chuyện đang kéo dài lê thê"
+    ],
+    "references": [
+      "tiến vào thế kỷ hai mươi",
+      "when turnbull in the narrow space behind the counter would push his way past her without other pretense of apology than something like a sneer she did feel for a moment as if evil were about to have the victory over her",
+      "giống hệt như năm xưa bà nội và mẹ thằng thanh cứ cãi nhau ầm ĩ",
+      "thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền",
+      "con ơi con con ơi con đâu rồi con con",
+      "người gì đâu á người đẹp trai",
+      "tôi là một tên đần độn anh ta mất tới hai mươi ba tiếng đồng hồ mới sắp xếp được một cuộc phỏng vấn đó là lần đầu tiên",
+      "và qua những con số đó mụ thì thầm hát âu phải thế chàng trai thỏ thẻ",
+      "một nguyên tử hydro có khối lượng nhỏ hơn tổng khối lượng của các proton và electron tạo nên nó",
+      "cuối cùng có thể khẳng định dạng câu hỏi giả định này có rất nhiều tác dụng ở những thời điểm cuộc trò chuyện đang kéo dài lê thê"
+    ]
+  },
+  "base": {
+    "model": "openai/whisper-small",
+    "wer": 0.33053822546784506,
+    "cer": 0.1477668284256139,
+    "num_samples": 32818,
+    "predictions": [
+      " đến vào thế kỷ 21",
+      " When Turnbull, in the narrow space behind the counter, would push his way past her without other pretense of apology than something like a sneer, she did feel for a moment as if evil were about to have the victory over her.",
+      " Dống hẹt như năm xưa, ba nội và mẹ thằng Thanh cứ cãi nhau ở Mỹ.",
+      " Thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền.",
+      " Con ơi con! Con ơi con đâu rồi con? Con ơi!",
+      " You know what, I'm gonna try.",
+      " Tụi tôi là một tên đần độn, anh ta mất tới 23 tín đồng hồ mới sắp xếp được một cụm phổng quấn. Đó là lần đầu tế.",
+      " Và qua những con số đó, mộ thị thầm hát, ưu phải thế chẳng trai thỏ thể.",
+      " Một nguyên tử Hiro có khối lượng nhỏ hơn tẩm khối lượng của các pro thông và Electron tại đây nó.",
+      " cuối cùng có thể khẳng định dạng câu hỏi gia đình này có rất nhiều tác dụng. Ở những thời điểm cuộc trò chuyện đang kéo dài Lethè,"
+    ],
+    "references": [
+      "tiến vào thế kỷ hai mươi",
+      "when turnbull in the narrow space behind the counter would push his way past her without other pretense of apology than something like a sneer she did feel for a moment as if evil were about to have the victory over her",
+      "giống hệt như năm xưa bà nội và mẹ thằng thanh cứ cãi nhau ầm ĩ",
+      "thiền học truyền thống thường chọn đối tượng thiền quán là các công án thiền",
+      "con ơi con con ơi con đâu rồi con con",
+      "người gì đâu á người đẹp trai",
+      "tôi là một tên đần độn anh ta mất tới hai mươi ba tiếng đồng hồ mới sắp xếp được một cuộc phỏng vấn đó là lần đầu tiên",
+      "và qua những con số đó mụ thì thầm hát âu phải thế chàng trai thỏ thẻ",
+      "một nguyên tử hydro có khối lượng nhỏ hơn tổng khối lượng của các proton và electron tạo nên nó",
+      "cuối cùng có thể khẳng định dạng câu hỏi giả định này có rất nhiều tác dụng ở những thời điểm cuộc trò chuyện đang kéo dài lê thê"
+    ]
+  }
+}

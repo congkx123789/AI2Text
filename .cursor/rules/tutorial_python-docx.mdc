@@ -1,0 +1,1758 @@
+---
+alwaysApply: true
+description: "python-docx usage notes and API reference"
+---
+### 3. Run - Định dạng text
+
+#### Các phương thức của Run:
+
+**`add_break(break_type=WD_BREAK.LINE)`** - Thêm break
+```python
+from docx.enum.text import WD_BREAK
+
+run.add_break()  # Line break (mặc định)
+run.add_break(WD_BREAK.LINE)  # Line break
+run.add_break(WD_BREAK.PAGE)  # Page break
+run.add_break(WD_BREAK.COLUMN)  # Column break
+run.add_break(WD_BREAK.LINE_CLEAR_LEFT)  # Line break, clear left
+run.add_break(WD_BREAK.LINE_CLEAR_RIGHT)  # Line break, clear right
+run.add_break(WD_BREAK.LINE_CLEAR_ALL)  # Line break, clear all
+```
+
+**`add_picture(image_path, width=None, height=None)`** - Thêm hình ảnh vào run
+```python
+from docx.shared import Inches
+
+run.add_picture("image.jpg", width=Inches(2))
+```
+
+**`add_tab()`** - Thêm tab
+```python
+run.add_tab()
+```
+
+**`clear()`** - Xóa nội dung run
+```python
+run.clear()
+```
+
+**`iter_inner_content()`** - Lặp qua nội dung trong run
+```python
+from docx.drawing import Drawing
+from docx.text.pagebreak import RenderedPageBreak
+
+# Lặp qua nội dung trong run (theo thứ tự xuất hiện)
+for item in run.iter_inner_content():
+    if isinstance(item, str):
+        # Text từ các <w:t> elements (có thể là nhiều elements được gộp lại)
+        print(f"Text: {item}")
+    elif isinstance(item, RenderedPageBreak):
+        # Rendered page break (tự động tạo bởi Word)
+        print("Found rendered page break")
+        preceding = item.preceding_paragraph_fragment  # Paragraph | None
+        following = item.following_paragraph_fragment  # Paragraph | None
+    elif isinstance(item, Drawing):
+        # Drawing element (hình ảnh, chart, etc.)
+        # Hiện tại chỉ có access đến ._drawing (CT_Drawing XML element)
+        print("Found drawing")
+        # drawing._drawing  # CT_Drawing element
+
+# Lưu ý:
+# - Các elements như <w:br>, <w:cr/>, <w:tab/>, <w:t> được chuyển thành text
+# - Các ranges liên tiếp của text elements được gộp thành một string
+# - Rendered page breaks và drawings được trả về riêng biệt
+# - Các elements khác bị bỏ qua
+```
+
+#### Các thuộc tính của Run:
+
+**`text`** - Nội dung text
+```python
+# Đọc text
+text = run.text
+
+# Ghi text (thay thế toàn bộ nội dung run)
+run.text = "New text"  # Thay thế tất cả content, giữ run formatting
+
+# Text có thể chứa tab và line break
+run.text = "First line\nSecond line"  # \n hoặc \r -> <w:cr/> element
+run.text = "Column1\tColumn2"  # \t -> <w:tab/> element
+run.text = "Line1\rLine2"  # \r -> <w:cr/> element
+
+# Lưu ý:
+# - Khi gán run.text, tất cả content hiện tại bị thay thế
+# - Run formatting (bold, italic, font, etc.) được giữ lại
+# - Mỗi \t tạo một <w:tab/> element
+# - Mỗi \n hoặc \r tạo một <w:cr/> element
+# - <w:drawing> và các elements khác bị bỏ qua khi đọc text
+```
+
+**`bold`** - In đậm (True/False/None)
+```python
+run.bold = True
+run.bold = False
+run.bold = None  # Kế thừa từ style
+```
+
+**`italic`** - In nghiêng
+```python
+run.italic = True
+```
+
+**`underline`** - Gạch chân
+```python
+from docx.enum.text import WD_UNDERLINE
+
+run.underline = True  # Single underline
+run.underline = False  # No underline
+run.underline = None  # Inherit from style
+run.underline = WD_UNDERLINE.SINGLE  # Single line
+run.underline = WD_UNDERLINE.DOUBLE  # Double line
+run.underline = WD_UNDERLINE.THICK  # Thick line
+run.underline = WD_UNDERLINE.DOTTED  # Dotted line
+run.underline = WD_UNDERLINE.DASH  # Dashed line
+run.underline = WD_UNDERLINE.DOT_DASH  # Dot-dash line
+run.underline = WD_UNDERLINE.DOT_DOT_DASH  # Dot-dot-dash line
+run.underline = WD_UNDERLINE.WAVY  # Wavy line
+run.underline = WD_UNDERLINE.NONE  # No underline
+```
+
+**`font`** - Đối tượng Font để định dạng chi tiết
+```python
+from docx.shared import Pt, RGBColor
+
+# Font name
+run.font.name = "Arial"
+
+# Font size
+run.font.size = Pt(12)
+
+# Font color
+run.font.color.rgb = RGBColor(255, 0, 0)  # Màu đỏ
+
+# Các thuộc tính khác
+run.font.bold = True
+run.font.italic = True
+run.font.underline = True
+run.font.strike = True  # Gạch ngang
+run.font.subscript = True  # Chỉ số dưới
+run.font.superscript = True  # Chỉ số trên
+run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+run.font.highlight_color = WD_COLOR_INDEX.BLUE
+run.font.highlight_color = WD_COLOR_INDEX.AUTO  # Tự động
+run.font.highlight_color = None  # Xóa highlight
+
+# Các thuộc tính định dạng nâng cao (tri-state: True/False/None)
+run.font.all_caps = True  # Tất cả chữ hoa
+run.font.small_caps = True  # Chữ hoa nhỏ
+run.font.strike = True  # Gạch ngang
+run.font.double_strike = True  # Gạch ngang đôi
+run.font.subscript = True  # Chỉ số dưới
+run.font.superscript = True  # Chỉ số trên
+run.font.hidden = True  # Ẩn text
+run.font.emboss = True  # Nổi (raised)
+run.font.imprint = True  # In dấu (pressed)
+run.font.outline = True  # Viền ngoài
+run.font.shadow = True  # Đổ bóng
+run.font.rtl = True  # Right-to-left text
+run.font.complex_script = True  # Complex script
+run.font.cs_bold = True  # Complex script bold
+run.font.cs_italic = True  # Complex script italic
+run.font.math = True  # Math content
+run.font.no_proof = True  # Không kiểm tra chính tả
+run.font.snap_to_grid = True  # Snap to grid
+run.font.spec_vanish = True  # Special vanish
+run.font.web_hidden = True  # Ẩn trên web
+
+# Tất cả các thuộc tính trên đều có thể là:
+# - True: Bật
+# - False: Tắt
+# - None: Kế thừa từ style hierarchy
+```
+
+**`style`** - Character style
+```python
+run.style = "Strong"
+```
+
+---
+
+### 4. Table - Làm việc với bảng
+
+#### Các phương thức của Table:
+
+**`add_row()`** - Thêm hàng mới
+```python
+table = document.add_table(rows=2, cols=3)
+new_row = table.add_row()
+```
+
+**`add_column(width)`** - Thêm cột mới
+```python
+from docx.shared import Inches
+
+new_col = table.add_column(width=Inches(1.5))
+```
+
+**`cell(row_idx, col_idx)`** - Truy cập ô
+```python
+cell = table.cell(0, 0)  # Ô ở hàng 0, cột 0
+cell.text = "Hello"
+```
+
+#### Các thuộc tính của Table:
+
+**`table_direction`** - Hướng của bảng (LTR/RTL)
+```python
+from docx.enum.table import WD_TABLE_DIRECTION
+
+# Đặt hướng bảng
+table.table_direction = WD_TABLE_DIRECTION.LTR  # Left-to-right
+table.table_direction = WD_TABLE_DIRECTION.RTL  # Right-to-left
+table.table_direction = None  # Kế thừa từ style
+
+# Đọc hướng bảng
+direction = table.table_direction  # WD_TABLE_DIRECTION hoặc None
+```
+
+**`rows`** - Danh sách các hàng
+```python
+# Lấy hàng đầu tiên
+first_row = table.rows[0]
+
+# Lặp qua tất cả hàng
+for row in table.rows:
+    print(f"Row has {len(row.cells)} cells")
+
+# Slicing - lấy một phần các hàng
+some_rows = table.rows[1:3]  # Hàng 1 và 2
+last_rows = table.rows[-2:]  # 2 hàng cuối
+
+# Truy cập table từ rows
+table = table.rows.table
+
+# Lặp qua tất cả hàng
+for row in table.rows:
+    for cell in row.cells:
+        print(cell.text)
+```
+
+**`columns`** - Danh sách các cột
+```python
+# Lấy cột đầu tiên
+first_col = table.columns[0]
+
+# Đặt width cho cột
+table.columns[0].width = Inches(2)
+table.columns[0].width = Pt(144)  # 2 inches
+
+# Lấy width của cột
+width = table.columns[0].width  # Trả về Length hoặc None
+
+# Lặp qua tất cả cột
+for col in table.columns:
+    print(f"Column width: {col.width}")
+
+# Lấy cells trong cột
+cells = table.column_cells(0)  # Tất cả cells trong cột 0
+```
+
+**`style`** - Style của bảng
+```python
+table.style = "Light Grid Accent 1"
+```
+
+**`alignment`** - Căn lề bảng
+```python
+from docx.enum.table import WD_TABLE_ALIGNMENT
+
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+```
+
+**`autofit`** - Tự động điều chỉnh
+```python
+table.autofit = True
+```
+
+#### Làm việc với Cell:
+
+**`cell.text`** - Nội dung text của ô
+```python
+cell.text = "Cell content"
+```
+
+**`cell.add_paragraph(text, style)`** - Thêm đoạn văn vào ô
+```python
+cell.add_paragraph("Paragraph in cell")
+```
+
+**`cell.add_table(rows, cols)`** - Thêm bảng lồng nhau
+```python
+nested_table = cell.add_table(rows=2, cols=2)
+```
+
+**`cell.merge(other_cell)`** - Gộp ô
+```python
+cell1 = table.cell(0, 0)
+cell2 = table.cell(0, 1)
+merged = cell1.merge(cell2)
+```
+
+**`cell.vertical_alignment`** - Căn dọc
+```python
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+
+cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+```
+
+**`cell.width`** - Chiều rộng ô
+```python
+from docx.shared import Inches, Pt
+
+cell.width = Inches(2)
+cell.width = Pt(144)  # 2 inches = 144 points
+
+# Đọc width
+width = cell.width  # Trả về Length hoặc None
+```
+
+**`cell.grid_span`** - Số cột mà ô này span (merge ngang)
+```python
+# Kiểm tra ô có merge ngang không
+if cell.grid_span > 1:
+    print(f"Cell spans {cell.grid_span} columns")
+```
+
+#### Làm việc với Row:
+
+**`row.cells`** - Danh sách các ô trong hàng
+```python
+# Lấy tất cả cells trong row
+for cell in row.cells:
+    print(cell.text)
+
+# Lưu ý quan trọng:
+# - Số lượng cells có thể khác nhau giữa các rows trong cùng table
+# - Do grid_cols_before và grid_cols_after
+# - Word cho phép row "start late" hoặc "end early"
+
+# Kiểm tra số cột trống trước/sau
+cols_before = row.grid_cols_before  # Số cột trống trước row này
+cols_after = row.grid_cols_after  # Số cột trống sau row này
+
+# Ví dụ:
+# Row 1: grid_cols_before=0, grid_cols_after=0, len(cells)=5
+# Row 2: grid_cols_before=1, grid_cols_after=0, len(cells)=4  # Bắt đầu từ cột 2
+# Row 3: grid_cols_before=0, grid_cols_after=2, len(cells)=3  # Kết thúc ở cột 3
+
+# Khi đọc table để tạo "matrix" data structure:
+# Cần tính toán vị trí thực tế dựa trên grid_cols_before/after
+```
+
+**`row.height`** - Chiều cao hàng
+```python
+from docx.shared import Pt, Inches
+from docx.enum.table import WD_ROW_HEIGHT_RULE
+
+row.height = Pt(20)
+row.height = Inches(0.5)
+
+# Height rule
+row.height_rule = WD_ROW_HEIGHT_RULE.AUTO  # Tự động
+row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST  # Ít nhất
+row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY  # Chính xác
+```
+
+**`row.grid_cols_before`** - Số cột trống trước hàng
+```python
+# Số cột layout-grid trống trước hàng đầu tiên
+cols_before = row.grid_cols_before
+```
+
+**`row.grid_cols_after`** - Số cột trống sau hàng
+```python
+# Số cột layout-grid trống sau hàng cuối cùng
+cols_after = row.grid_cols_after
+```
+
+---
+
+### 5. Section - Quản lý section và trang
+
+#### Các thuộc tính của Section:
+
+**Margins (Lề):**
+```python
+from docx.shared import Inches
+
+section = document.sections[0]
+
+# Đặt lề
+section.left_margin = Inches(1)
+section.right_margin = Inches(1)
+section.top_margin = Inches(1)
+section.bottom_margin = Inches(1)
+```
+
+**Page size (Kích thước trang):**
+```python
+section.page_width = Inches(8.5)
+section.page_height = Inches(11)
+```
+
+**Orientation (Hướng trang):**
+```python
+from docx.enum.section import WD_ORIENTATION
+
+section.orientation = WD_ORIENTATION.LANDSCAPE
+section.orientation = WD_ORIENTATION.PORTRAIT
+```
+
+**Header và Footer:**
+```python
+# Header
+header = section.header
+header_para = header.paragraphs[0]
+header_para.text = "Header text"
+
+# Footer
+footer = section.footer
+footer_para = footer.paragraphs[0]
+footer_para.text = "Footer text"
+
+# First page header/footer
+section.different_first_page_header_footer = True
+first_header = section.first_page_header
+first_footer = section.first_page_footer
+
+# Even page header/footer
+from docx.enum.section import WD_HEADER_FOOTER
+even_header = section.even_page_header
+even_footer = section.even_page_footer
+
+# Kiểm tra header/footer có linked to previous không
+if header.is_linked_to_previous:
+    print("Header uses previous section's header")
+else:
+    print("Header has its own definition")
+
+# Thay đổi linked status
+header.is_linked_to_previous = True  # Link to previous
+header.is_linked_to_previous = False  # Use own definition
+```
+
+**Header/Footer distance:**
+```python
+section.header_distance = Inches(0.5)
+section.footer_distance = Inches(0.5)
+```
+
+**Gutter:**
+```python
+# Gutter là khoảng cách thêm vào lề trong để đảm bảo lề đều sau khi đóng sách
+section.gutter = Inches(0.5)
+section.gutter = None  # Xóa gutter
+```
+
+**Start type:**
+```python
+from docx.enum.section import WD_SECTION_START
+
+section.start_type = WD_SECTION_START.NEW_PAGE
+section.start_type = WD_SECTION_START.ODD_PAGE
+section.start_type = WD_SECTION_START.EVEN_PAGE
+```
+
+---
+
+### 6. Styles - Quản lý styles
+
+#### Truy cập styles:
+```python
+styles = document.styles
+
+# Lấy style theo tên
+heading_style = styles["Heading 1"]
+
+# Kiểm tra style có tồn tại
+if "Heading 1" in styles:
+    print("Heading 1 style exists")
+
+# Lặp qua tất cả styles
+for style in styles:
+    print(f"{style.name} ({style.type})")
+
+# Số lượng styles
+num_styles = len(styles)
+
+# Lấy style theo ID (deprecated - nên dùng tên)
+from docx.enum.style import WD_STYLE_TYPE
+style = styles.get_by_id("Heading1", WD_STYLE_TYPE.PARAGRAPH)
+
+# Lấy style ID từ style object hoặc tên
+style_id = styles.get_style_id("Heading 1", WD_STYLE_TYPE.PARAGRAPH)
+style_id = styles.get_style_id(heading_style, WD_STYLE_TYPE.PARAGRAPH)
+```
+
+#### Tạo style mới:
+```python
+from docx.enum.style import WD_STYLE_TYPE
+
+# Tạo paragraph style
+new_style = styles.add_style("My Style", WD_STYLE_TYPE.PARAGRAPH)
+
+# Tạo character style
+char_style = styles.add_style("My Char Style", WD_STYLE_TYPE.CHARACTER)
+
+# Tạo table style
+table_style = styles.add_style("My Table Style", WD_STYLE_TYPE.TABLE)
+```
+
+#### Sử dụng style:
+```python
+# Áp dụng cho paragraph
+para.style = "Heading 1"
+
+# Áp dụng cho run
+run.style = "Strong"
+
+# Áp dụng cho table
+table.style = "Light Grid Accent 1"
+```
+
+#### Lấy default style:
+```python
+default_para_style = styles.default(WD_STYLE_TYPE.PARAGRAPH)
+default_char_style = styles.default(WD_STYLE_TYPE.CHARACTER)
+```
+
+---
+
+### 7. Comments - Thêm và quản lý comments
+
+#### Thêm comment:
+```python
+# Thêm comment vào một run
+run = document.paragraphs[0].runs[0]
+comment = document.add_comment(
+    runs=run,
+    text="This is a comment",
+    author="John Doe",
+    initials="JD"
+)
+
+# Thêm comment vào nhiều runs
+runs = document.paragraphs[0].runs
+comment = document.add_comment(runs=runs, text="Comment text")
+
+# Text có thể chứa \n để tạo nhiều paragraphs trong comment
+comment = document.add_comment(
+    runs=run,
+    text="First paragraph\nSecond paragraph\nThird paragraph",
+    author="Author"
+)
+# Sẽ tạo comment với 3 paragraphs
+
+# Thêm comment rỗng
+comment = document.add_comment(runs=run, text="", author="Author")
+# Comment sẽ có 1 paragraph trống, có thể thêm content sau
+comment.paragraphs[0].add_run("Content added later")
+```
+
+#### Làm việc với Comment:
+```python
+# Lấy comment
+comment = document.comments[0]
+
+# Thuộc tính của comment
+comment.text  # Nội dung text
+comment.author  # Tác giả
+comment.initials  # Chữ viết tắt
+comment.comment_id  # ID của comment
+comment.timestamp  # Thời gian tạo
+
+# Thêm nội dung vào comment
+comment.add_paragraph("Additional comment text")
+
+# Sửa thuộc tính
+comment.author = "Jane Doe"
+comment.initials = "JD"
+```
+
+#### Lặp qua tất cả comments:
+```python
+for comment in document.comments:
+    print(f"{comment.author}: {comment.text}")
+```
+
+---
+
+### 8. Images và Shapes - Thêm hình ảnh
+
+#### Thêm hình ảnh vào document:
+```python
+from docx.shared import Inches
+
+# Thêm hình ảnh với kích thước
+document.add_picture("image.jpg", width=Inches(2), height=Inches(1.5))
+
+# Thêm hình ảnh vào run
+run = document.paragraphs[0].runs[0]
+inline_shape = run.add_picture("image.jpg", width=Inches(2))
+```
+
+#### Làm việc với InlineShape:
+```python
+from docx.enum.shape import WD_INLINE_SHAPE
+from docx.shared import Emu, Inches
+
+# Lấy tất cả inline shapes
+for shape in document.inline_shapes:
+    print(f"Width: {shape.width}, Height: {shape.height}")
+    print(f"Type: {shape.type}")
+
+# Kiểm tra loại shape
+if shape.type == WD_INLINE_SHAPE.PICTURE:
+    print("This is an embedded picture")
+elif shape.type == WD_INLINE_SHAPE.LINKED_PICTURE:
+    print("This is a linked picture")
+elif shape.type == WD_INLINE_SHAPE.CHART:
+    print("This is a chart")
+elif shape.type == WD_INLINE_SHAPE.SMART_ART:
+    print("This is SmartArt")
+elif shape.type == WD_INLINE_SHAPE.NOT_IMPLEMENTED:
+    print("Unknown shape type")
+
+# Thay đổi kích thước
+shape.width = Inches(3)
+shape.height = Inches(2)
+shape.width = Emu(914400)  # 1 inch = 914400 EMU
+shape.height = Emu(1828800)  # 2 inches
+
+# Đọc kích thước
+width = shape.width  # Trả về Length object
+height = shape.height  # Trả về Length object
+
+# Indexed access
+first_shape = document.inline_shapes[0]
+last_shape = document.inline_shapes[-1]
+
+# Lặp qua shapes
+for idx, shape in enumerate(document.inline_shapes):
+    print(f"Shape {idx}: {shape.type}")
+```
+
+---
+
+### 9. Images - Làm việc với hình ảnh
+
+#### Các định dạng hình ảnh được hỗ trợ:
+```python
+# python-docx hỗ trợ các định dạng sau:
+# - JPEG (.jpg, .jpeg) - MIME: image/jpeg
+# - PNG (.png) - MIME: image/png
+# - GIF (.gif) - MIME: image/gif
+# - BMP (.bmp) - MIME: image/bmp
+# - TIFF (.tiff, .tif) - MIME: image/tiff
+
+# Thêm hình ảnh
+from docx.shared import Inches
+
+run = document.paragraphs[0].add_run()
+run.add_picture("image.jpg", width=Inches(2))
+run.add_picture("image.png", width=Inches(3), height=Inches(2))
+```
+
+#### Làm việc với Image object:
+```python
+from docx.image.image import Image
+
+# Tạo Image từ file
+image = Image.from_file("image.jpg")
+
+# Thuộc tính của Image
+image.width  # Chiều rộng (EMU)
+image.height  # Chiều cao (EMU)
+image.px_width  # Chiều rộng pixel
+image.px_height  # Chiều cao pixel
+image.horz_dpi  # DPI ngang (mặc định 72 nếu không có)
+image.vert_dpi  # DPI dọc (mặc định 72 nếu không có)
+image.content_type  # MIME type (ví dụ: "image/jpeg")
+image.ext  # Extension (ví dụ: "jpg")
+image.filename  # Tên file
+image.blob  # Dữ liệu binary (bytes)
+image.sha1  # SHA1 hash của image
+
+# Tạo Image từ blob
+image = Image.from_blob(blob_data)  # filename tự động từ content type
+
+# Tạo Image từ file
+image = Image.from_file("image.jpg")  # Từ path
+with open("image.png", "rb") as f:
+    image = Image.from_file(f)  # Từ file-like object
+
+# Tính toán kích thước scaled
+# Nếu cả width và height đều None: trả về native dimensions
+width, height = image.scaled_dimensions()
+
+# Nếu chỉ có width: tự động tính height để giữ tỷ lệ
+width, height = image.scaled_dimensions(width=Inches(2))
+
+# Nếu chỉ có height: tự động tính width để giữ tỷ lệ
+width, height = image.scaled_dimensions(height=Inches(3))
+
+# Nếu có cả width và height: trả về chính xác các giá trị đó
+width, height = image.scaled_dimensions(width=Inches(2), height=Inches(1.5))
+
+# Native dimensions (tính từ px_width, px_height, và DPI)
+native_width = image.width  # Inches object
+native_height = image.height  # Inches object
+
+# Lưu ý: DPI mặc định là 72 nếu không có trong file
+# Native size = px_size / dpi
+```
+
+#### InlineShape Types:
+```python
+from docx.enum.shape import WD_INLINE_SHAPE
+
+WD_INLINE_SHAPE.PICTURE  # Hình ảnh embedded
+WD_INLINE_SHAPE.LINKED_PICTURE  # Hình ảnh linked
+WD_INLINE_SHAPE.CHART  # Biểu đồ
+WD_INLINE_SHAPE.SMART_ART  # SmartArt
+WD_INLINE_SHAPE.NOT_IMPLEMENTED  # Loại chưa được hỗ trợ
+```
+
+---
+
+### 10. Font - Định dạng font chi tiết
+
+#### Các thuộc tính của Font:
+
+**Cơ bản:**
+```python
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_UNDERLINE, WD_COLOR_INDEX
+from docx.enum.dml import MSO_THEME_COLOR
+
+font = run.font
+
+# Font name và size
+font.name = "Arial"
+font.size = Pt(12)
+
+# Màu chữ - RGB
+font.color.rgb = RGBColor(255, 0, 0)  # Đỏ (R, G, B)
+font.color.rgb = RGBColor(10, 20, 30)  # Màu tùy chỉnh
+
+# Màu chữ - Theme color
+font.color.theme_color = MSO_THEME_COLOR.ACCENT_1
+font.color.theme_color = MSO_THEME_COLOR.DARK_1
+font.color.theme_color = MSO_THEME_COLOR.LIGHT_2
+
+# Kiểm tra loại màu
+from docx.enum.dml import MSO_COLOR_TYPE
+if font.color.type == MSO_COLOR_TYPE.RGB:
+    print(font.color.rgb)
+elif font.color.type == MSO_COLOR_TYPE.THEME:
+    print(font.color.theme_color)
+
+# Highlight
+font.highlight_color = WD_COLOR_INDEX.YELLOW
+font.highlight_color = WD_COLOR_INDEX.BRIGHT_GREEN
+```
+
+**Định dạng text:**
+```python
+font.bold = True
+font.italic = True
+font.underline = WD_UNDERLINE.DOUBLE
+font.strike = True  # Gạch ngang
+font.double_strike = True  # Gạch ngang đôi
+```
+
+**Chỉ số trên/dưới:**
+```python
+font.subscript = True  # Chỉ số dưới
+font.superscript = True  # Chỉ số trên
+```
+
+**Hiệu ứng:**
+```python
+font.all_caps = True  # Tất cả chữ hoa
+font.small_caps = True  # Chữ hoa nhỏ
+font.shadow = True  # Đổ bóng
+font.outline = True  # Viền
+font.emboss = True  # Nổi
+font.imprint = True  # Chìm
+```
+
+**Khác:**
+```python
+font.hidden = True  # Ẩn text
+font.rtl = True  # Right-to-left text
+font.complex_script = True  # Complex script
+font.cs_bold = True  # Complex script bold
+font.cs_italic = True  # Complex script italic
+font.math = True  # Math content
+font.no_proof = True  # Không kiểm tra chính tả
+font.snap_to_grid = True  # Snap to grid
+font.spec_vanish = True  # Special vanish (luôn ẩn)
+font.web_hidden = True  # Ẩn trên web
+
+# Tất cả các thuộc tính trên đều có thể là:
+# - True: Bật
+# - False: Tắt
+# - None: Kế thừa từ style hierarchy
+```
+
+---
+
+### 10. Hyperlinks - Liên kết
+
+#### Làm việc với Hyperlinks:
+
+**Truy cập hyperlinks trong paragraph:**
+```python
+# Lấy tất cả hyperlinks trong paragraph
+for hyperlink in para.hyperlinks:
+    print(f"URL: {hyperlink.url}")
+    print(f"Text: {hyperlink.text}")
+    print(f"Address: {hyperlink.address}")
+    print(f"Fragment: {hyperlink.fragment}")
+    
+    # Lấy các runs trong hyperlink
+    for run in hyperlink.runs:
+        print(run.text)
+```
+
+**Kiểm tra page break trong hyperlink:**
+```python
+if hyperlink.contains_page_break:
+    print("Hyperlink contains page break")
+```
+
+---
+
+### 11. Settings - Cài đặt tài liệu
+
+#### Làm việc với Settings:
+
+```python
+settings = document.settings
+
+# Bật/tắt header/footer riêng cho trang chẵn/lẻ
+settings.odd_and_even_pages_header_footer = True
+settings.odd_and_even_pages_header_footer = False
+```
+
+---
+
+### 12. Core Properties - Thuộc tính tài liệu
+
+#### Làm việc với Core Properties:
+
+```python
+props = document.core_properties
+
+# String properties (có thể là empty string)
+props.title = "My Document"
+props.author = "John Doe"
+props.subject = "Documentation"
+props.comments = "This is a comment"
+props.keywords = "python, docx, word"
+props.category = "Technical"
+props.content_status = "DRAFT"  # hoặc "FINAL"
+props.identifier = "DOC-001"
+props.language = "US-EN"  # hoặc "GB-EN", "VI-VN", etc.
+props.last_modified_by = "Jane Doe"
+props.version = "1.0"
+
+# Date properties (có thể là None)
+import datetime
+from datetime import datetime, timezone
+
+# Đọc datetime properties
+created = props.created  # datetime object hoặc None
+modified = props.modified  # datetime object hoặc None
+last_printed = props.last_printed  # datetime object hoặc None
+
+# Gán datetime properties
+props.created = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+props.modified = datetime.now(timezone.utc)
+props.last_printed = datetime(2023, 1, 2, 10, 0, 0, tzinfo=timezone.utc)
+
+# Revision property (integer, mặc định 0 nếu không có hoặc không hợp lệ)
+revision = props.revision  # int (mặc định 0)
+props.revision = 1
+props.revision = 42
+
+# Lưu ý: Revision tự động parse từ string
+# Nếu giá trị không hợp lệ (không phải số), sẽ trả về 0
+
+# Revision number
+props.revision = 1
+```
+
+---
+
+### 13. Hyperlinks - Làm việc với siêu liên kết
+
+#### Làm việc với Hyperlink:
+```python
+# Lấy hyperlinks từ paragraph
+para = document.paragraphs[0]
+hyperlinks = para.hyperlinks
+
+# Lặp qua hyperlinks
+for hyperlink in hyperlinks:
+    print(f"Text: {hyperlink.text}")
+    print(f"URL: {hyperlink.url}")
+    print(f"Address: {hyperlink.address}")
+    print(f"Fragment: {hyperlink.fragment}")
+
+# Thuộc tính của Hyperlink
+hyperlink.text  # Text hiển thị (từ các runs)
+hyperlink.url  # URL đầy đủ (address + fragment với #)
+hyperlink.address  # Địa chỉ URL (có thể là web link, file path, hoặc empty cho internal link)
+hyperlink.fragment  # Fragment/anchor (ví dụ: "_Toc147925734" cho TOC links)
+hyperlink.runs  # Danh sách runs trong hyperlink
+hyperlink.contains_page_break  # True nếu hyperlink bị ngắt trang
+
+# Ví dụ:
+# - Web link: address="https://google.com", fragment="", url="https://google.com"
+# - Internal bookmark: address="", fragment="_Toc147925734", url=""
+# - Link với fragment: address="https://example.com", fragment="section1", url="https://example.com#section1"
+```
+
+#### Lặp qua hyperlinks trong paragraph:
+```python
+# Sử dụng iter_inner_content() để lặp qua runs và hyperlinks
+for item in para.iter_inner_content():
+    if isinstance(item, Run):
+        print(f"Run: {item.text}")
+    elif isinstance(item, Hyperlink):
+        print(f"Hyperlink: {item.text}, URL: {item.url}")
+```
+
+---
+
+### 14. Tab Stops - Điểm dừng tab
+
+#### Làm việc với Tab Stops:
+
+```python
+from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER
+from docx.shared import Inches, Twips
+
+tab_stops = para.paragraph_format.tab_stops
+
+# Thêm tab stop
+tab_stop = tab_stops.add_tab_stop(
+    position=Inches(2),
+    alignment=WD_TAB_ALIGNMENT.LEFT,
+    leader=WD_TAB_LEADER.SPACES  # Mặc định
+)
+
+# Tab stop với leader
+tab_stop = tab_stops.add_tab_stop(
+    position=Inches(3),
+    alignment=WD_TAB_ALIGNMENT.RIGHT,
+    leader=WD_TAB_LEADER.DOTS  # Dấu chấm
+)
+
+# Tab stop với negative position (hanging indent)
+tab_stop = tab_stops.add_tab_stop(
+    position=Pt(-12),  # Negative position
+    alignment=WD_TAB_ALIGNMENT.LEFT
+)
+
+# Xóa tab stop
+del tab_stops[0]  # Xóa tab stop đầu tiên
+del tab_stops[-1]  # Xóa tab stop cuối cùng
+
+# Xóa tất cả tab stops
+tab_stops.clear_all()
+
+# Các loại alignment
+WD_TAB_ALIGNMENT.LEFT  # Căn trái
+WD_TAB_ALIGNMENT.CENTER  # Căn giữa
+WD_TAB_ALIGNMENT.RIGHT  # Căn phải
+WD_TAB_ALIGNMENT.DECIMAL  # Căn theo dấu thập phân
+
+# Leader (ký tự điền)
+tab_stop.leader = WD_TAB_LEADER.DOTS  # Dấu chấm
+tab_stop.leader = WD_TAB_LEADER.DASHES  # Dấu gạch ngang
+tab_stop.leader = WD_TAB_LEADER.UNDERSCORE  # Dấu gạch dưới
+tab_stop.leader = WD_TAB_LEADER.SPACES  # Khoảng trắng
+tab_stop.leader = None  # Không có leader
+
+# Thay đổi position
+tab_stop.position = Inches(3)
+
+# Thay đổi alignment
+tab_stop.alignment = WD_TAB_ALIGNMENT.RIGHT
+
+# Lấy tab stop theo position
+tab_stop = tab_stops.get_by_position(Inches(2))
+
+# Xóa tab stop
+tab_stops.clear_all()
+
+# Lặp qua tất cả tab stops
+for tab_stop in tab_stops:
+    print(f"Position: {tab_stop.position}, Alignment: {tab_stop.alignment}")
+```
+
+---
+
+### 14. Drawing và Image - Làm việc với hình ảnh nâng cao
+
+#### Làm việc với Drawing:
+
+```python
+# Kiểm tra drawing có chứa picture không
+for shape in document.inline_shapes:
+    if shape.type == WD_INLINE_SHAPE.PICTURE:
+        # Lấy image từ drawing (nếu có)
+        # Note: Cần truy cập qua run.iter_inner_content()
+        pass
+```
+
+#### Làm việc với Image:
+
+```python
+from docx.image.image import Image
+
+# Tạo Image từ file
+image = Image.from_file("image.jpg")
+
+# Thuộc tính của image
+image.px_width  # Chiều rộng pixel
+image.px_height  # Chiều cao pixel
+image.horz_dpi  # DPI ngang
+image.vert_dpi  # DPI dọc
+image.width  # Chiều rộng native (Length)
+image.height  # Chiều cao native (Length)
+image.content_type  # Loại content (image/jpeg, image/png, ...)
+image.ext  # Extension (jpg, png, ...)
+image.filename  # Tên file
+image.sha1  # SHA1 hash của image
+
+# Scale dimensions
+scaled_width, scaled_height = image.scaled_dimensions(width=Inches(2), height=None)
+```
+
+#### RGBColor từ string:
+
+```python
+from docx.shared import RGBColor
+
+# Tạo RGBColor từ hex string
+rgb = RGBColor.from_string("FF0000")  # Đỏ
+rgb = RGBColor.from_string("00FF00")  # Xanh lá
+rgb = RGBColor.from_string("0000FF")  # Xanh dương
+
+# Chuyển RGBColor thành hex string
+rgb = RGBColor(255, 0, 0)
+hex_str = str(rgb)  # "FF0000"
+```
+
+---
+
+### 15. RenderedPageBreak - Xử lý page break được render
+
+#### Làm việc với RenderedPageBreak:
+
+```python
+# Kiểm tra paragraph có chứa page break không
+if para.contains_page_break:
+    rendered_breaks = para.rendered_page_breaks
+    for page_break in rendered_breaks:
+        # Lấy fragment trước page break
+        preceding = page_break.preceding_paragraph_fragment
+        if preceding:
+            print(f"Text before break: {preceding.text}")
+        
+        # Lấy fragment sau page break
+        following = page_break.following_paragraph_fragment
+        if following:
+            print(f"Text after break: {following.text}")
+
+# Kiểm tra run có chứa page break không
+if run.contains_page_break:
+    # Xử lý tương tự
+    pass
+```
+
+---
+
+### 16. Style Properties - Thuộc tính Style nâng cao
+
+#### Các thuộc tính của Style:
+
+```python
+style = document.styles["Heading 1"]
+
+# Các thuộc tính cơ bản
+style.style_id  # ID của style
+style.name  # Tên style
+style.type  # Loại style (PARAGRAPH, CHARACTER, TABLE, ...)
+style.builtin  # True nếu là built-in style
+
+# Các thuộc tính nâng cao
+style.hidden  # Ẩn style
+style.priority  # Thứ tự ưu tiên (uiPriority)
+style.unhide_when_used  # Tự động hiện khi sử dụng
+style.quick_style  # Quick style setting (qFormat)
+style.locked  # Khóa style
+
+# Xóa style
+style.delete()
+
+# ParagraphStyle có thêm
+if isinstance(style, ParagraphStyle):
+    style.paragraph_format  # ParagraphFormat object
+    style.font  # Font object
+    style.next_paragraph_style  # Style cho paragraph tiếp theo
+    # Đặt next paragraph style
+    style.next_paragraph_style = document.styles["Body Text"]
+    style.next_paragraph_style = None  # Xóa next style
+
+# CharacterStyle có thêm
+if isinstance(style, CharacterStyle):
+    style.font  # Font object
+    style.base_style  # Style mà style này dựa trên
+    # Đặt base style
+    style.base_style = document.styles["Default Character Font"]
+    style.base_style = None  # Xóa base style
+```
+
+#### Latent Styles - Styles ẩn:
+
+```python
+latent_styles = document.styles.latent_styles
+
+# Default properties
+latent_styles.default_priority  # Priority mặc định
+latent_styles.default_to_hidden  # Mặc định ẩn
+latent_styles.default_to_locked  # Mặc định khóa
+latent_styles.default_to_quick_style  # Mặc định quick style
+latent_styles.default_to_unhide_when_used  # Mặc định unhide when used
+latent_styles.load_count  # Số lượng styles được load
+
+# Thêm latent style
+latent_style = latent_styles.add_latent_style("Heading 1")
+
+# Lấy latent style
+latent_style = latent_styles["Heading 1"]
+
+# Thuộc tính của latent style
+latent_style.name  # Tên
+latent_style.priority  # Priority
+latent_style.hidden  # Ẩn
+latent_style.locked  # Khóa
+latent_style.quick_style  # Quick style
+latent_style.unhide_when_used  # Unhide when used
+
+# Xóa latent style
+latent_style.delete()
+
+# Lặp qua latent styles
+for latent_style in latent_styles:
+    print(latent_style.name)
+```
+
+---
+
+### 17. Các Enum và Constants hữu ích
+
+#### Paragraph Alignment:
+```python
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+
+WD_PARAGRAPH_ALIGNMENT.LEFT
+WD_PARAGRAPH_ALIGNMENT.CENTER
+WD_PARAGRAPH_ALIGNMENT.RIGHT
+WD_PARAGRAPH_ALIGNMENT.JUSTIFY
+```
+
+#### Break Types:
+```python
+from docx.enum.text import WD_BREAK
+
+WD_BREAK.LINE  # Line break
+WD_BREAK.PAGE  # Page break
+WD_BREAK.COLUMN  # Column break
+WD_BREAK.LINE_CLEAR_LEFT  # Line break, clear left
+WD_BREAK.LINE_CLEAR_RIGHT  # Line break, clear right
+WD_BREAK.LINE_CLEAR_ALL  # Line break, clear all
+```
+
+#### Underline:
+```python
+from docx.enum.text import WD_UNDERLINE
+
+WD_UNDERLINE.SINGLE
+WD_UNDERLINE.DOUBLE
+WD_UNDERLINE.DOTTED
+WD_UNDERLINE.WAVY
+```
+
+#### Section:
+```python
+from docx.enum.section import WD_SECTION_START, WD_ORIENTATION, WD_SECTION
+
+WD_SECTION_START.NEW_PAGE  # Trang mới
+WD_SECTION_START.ODD_PAGE  # Trang lẻ
+WD_SECTION_START.EVEN_PAGE  # Trang chẵn
+WD_SECTION_START.CONTINUOUS  # Tiếp tục (không ngắt trang)
+WD_SECTION_START.NEW_COLUMN  # Cột mới
+
+WD_SECTION.NEW_PAGE  # Alias cho NEW_PAGE
+WD_SECTION.CONTINUOUS  # Alias cho CONTINUOUS
+WD_SECTION.ODD_PAGE  # Alias cho ODD_PAGE
+WD_SECTION.EVEN_PAGE  # Alias cho EVEN_PAGE
+WD_SECTION.NEW_COLUMN  # Alias cho NEW_COLUMN
+
+WD_ORIENTATION.PORTRAIT  # Dọc
+WD_ORIENTATION.LANDSCAPE  # Ngang
+```
+
+#### Table:
+```python
+from docx.enum.table import (
+    WD_TABLE_ALIGNMENT,
+    WD_CELL_VERTICAL_ALIGNMENT
+)
+
+WD_TABLE_ALIGNMENT.LEFT
+WD_TABLE_ALIGNMENT.CENTER
+WD_TABLE_ALIGNMENT.RIGHT
+
+WD_CELL_VERTICAL_ALIGNMENT.TOP
+WD_CELL_VERTICAL_ALIGNMENT.CENTER
+WD_CELL_VERTICAL_ALIGNMENT.BOTTOM
+```
+
+#### Length Units:
+```python
+from docx.shared import Inches, Cm, Mm, Pt, Emu, Twips, Length
+
+# Tạo length từ các đơn vị khác nhau
+Inches(1)  # 1 inch
+Cm(2.54)   # 2.54 cm
+Mm(25.4)   # 25.4 mm
+Pt(12)     # 12 points
+Emu(914400)  # 914400 EMU
+Twips(720)  # 720 twips
+
+# Chuyển đổi đơn vị
+length = Inches(1)
+length.inches  # 1.0 (float)
+length.cm  # 2.54 (float)
+length.mm  # 25.4 (float)
+length.pt  # 72.0 (float)
+length.emu  # 914400 (int)
+length.twips  # 1440 (int)
+
+# Length có thể so sánh và tính toán
+length1 = Inches(1)
+length2 = Cm(2.54)
+length1 == length2  # True
+length1 + length2  # Cộng length
+length1 * 2  # Nhân length
+```
+
+#### Color:
+```python
+from docx.shared import RGBColor
+from docx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
+
+# RGB Color
+RGBColor(255, 0, 0)  # Đỏ
+RGBColor(0, 255, 0)  # Xanh lá
+RGBColor(0, 0, 255)  # Xanh dương
+RGBColor(10, 20, 30)  # Màu tùy chỉnh
+
+# Theme Colors
+MSO_THEME_COLOR.DARK_1
+MSO_THEME_COLOR.DARK_2
+MSO_THEME_COLOR.LIGHT_1
+MSO_THEME_COLOR.LIGHT_2
+MSO_THEME_COLOR.ACCENT_1
+MSO_THEME_COLOR.ACCENT_2
+MSO_THEME_COLOR.ACCENT_3
+MSO_THEME_COLOR.ACCENT_4
+MSO_THEME_COLOR.ACCENT_5
+MSO_THEME_COLOR.ACCENT_6
+MSO_THEME_COLOR.HYPERLINK
+MSO_THEME_COLOR.FOLLOWED_HYPERLINK
+```
+
+#### Line Spacing:
+```python
+from docx.enum.text import WD_LINE_SPACING
+
+WD_LINE_SPACING.SINGLE  # Đơn (1.0)
+WD_LINE_SPACING.ONE_POINT_FIVE  # 1.5 lần
+WD_LINE_SPACING.DOUBLE  # Đôi (2.0)
+WD_LINE_SPACING.AT_LEAST  # Ít nhất (minimum)
+WD_LINE_SPACING.EXACTLY  # Chính xác (exact)
+WD_LINE_SPACING.MULTIPLE  # Bội số (multiple, có thể dùng số như 1.75)
+```
+
+#### Row Height Rule:
+```python
+from docx.enum.table import WD_ROW_HEIGHT_RULE
+
+WD_ROW_HEIGHT_RULE.AUTO  # Tự động
+WD_ROW_HEIGHT_RULE.AT_LEAST  # Ít nhất
+WD_ROW_HEIGHT_RULE.EXACTLY  # Chính xác
+```
+
+#### Tab Alignment:
+```python
+from docx.enum.text import WD_TAB_ALIGNMENT
+
+WD_TAB_ALIGNMENT.LEFT
+WD_TAB_ALIGNMENT.CENTER
+WD_TAB_ALIGNMENT.RIGHT
+WD_TAB_ALIGNMENT.DECIMAL
+WD_TAB_ALIGNMENT.BAR
+WD_TAB_ALIGNMENT.LIST
+WD_TAB_ALIGNMENT.CLEAR
+```
+
+#### Tab Leader:
+```python
+from docx.enum.text import WD_TAB_LEADER
+
+WD_TAB_LEADER.SPACES  # Khoảng trắng
+WD_TAB_LEADER.DOTS  # Dấu chấm
+WD_TAB_LEADER.DASHES  # Dấu gạch ngang
+WD_TAB_LEADER.LINES  # Đường thẳng
+WD_TAB_LEADER.HEAVY  # Nặng
+WD_TAB_LEADER.MIDDLE_DOT  # Chấm giữa
+```
+
+---
+
+### 18. Ví dụ tổng hợp
+
+#### Ví dụ 1: Tạo document cơ bản với formatting
+```python
+from docx import Document
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_BREAK, WD_LINE_SPACING
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.dml import MSO_THEME_COLOR
+
+# Tạo document mới
+doc = Document()
+
+# Đặt core properties
+doc.core_properties.title = "My Document"
+doc.core_properties.author = "John Doe"
+doc.core_properties.subject = "Python Documentation"
+
+# Thêm title
+title = doc.add_heading("My Document", level=0)
+
+# Thêm paragraph với format
+para = doc.add_paragraph()
+para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+run = para.add_run("Centered text")
+run.bold = True
+run.font.size = Pt(14)
+run.font.color.rgb = RGBColor(0, 0, 255)
+
+# Paragraph với line spacing
+para2 = doc.add_paragraph("This is a paragraph with custom line spacing.")
+para2.paragraph_format.line_spacing = Pt(18)
+para2.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+para2.paragraph_format.space_before = Pt(12)
+para2.paragraph_format.space_after = Pt(6)
+
+# Thêm bảng
+table = doc.add_table(rows=3, cols=3)
+table.alignment = WD_TABLE_ALIGNMENT.CENTER
+table.style = "Light Grid Accent 1"
+
+# Điền dữ liệu vào bảng
+for i, row in enumerate(table.rows):
+    for j, cell in enumerate(row.cells):
+        cell.text = f"Row {i}, Col {j}"
+        if i == 0:  # Header row
+            cell.paragraphs[0].runs[0].bold = True
+
+# Thêm hình ảnh
+doc.add_picture("image.jpg", width=Inches(2))
+
+# Thêm page break
+doc.add_page_break()
+
+# Thêm section mới
+section = doc.add_section()
+section.left_margin = Inches(1.5)
+section.right_margin = Inches(1.5)
+section.top_margin = Inches(1)
+section.bottom_margin = Inches(1)
+
+# Thêm header và footer
+header = section.header
+header.paragraphs[0].text = "Header Text"
+header.paragraphs[0].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+footer = section.footer
+footer.paragraphs[0].text = "Page 1"
+footer.paragraphs[0].alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+# Lưu document
+doc.save("output.docx")
+```
+
+#### Ví dụ 2: Làm việc với Comments
+```python
+from docx import Document
+
+doc = Document()
+doc.add_paragraph("This is a paragraph with a comment.")
+
+# Thêm comment
+para = doc.paragraphs[0]
+run = para.runs[0]
+comment = doc.add_comment(
+    runs=run,
+    text="This is a comment about the text.",
+    author="John Doe",
+    initials="JD"
+)
+
+# Thêm nội dung vào comment
+comment.add_paragraph("Additional comment text.")
+
+# Lặp qua tất cả comments
+for comment in doc.comments:
+    print(f"Author: {comment.author}")
+    print(f"Text: {comment.text}")
+    print(f"Timestamp: {comment.timestamp}")
+```
+
+#### Ví dụ 3: Làm việc với Tab Stops
+```python
+from docx import Document
+from docx.shared import Inches
+from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER
+
+doc = Document()
+para = doc.add_paragraph()
+
+# Thêm tab stops
+tab_stops = para.paragraph_format.tab_stops
+
+# Tab stop căn trái với dots
+tab1 = tab_stops.add_tab_stop(Inches(1), WD_TAB_ALIGNMENT.LEFT)
+tab1.leader = WD_TAB_LEADER.DOTS
+
+# Tab stop căn phải
+tab2 = tab_stops.add_tab_stop(Inches(5), WD_TAB_ALIGNMENT.RIGHT)
+
+# Sử dụng tabs trong text
+run = para.add_run("Item 1")
+run.add_tab()
+run.add_text("Price")
+run.add_tab()
+run.add_text("$10.00")
+```
+
+#### Ví dụ 4: Định dạng Font nâng cao
+```python
+from docx import Document
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_UNDERLINE, WD_COLOR_INDEX
+from docx.enum.dml import MSO_THEME_COLOR
+
+doc = Document()
+para = doc.add_paragraph()
+run = para.add_run("Formatted text")
+
+font = run.font
+
+# Font cơ bản
+font.name = "Arial"
+font.size = Pt(14)
+
+# Màu sắc
+font.color.rgb = RGBColor(255, 0, 0)  # Đỏ
+# Hoặc theme color
+font.color.theme_color = MSO_THEME_COLOR.ACCENT_1
+
+# Highlight
+font.highlight_color = WD_COLOR_INDEX.YELLOW
+
+# Định dạng text
+font.bold = True
+font.italic = True
+font.underline = WD_UNDERLINE.DOUBLE
+font.strike = True
+font.superscript = True
+font.subscript = False
+
+# Hiệu ứng
+font.shadow = True
+font.outline = True
+font.all_caps = True
+font.small_caps = True
+```
+
+#### Ví dụ 5: Đọc và xử lý document có sẵn
+```python
+from docx import Document
+
+# Mở document
+doc = Document("existing.docx")
+
+# Đọc paragraphs
+for para in doc.paragraphs:
+    print(f"Text: {para.text}")
+    print(f"Style: {para.style.name if para.style else 'None'}")
+    
+    # Đọc runs
+    for run in para.runs:
+        print(f"  Run text: {run.text}")
+        print(f"  Bold: {run.bold}")
+        print(f"  Font: {run.font.name}")
+
+# Đọc tables
+for table in doc.tables:
+    print(f"Table has {len(table.rows)} rows and {len(table.columns)} columns")
+    for row in table.rows:
+        for cell in row.cells:
+            print(f"Cell: {cell.text}")
+
+# Đọc comments
+for comment in doc.comments:
+    print(f"Comment by {comment.author}: {comment.text}")
+
+# Đọc core properties
+props = doc.core_properties
+print(f"Title: {props.title}")
+print(f"Author: {props.author}")
+print(f"Created: {props.created}")
+```
+
+#### Ví dụ 6: Sử dụng iter_inner_content
+```python
+from docx import Document
+
+doc = Document("document.docx")
+
+# Lặp qua tất cả paragraphs và tables
+for item in doc.iter_inner_content():
+    if isinstance(item, Paragraph):
+        print(f"Paragraph: {item.text}")
+    elif isinstance(item, Table):
+        print(f"Table: {len(table.rows)} rows")
+
+# Lặp qua nội dung trong paragraph
+para = doc.paragraphs[0]
+for item in para.iter_inner_content():
+    if isinstance(item, Run):
+        print(f"Run: {item.text}, Bold: {item.bold}")
+    elif isinstance(item, Hyperlink):
+        print(f"Hyperlink: {item.text}, URL: {item.url}")
+
+# Lặp qua nội dung trong run
+run = para.runs[0]
+for item in run.iter_inner_content():
+    if isinstance(item, str):
+        print(f"Text: {item}")
+    elif isinstance(item, RenderedPageBreak):
+        print("Found rendered page break")
+    elif isinstance(item, Drawing):
+        print("Found drawing")
+```
+
+#### Ví dụ 7: Tạo document với nhiều sections
+```python
+from docx import Document
+from docx.enum.section import WD_SECTION_START, WD_ORIENTATION
+from docx.shared import Inches
+
+doc = Document()
+
+# Section 1 - Portrait
+section1 = doc.sections[0]
+section1.page_width = Inches(8.5)
+section1.page_height = Inches(11)
+section1.orientation = WD_ORIENTATION.PORTRAIT
+section1.left_margin = Inches(1)
+section1.right_margin = Inches(1)
+
+doc.add_paragraph("Content in portrait section")
+
+# Thêm section mới - Landscape
+section2 = doc.add_section(WD_SECTION_START.NEW_PAGE)
+section2.page_width = Inches(11)
+section2.page_height = Inches(8.5)
+section2.orientation = WD_ORIENTATION.LANDSCAPE
+section2.left_margin = Inches(1.5)
+section2.right_margin = Inches(1.5)
+
+doc.add_paragraph("Content in landscape section")
+
+# Section với first page header/footer
+section3 = doc.add_section(WD_SECTION_START.ODD_PAGE)
+section3.different_first_page_header_footer = True
+
+# First page header
+first_header = section3.first_page_header
+first_header.paragraphs[0].text = "First Page Header"
+
+# Regular header
+header = section3.header
+header.paragraphs[0].text = "Regular Header"
+
+doc.save("multi-section.docx")
+```
+
+#### Ví dụ 8: Làm việc với Settings và Header/Footer nâng cao
+```python
+from docx import Document
+from docx.enum.section import WD_HEADER_FOOTER
+
+doc = Document()
+
+# Bật header/footer riêng cho trang chẵn/lẻ
+doc.settings.odd_and_even_pages_header_footer = True
+
+section = doc.sections[0]
+
+# Header cho trang lẻ (primary)
+header = section.header
+header.paragraphs[0].text = "Odd Page Header"
+
+# Header cho trang chẵn
+even_header = section.even_page_header
+even_header.paragraphs[0].text = "Even Page Header"
+
+# Footer cho trang lẻ
+footer = section.footer
+footer.paragraphs[0].text = "Odd Page Footer"
+
+# Footer cho trang chẵn
+even_footer = section.even_page_footer
+even_footer.paragraphs[0].text = "Even Page Footer"
+
+# First page header/footer riêng
+section.different_first_page_header_footer = True
+first_header = section.first_page_header
+first_header.paragraphs[0].text = "First Page Header"
+first_footer = section.first_page_footer
+first_footer.paragraphs[0].text = "First Page Footer"
+
+doc.save("headers-footers.docx")
+```
+
+#### Ví dụ 9: Làm việc với RGBColor
+```python
+from docx.shared import RGBColor
+
+# Tạo RGBColor từ RGB values
+red = RGBColor(255, 0, 0)
+green = RGBColor(0, 255, 0)
+blue = RGBColor(0, 0, 255)
+
+# Tạo từ hex string
+rgb1 = RGBColor.from_string("FF0000")  # Đỏ
+rgb2 = RGBColor.from_string("00FF00")  # Xanh lá
+rgb3 = RGBColor.from_string("0000FF")  # Xanh dương
+
+# Chuyển thành hex string
+hex_str = str(RGBColor(255, 128, 64))  # "FF8040"
+
+# Sử dụng với font
+run.font.color.rgb = RGBColor(255, 0, 0)  # Màu đỏ
+run.font.color.rgb = RGBColor.from_string("FF8040")  # Màu cam
+```
+
+#### Ví dụ 10: Làm việc với Row và Column chi tiết
+```python
+from docx import Document
+from docx.shared import Inches, Pt
+from docx.enum.table import WD_ROW_HEIGHT_RULE
+
+doc = Document()
+table = doc.add_table(rows=3, cols=3)
+
+# Làm việc với Row
+row = table.rows[0]
+
+# Đặt height và height rule
+row.height = Pt(20)
+row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
+
+# Grid cols before/after
+print(f"Grid cols before: {row.grid_cols_before}")
+print(f"Grid cols after: {row.grid_cols_after}")
+
+# Làm việc với Column
+col = table.columns[0]
+
+# Đặt width
+col.width = Inches(2)
+col.width = Pt(144)  # Tương đương 2 inches
+
+# Lấy width
+width = col.width  # Length hoặc None
+
+# Lấy tất cả cells trong cột
+cells = table.column_cells(0)
+for cell in cells:
+    print(cell.text)
+
+# Làm việc với Cell
+cell = table.cell(0, 0)
+
+# Grid span (số cột merge)
+print(f"Cell spans {cell.grid_span} columns")
+
+# Width
+cell.width = Inches(1.5)
+```
+
+#### Ví dụ 11: Xử lý RenderedPageBreak
+```python
+from docx import Document
+
+doc = Document("document.docx")
+
+# Kiểm tra và xử lý page breaks trong paragraphs
+for para in doc.paragraphs:
+    if para.contains_page_break:
+        print(f"Paragraph contains page break: {para.text[:50]}...")
+        
+        for page_break in para.rendered_page_breaks:
+            # Lấy fragment trước page break
+            preceding = page_break.preceding_paragraph_fragment
+            if preceding:
+                print(f"  Text before break: {preceding.text}")
+            
+            # Lấy fragment sau page break
+            following = page_break.following_paragraph_fragment
+            if following:
+                print(f"  Text after break: {following.text}")
+
+# Kiểm tra page breaks trong runs
+for para in doc.paragraphs:
+    for run in para.runs:
+        if run.contains_page_break:
+            print(f"Run contains page break: {run.text}")
+```
+
+---
+
+## Tài liệu tham khảo
+
+More information is available in the [python-docx documentation](https://python-docx.readthedocs.org/en/latest/)

@@ -258,23 +258,9 @@ class MetricsCallback(Callback):
     
     def on_epoch_end(self, trainer, epoch: int, metrics: Dict[str, float]):
         """Track and log metrics."""
-        # Store metrics history
+        # Store metrics history (file-based logging, no database)
         metrics_with_epoch = {**metrics, 'epoch': epoch}
         self.metrics_history.append(metrics_with_epoch)
-        
-        # Log to database if available
-        if hasattr(trainer, 'db') and hasattr(trainer, 'training_run_id'):
-            if trainer.training_run_id:
-                trainer.db.add_epoch_metrics(
-                    training_run_id=trainer.training_run_id,
-                    epoch=epoch,
-                    train_loss=metrics.get('train_loss', 0.0),
-                    val_loss=metrics.get('val_loss', 0.0),
-                    learning_rate=metrics.get('learning_rate', 0.0),
-                    wer=metrics.get('wer', None),
-                    cer=metrics.get('cer', None),
-                    epoch_time=metrics.get('epoch_time', None)
-                )
     
     def get_metrics_history(self):
         """Get all tracked metrics."""

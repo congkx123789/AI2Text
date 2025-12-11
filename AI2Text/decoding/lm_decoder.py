@@ -127,7 +127,8 @@ class LMBeamSearchDecoder:
         results = []
         
         # Get log probabilities
-        log_probs = F.log_softmax(logits, dim=-1).cpu().numpy()
+        # Convert to float32 before numpy (NumPy doesn't support bfloat16)
+        log_probs = F.log_softmax(logits, dim=-1).float().cpu().numpy()
         
         for b in range(batch_size):
             if lengths is not None:

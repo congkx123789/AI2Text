@@ -1,0 +1,3821 @@
+---
+alwaysApply: true
+description: "DocxTemplate quickstart and advanced usage guide"
+---
+## ⚡ Quick Start
+
+### Bước 1: Tạo Template Word
+
+1. Mở Microsoft Word
+2. Tạo document với nội dung:
+   ```
+   Xin chào {{ name }}!
+   
+   Công ty: {{ company_name }}
+   Ngày: {{ date }}
+   ```
+3. Lưu file với tên `template.docx`
+
+**⚠️ LƯU Ý QUAN TRỌNG:**
+- Luôn có **space** sau `{{` và trước `}}`
+- ✅ Đúng: `{{ name }}`
+- ❌ Sai: `{{name}}`
+
+### Bước 2: Code Python
+
+```python
+from docxtpl import DocxTemplate
+
+# Load template
+tpl = DocxTemplate("template.docx")
+
+# Tạo context (dữ liệu)
+context = {
+    "name": "Nguyễn Văn A",
+    "company_name": "Công ty ABC",
+    "date": "2024-01-15"
+}
+
+# Render template với context
+tpl.render(context)
+
+# Lưu file kết quả
+tpl.save("output.docx")
+```
+
+---
+
+## 🎯 Các Tính Năng Chính
+
+### 1. Variables - Biến Đơn Giản
+
+**Template Word:**
+```
+Tên: {{ name }}
+Tuổi: {{ age }}
+Email: {{ email }}
+```
+
+**Python Code:**
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("template.docx")
+context = {
+    "name": "John Doe",
+    "age": 30,
+    "email": "john@example.com"
+}
+tpl.render(context)
+tpl.save("output.docx")
+```
+
+**Kết quả:**
+```
+Tên: John Doe
+Tuổi: 30
+Email: john@example.com
+```
+
+---
+
+### 2. Conditional Statements - Câu Lệnh Điều Kiện
+
+**Template Word:**
+```
+{% if is_student %}
+Bạn là học sinh
+{% else %}
+Bạn không phải học sinh
+{% endif %}
+```
+
+**Python Code:**
+```python
+context = {
+    "is_student": True
+}
+```
+
+**Lưu ý:** Có thể dùng `{%p if ... %}` cho paragraph-level, `{%tr if ... %}` cho table row-level.
+
+---
+
+### 3. Loops - Vòng Lặp
+
+**Template Word:**
+```
+Danh sách sản phẩm:
+{% for item in items %}
+- {{ item.name }}: ${{ item.price }}
+{% endfor %}
+```
+
+**Python Code:**
+```python
+context = {
+    "items": [
+        {"name": "Laptop", "price": 1000},
+        {"name": "Mouse", "price": 20},
+        {"name": "Keyboard", "price": 50}
+    ]
+}
+```
+
+---
+
+### 4. RichText - Định Dạng Text Nâng Cao
+
+**Ví dụ từ `tests/richtext.py`:**
+
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("templates/richtext_tpl.docx")
+
+rt = RichText()
+rt.add("a rich text", style="myrichtextstyle")
+rt.add(" with ")
+rt.add("some italic", italic=True)
+rt.add(" and ")
+rt.add("some violet", color="#ff00ff")
+rt.add(" and ")
+rt.add("some striked", strike=True)
+rt.add(" and ")
+rt.add("some Highlighted", highlight="#ffff00")
+rt.add(" and ")
+rt.add("some small", size=14)
+rt.add(" or ")
+rt.add("big", size=60)
+rt.add(" text.")
+
+# Hyperlink
+rt.add("\nYou can add an hyperlink, here to ")
+rt.add("google", url_id=tpl.build_url_id("http://google.com"))
+
+# Escape sequences
+rt.add("\n1st line")
+rt.add("\n2nd line")
+rt.add("\n3rd line")
+rt.add("\aA new paragraph : <cool>\a")
+rt.add("--- A page break here (see next page) ---\f")
+
+# Underline types
+for ul in ["single", "double", "thick", "dotted", "dash", 
+           "dotDash", "dotDotDash", "wave"]:
+    rt.add("\nUnderline : " + ul + " \n", underline=ul)
+
+# Fonts
+rt.add("\nFonts :\n", underline=True)
+rt.add("Arial\n", font="Arial")
+rt.add("Courier New\n", font="Courier New")
+rt.add("Times New Roman\n", font="Times New Roman")
+
+# Subscript và Superscript
+rt.add("\n\nHere some")
+rt.add("superscript", superscript=True)
+rt.add(" and some")
+rt.add("subscript", subscript=True)
+
+# Nối RichText objects
+rt_embedded = RichText("an example of ")
+rt_embedded.add(rt)
+
+context = {"example": rt_embedded}
+tpl.render(context)
+tpl.save("output/richtext.docx")
+```
+
+**Template Word:** `{{r example }}` (lưu ý có `r`)
+
+**Các thuộc tính của RichText.add():**
+- `style` - Character style name
+- `color` - Màu chữ (hex: "#ff0000" hoặc "ff0000")
+- `highlight` - Màu nền
+- `size` - Font size
+- `bold`, `italic`, `underline`, `strike`
+- `font` - Tên font
+- `url_id` - Hyperlink ID
+- `rtl` - Right-to-left text
+- `lang` - Language code
+- `subscript`, `superscript`
+
+---
+
+### 5. InlineImage - Chèn Hình Ảnh
+
+**Ví dụ từ `tests/inline_image.py`:**
+
+```python
+from docxtpl import DocxTemplate, InlineImage
+from docx.shared import Mm
+import jinja2
+
+tpl = DocxTemplate("templates/inline_image_tpl.docx")
+
+context = {
+    # Hình ảnh đơn giản với width
+    "myimage": InlineImage(tpl, "templates/python_logo.png", width=Mm(20)),
+    
+    # Hình ảnh với width và height
+    "myimageratio": InlineImage(
+        tpl, "templates/python_jpeg.jpg", width=Mm(30), height=Mm(60)
+    ),
+    
+    # Hình ảnh trong loop
+    "frameworks": [
+        {
+            "image": InlineImage(tpl, "templates/django.png", height=Mm(10)),
+            "desc": "The web framework for perfectionists with deadlines",
+        },
+        {
+            "image": InlineImage(tpl, "templates/zope.png", height=Mm(10)),
+            "desc": "Zope is a leading Open Source Application Server",
+        },
+        {
+            "image": InlineImage(tpl, "templates/pyramid.png", height=Mm(10)),
+            "desc": "Pyramid is a lightweight Python web framework",
+        },
+    ],
+}
+
+# Có thể dùng với autoescape
+jinja_env = jinja2.Environment(autoescape=True)
+tpl.render(context, jinja_env)
+tpl.save("output/inline_image.docx")
+```
+
+**Template Word:**
+```
+{{ myimage }}
+
+{% for fw in frameworks %}
+{{ fw.image }} - {{ fw.desc }}
+{% endfor %}
+```
+
+**Đơn vị đo lường:**
+```python
+from docx.shared import Mm, Inches, Pt, Cm
+
+# Millimeters
+img = InlineImage(tpl, "img.png", width=Mm(50))
+
+# Inches
+img = InlineImage(tpl, "img.png", width=Inches(2))
+
+# Points
+img = InlineImage(tpl, "img.png", width=Pt(144))
+
+# Centimeters
+img = InlineImage(tpl, "img.png", width=Cm(5))
+```
+
+---
+
+### 6. Subdocuments - Tài Liệu Con
+
+**Ví dụ từ `tests/subdoc.py`:**
+
+```python
+from docxtpl import DocxTemplate
+from docx.shared import Inches
+
+tpl = DocxTemplate("templates/subdoc_tpl.docx")
+
+# Tạo subdoc từ scratch
+sd = tpl.new_subdoc()
+
+# Paragraphs
+p = sd.add_paragraph("This is a sub-document inserted into a bigger one")
+p = sd.add_paragraph("It has been ")
+p.add_run("dynamically").style = "dynamic"
+p.add_run(" generated with python by using ")
+p.add_run("python-docx").italic = True
+p.add_run(" library")
+
+# Heading
+sd.add_heading("Heading, level 1", level=1)
+
+# Paragraph với style
+sd.add_paragraph("This is an Intense quote", style="IntenseQuote")
+
+# Hình ảnh
+sd.add_paragraph("A picture :")
+sd.add_picture("templates/python_logo.png", width=Inches(1.25))
+
+# Table
+sd.add_paragraph("A Table :")
+table = sd.add_table(rows=1, cols=3)
+hdr_cells = table.rows[0].cells
+hdr_cells[0].text = "Qty"
+hdr_cells[1].text = "Id"
+hdr_cells[2].text = "Desc"
+
+recordset = ((1, 101, "Spam"), (2, 42, "Eggs"), (3, 631, "Spam,spam, eggs, and ham"))
+for item in recordset:
+    row_cells = table.add_row().cells
+    row_cells[0].text = str(item[0])
+    row_cells[1].text = str(item[1])
+    row_cells[2].text = item[2]
+
+context = {"mysubdoc": sd}
+tpl.render(context)
+tpl.save("output/subdoc.docx")
+```
+
+**Template Word:** `{{p mysubdoc }}` (lưu ý có `p`)
+
+**Merge từ file có sẵn (từ `tests/merge_docx.py`):**
+
+```python
+tpl = DocxTemplate("templates/merge_docx_master_tpl.docx")
+sd = tpl.new_subdoc("templates/merge_docx_subdoc.docx")
+
+context = {"mysubdoc": sd}
+tpl.render(context)
+tpl.save("output/merge_docx.docx")
+```
+
+---
+
+### 7. Tables - Bảng
+
+#### A. Cell Background Color
+
+**Ví dụ từ `tests/cellbg.py`:**
+
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("templates/cellbg_tpl.docx")
+
+context = {
+    "alerts": [
+        {
+            "date": "2015-03-10",
+            "desc": RichText("Very critical alert", color="FF0000", bold=True),
+            "type": "CRITICAL",
+            "bg": "FF0000",  # Màu đỏ (không có #)
+        },
+        {
+            "date": "2015-03-11",
+            "desc": RichText("Just a warning"),
+            "type": "WARNING",
+            "bg": "FFDD00",  # Màu vàng
+        },
+        {
+            "date": "2015-03-12",
+            "desc": RichText("Information"),
+            "type": "INFO",
+            "bg": "8888FF",  # Màu xanh
+        },
+    ],
+}
+
+tpl.render(context)
+tpl.save("output/cellbg.docx")
+```
+
+**Template Word:**
+```
+| Date | {% cellbg bg %} Alert | Type |
+{% for alert in alerts %}
+| {{ alert.date }} | {% cellbg alert.bg %} {{r alert.desc }} | {{ alert.type }} |
+{% endfor %}
+```
+
+#### B. Dynamic Table - Bảng Động
+
+**Ví dụ từ `tests/dynamic_table.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/dynamic_table_tpl.docx")
+
+context = {
+    "col_labels": ["fruit", "vegetable", "stone", "thing"],
+    "tbl_contents": [
+        {"label": "yellow", "cols": ["banana", "capsicum", "pyrite", "taxi"]},
+        {"label": "red", "cols": ["apple", "tomato", "cinnabar", "doubledecker"]},
+        {"label": "green", "cols": ["guava", "cucumber", "aventurine", "card"]},
+    ],
+}
+
+tpl.render(context)
+tpl.save("output/dynamic_table.docx")
+```
+
+**Template Word:**
+```
+| {% for label in col_labels %} {{ label }} | {% endfor %}
+{% for row in tbl_contents %}
+| {{ row.label }} | {% for col in row.cols %} {{ col }} | {% endfor %}
+{% endfor %}
+```
+
+#### C. Vertical Merge - Gộp Dọc
+
+**Ví dụ từ `tests/vertical_merge.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/vertical_merge_tpl.docx")
+
+context = {
+    "items": [
+        {"desc": "Python interpreters", "qty": 2, "price": "FREE"},
+        {"desc": "Django projects", "qty": 5403, "price": "FREE"},
+        {"desc": "Guido", "qty": 1, "price": "100,000,000.00"},
+    ],
+    "total_price": "100,000,000.00",
+    "category": "Book",
+}
+
+tpl.render(context)
+tpl.save("output/vertical_merge.docx")
+```
+
+**Template Word:**
+```
+| Category | {% vm %} Item | Qty | Price |
+{% for item in items %}
+| {{ category }} | {% vm %} {{ item.desc }} | {{ item.qty }} | {{ item.price }} |
+{% endfor %}
+```
+
+`{% vm %}` sẽ tự động merge cells theo chiều dọc trong loop.
+
+#### D. Horizontal Merge - Gộp Ngang
+
+**Ví dụ từ `tests/horizontal_merge.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/horizontal_merge_tpl.docx")
+tpl.render({})
+tpl.save("output/horizontal_merge.docx")
+```
+
+**Template Word:**
+```
+{% for item in items %}
+| {% hm %} Header | {{ item.data }} |
+{% endfor %}
+```
+
+`{% hm %}` sẽ tự động merge cells theo chiều ngang với số lượng items trong loop.
+
+#### E. Colspan
+
+**Template Word:**
+```
+| Name | {% colspan num_cols %} Description | Price |
+```
+
+**Python:**
+```python
+context = {"num_cols": 3, "name": "Product", "price": "$100"}
+```
+
+---
+
+### 8. Nested Loops - Vòng Lặp Lồng Nhau
+
+**Ví dụ từ `tests/nested_for.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/nested_for_tpl.docx")
+
+context = {
+    "dishes": [
+        {"name": "Pizza", "ingredients": ["bread", "tomato", "ham", "cheese"]},
+        {
+            "name": "Hamburger",
+            "ingredients": ["bread", "chopped steak", "cheese", "sauce"],
+        },
+        {
+            "name": "Apple pie",
+            "ingredients": ["flour", "apples", "suggar", "quince jelly"],
+        },
+    ],
+    "authors": [
+        {
+            "name": "Saint-Exupery",
+            "books": [
+                {"title": "Le petit prince"},
+                {"title": "L'aviateur"},
+                {"title": "Vol de nuit"},
+            ],
+        },
+        {
+            "name": "Barjavel",
+            "books": [
+                {"title": "Ravage"},
+                {"title": "La nuit des temps"},
+                {"title": "Le grand secret"},
+            ],
+        },
+    ],
+}
+
+tpl.render(context)
+tpl.save("output/nested_for.docx")
+```
+
+**Template Word:**
+```
+Dishes:
+{% for dish in dishes %}
+{{ dish.name }}:
+{% for ingredient in dish.ingredients %}
+  - {{ ingredient }}
+{% endfor %}
+{% endfor %}
+
+Authors:
+{% for author in authors %}
+{{ author.name }}:
+{% for book in author.books %}
+  - {{ book.title }}
+{% endfor %}
+{% endfor %}
+```
+
+---
+
+### 9. Escape - Xử Lý Ký Tự Đặc Biệt
+
+**Ví dụ từ `tests/escape.py`:**
+
+```python
+from docxtpl import DocxTemplate, R, Listing
+
+tpl = DocxTemplate("templates/escape_tpl.docx")
+
+context = {
+    # Cách 1: Dùng RichText (R là shortcut)
+    "myvar": R(
+        '"less than" must be escaped : <, this can be done with RichText() or R()'
+    ),
+    
+    # Cách 2: Dùng filter |e trong template
+    "myescvar": 'It can be escaped with a "|e" jinja filter in the template too : < ',
+    
+    # RichText với escape sequences
+    "nlnp": R(
+        "Here is a multiple\nlines\nstring\aand some\aother\aparagraphs",
+        color="#ff00ff",
+    ),
+    
+    # Listing class - giữ nguyên styling
+    "mylisting": Listing("the listing\nwith\nsome\nlines\nand special chars : <>& ..."),
+    
+    # Page break
+    "page_break": R("\f"),
+    
+    # String với escape sequences (tự động xử lý)
+    "new_listing": """
+This is a new listing
+Now, does not require Listing() Object
+Here is a \t tab\a
+Here is a new paragraph\a
+Here is a page break : \f
+That's it
+""",
+    
+    # HTML content
+    "some_html": (
+        "HTTP/1.1 200 OK\n"
+        "Server: Apache-Coyote/1.1\n"
+        "<html>\n"
+        "<head>\n"
+        "    <title>Struts Problem Report</title>\n"
+        "</head>\n"
+        "<body>\n"
+        "...\n"
+        "</body>\n"
+        "</html>"
+    ),
+}
+
+tpl.render(context)
+tpl.save("output/escape.docx")
+```
+
+**Template Word:**
+```
+{{r myvar }}
+{{ myescvar|e }}
+{{r nlnp }}
+{{ mylisting }}
+{{r page_break }}
+{{ new_listing }}
+{{ some_html|e }}
+```
+
+**Auto-escaping (từ `tests/escape_auto.py`):**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/escape_tpl_auto.docx")
+
+context = {
+    "nested_dict": {name(str(c)): c for c in XML_RESERVED},
+    "autoescape": 'Escaped "str & ing"!',
+    "autoescape_unicode": "This is an escaped <unicode> example \u4f60 & \u6211",
+}
+
+# Tự động escape tất cả
+tpl.render(context, autoescape=True)
+tpl.save("output/escape_auto.docx")
+```
+
+---
+
+### 10. Header và Footer
+
+**Ví dụ từ `tests/header_footer.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/header_footer_tpl.docx")
+
+sd = tpl.new_subdoc()
+p = sd.add_paragraph(
+    "This is a sub-document to check it does not break header and footer"
+)
+
+context = {
+    "title": "Header and footer test",
+    "company_name": "The World Wide company",
+    "date": "2016-03-17",
+    "mysubdoc": sd,
+}
+
+tpl.render(context)
+tpl.save("output/header_footer.docx")
+```
+
+**Template Word (Header):**
+```
+{{ company_name }} - {{ title }}
+```
+
+**Template Word (Footer):**
+```
+Page {{ page_number }} - {{ date }}
+```
+
+**Header/Footer với UTF-8 (từ `tests/header_footer_utf8.py`):**
+
+```python
+context = {
+    "title": "헤더와 푸터",  # Tiếng Hàn
+    "company_name": "세계적 회사",
+    "date": "2016-03-17",
+}
+```
+
+**Header/Footer với InlineImage (từ `tests/header_footer_inline_image.py`):**
+
+```python
+from docxtpl import DocxTemplate, InlineImage
+from docx.shared import Mm
+
+tpl = DocxTemplate("templates/header_footer_inline_image_tpl.docx")
+
+context = {
+    "inline_image": InlineImage(tpl, "templates/django.png", height=Mm(10)),
+    "images": [
+        InlineImage(tpl, "templates/python.png", height=Mm(10)),
+        InlineImage(tpl, "templates/python.png", height=Mm(10)),
+        InlineImage(tpl, "templates/python.png", height=Mm(10)),
+    ],
+}
+
+tpl.render(context)
+tpl.save("output/header_footer_inline_image.docx")
+```
+
+---
+
+### 11. Replace Pictures - Thay Thế Hình Ảnh
+
+**Ví dụ từ `tests/replace_picture.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/replace_picture_tpl.docx")
+
+# Thay hình theo tên file (chỉ cần basename)
+tpl.replace_pic("python_logo.png", "templates/python.png")
+
+tpl.render({})
+tpl.save("output/replace_picture.docx")
+```
+
+**Lưu ý:**
+- Chỉ cần basename, không cần full path
+- Tìm theo name, title, hoặc description của hình
+- Không cần file gốc tồn tại
+
+---
+
+### 12. RichTextParagraph - Paragraph Styles
+
+**Ví dụ từ `tests/richtextparagraph.py`:**
+
+```python
+from docxtpl import DocxTemplate, RichText, RichTextParagraph
+
+tpl = DocxTemplate("templates/richtext_paragraph_tpl.docx")
+
+rtp = RichTextParagraph()
+
+# Paragraph với custom style
+rtp.add(
+    "The rich text paragraph function allows paragraph styles to be added to text",
+    parastyle="myrichparastyle",
+)
+
+# Paragraph với built-in style
+rtp.add("Any built in paragraph style can be used", parastyle="IntenseQuote")
+
+# Custom style
+rtp.add(
+    "or you can add your own, unlocking all style options", 
+    parastyle="createdStyle"
+)
+
+# Normal style
+rtp.add(
+    "To use, just create a style in your template word doc with the formatting you want "
+    "and call it in the code.",
+    parastyle="normal",
+)
+
+# Bullet points
+rtp.add("This allows for the use of")
+rtp.add("custom bullet\apoints", parastyle="SquareBullet")
+rtp.add("Numbered Bullet Points", parastyle="BasicNumbered")
+rtp.add("and Alpha Bullet Points.", parastyle="alphaBracketNumbering")
+
+# Alignment
+rtp.add("You can", parastyle="normal")
+rtp.add("set the", parastyle="centerAlign")
+rtp.add("text alignment", parastyle="rightAlign")
+
+# Line spacing
+rtp.add(
+    "as well as the spacing between lines of text. Like this for example, "
+    "this text has very tight spacing between the lines.\aIt also has no space between "
+    "paragraphs of the same style.",
+    parastyle="TightLineSpacing",
+)
+
+rtp.add(
+    "Unlike this one, which has extra large spacing between lines for when you want to "
+    "space things out a bit or just write a little less.",
+    parastyle="WideLineSpacing",
+)
+
+# Background color
+rtp.add(
+    "You can also set the background colour of a line.", 
+    parastyle="LineShadingGreen"
+)
+
+# Có thể thêm RichText vào RichTextParagraph
+rt = RichText()
+rt.add("This works with ")
+rt.add("Rich ", bold=True)
+rt.add("Text ", italic=True)
+rt.add("Strings", underline="single")
+rt.add(" too.")
+
+rtp.add(rt, parastyle="SquareBullet")
+
+context = {"example": rtp}
+tpl.render(context)
+tpl.save("output/richtext_paragraph.docx")
+```
+
+**Template Word:** `{{p example }}` (lưu ý có `p`)
+
+---
+
+### 13. Custom Jinja2 Filters
+
+**Ví dụ từ `tests/custom_jinja_filters.py`:**
+
+```python
+from docxtpl import DocxTemplate
+import jinja2
+
+jinja_env = jinja2.Environment()
+
+# Định nghĩa filter
+def my_filterA(value, my_string_arg):
+    return_value = value + " " + my_string_arg
+    return return_value
+
+def my_filterB(value, my_float_arg):
+    return_value = value + my_float_arg
+    return return_value
+
+# Đăng ký filters
+jinja_env.filters["my_filterA"] = my_filterA
+jinja_env.filters["my_filterB"] = my_filterB
+
+context = {"base_value_string": " Hello", "base_value_float": 1.5}
+
+tpl = DocxTemplate("templates/custom_jinja_filters_tpl.docx")
+tpl.render(context, jinja_env)
+tpl.save("output/custom_jinja_filters.docx")
+```
+
+**Template Word:**
+```
+{{ base_value_string|my_filterA("World") }}
+{{ base_value_float|my_filterB(2.5) }}
+```
+
+---
+
+### 14. Document Properties
+
+**Ví dụ từ `tests/doc_properties.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/doc_properties_tpl.docx")
+
+context = {"test": "HelloWorld"}
+
+tpl.render(context)
+tpl.save("output/doc_properties.docx")
+```
+
+**Template Word Properties:**
+- Author: `{{ author }}`
+- Title: `{{ title }}`
+- Subject: `{{ subject }}`
+- Comments: `{{ comments }}`
+
+Properties sẽ được render tự động khi gọi `render()`.
+
+---
+
+### 15. Footnotes
+
+**Ví dụ từ `tests/footnotes.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/footnotes_tpl.docx")
+
+context = {"a_jinja_variable": "A Jinja variable!"}
+
+tpl.render(context)
+tpl.save("output/footnotes.docx")
+```
+
+**Template Word:** Chèn footnote với `{{ a_jinja_variable }}` trong footnote.
+
+Footnotes sẽ được render tự động.
+
+---
+
+### 16. Merge Paragraph - Gộp Paragraph
+
+**Ví dụ từ `tests/merge_paragraph.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/merge_paragraph_tpl.docx")
+
+context = {"living_in_town": True}
+
+tpl.render(context)
+tpl.save("output/merge_paragraph.docx")
+```
+
+**Template Word:**
+```
+My house is located
+{%- if living_in_town -%}
+ in urban area
+{%- else -%}
+ in countryside
+{%- endif -%}
+ and I love it.
+```
+
+`{%-` và `-%}` sẽ merge với text trước/sau để tránh khoảng trắng thừa.
+
+---
+
+### 17. Preserve Spaces - Bảo Toàn Khoảng Trắng
+
+**Ví dụ từ `tests/preserve_spaces.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/preserve_spaces_tpl.docx")
+
+tags = ["tag_1", "tag_2"]
+replacement = ["looking", "too"]
+
+context = dict(zip(tags, replacement))
+
+tpl.render(context)
+tpl.save("output/preserve_spaces.docx")
+```
+
+Thư viện tự động bảo toàn spaces giữa các tags.
+
+---
+
+### 18. Word 2016 Compatibility
+
+**Ví dụ từ `tests/word2016.py`:**
+
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("templates/word2016_tpl.docx")
+
+tpl.render(
+    {
+        "test_space": "          ",
+        "test_tabs": 5 * "\t",
+        "test_space_r": RichText("          "),
+        "test_tabs_r": RichText(5 * "\t"),
+    }
+)
+tpl.save("output/word2016.docx")
+```
+
+**Lưu ý:** Word 2016 có thể ignore spaces/tabs. Dùng RichText để đảm bảo hiển thị đúng.
+
+**Template Word:**
+```
+{{ test_space }} Spaces may be ignored
+{{r test_space_r }} Spaces will be preserved
+{{ test_tabs }} Tabs may be ignored
+{{r test_tabs_r }} Tabs will be preserved
+```
+
+---
+
+### 19. East Asian Fonts
+
+**Ví dụ từ `tests/richtext_eastAsia.py`:**
+
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("templates/richtext_eastAsia_tpl.docx")
+
+rt = RichText("测试TEST", font="eastAsia:Microsoft YaHei")
+ch = RichText("测试TEST", font="eastAsia:微软雅黑")
+sun = RichText("测试TEST", font="eastAsia:SimSun")
+
+context = {
+    "example": rt,
+    "Chinese": ch,
+    "simsun": sun,
+}
+
+tpl.render(context)
+tpl.save("output/richtext_eastAsia.docx")
+```
+
+**Template Word:** `{{r example }}`, `{{r Chinese }}`, `{{r simsun }}`
+
+---
+
+### 20. RichText với If Statement
+
+**Ví dụ từ `tests/richtext_and_if.py`:**
+
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("templates/richtext_and_if_tpl.docx")
+
+context = {"foobar": RichText("Foobar!", color="ff0000")}
+
+tpl.render(context)
+tpl.save("output/richtext_and_if.docx")
+```
+
+**Template Word:**
+```
+{% if condition %}
+{{r foobar }}
+{% endif %}
+```
+
+---
+
+### 21. Comments - Ghi Chú
+
+**Ví dụ từ `tests/comments.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/comments_tpl.docx")
+
+tpl.render({})
+tpl.save("output/comments.docx")
+```
+
+**Template Word:**
+```
+{#p this is a comment as a paragraph #}
+{#tr this is a comment as a table row #}
+{#tc this is a comment as a table cell #}
+```
+
+Comments sẽ không xuất hiện trong output.
+
+---
+
+### 22. Multiple Rendering
+
+**Ví dụ từ `tests/multi_rendering.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/multi_rendering_tpl.docx")
+
+documents_data = [
+    {
+        "dest_file": "multi_render1.docx",
+        "context": {
+            "title": "Title ONE",
+            "body": "This is the body for first document",
+        },
+    },
+    {
+        "dest_file": "multi_render2.docx",
+        "context": {
+            "title": "Title TWO",
+            "body": "This is the body for second document",
+        },
+    },
+    {
+        "dest_file": "multi_render3.docx",
+        "context": {
+            "title": "Title THREE",
+            "body": "This is the body for third document",
+        },
+    },
+]
+
+for document_data in documents_data:
+    dest_file = document_data["dest_file"]
+    context = document_data["context"]
+    tpl.render(context)
+    tpl.save("output/%s" % dest_file)
+```
+
+Có thể render nhiều lần với cùng DocxTemplate object.
+
+---
+
+### 23. Order - Ví Dụ Hoàn Chỉnh
+
+**Ví dụ từ `tests/order.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("templates/order_tpl.docx")
+
+context = {
+    "customer_name": "Eric",
+    "items": [
+        {"desc": "Python interpreters", "qty": 2, "price": "FREE"},
+        {"desc": "Django projects", "qty": 5403, "price": "FREE"},
+        {"desc": "Guido", "qty": 1, "price": "100,000,000.00"},
+    ],
+    "in_europe": True,
+    "is_paid": False,
+    "company_name": "The World Wide company",
+    "total_price": "100,000,000.00",
+}
+
+tpl.render(context)
+tpl.save("output/order.docx")
+```
+
+Ví dụ đơn giản với variables, loops, và conditionals.
+
+---
+
+### 24. Get Undeclared Variables
+
+**Ví dụ từ `tests/get_undeclared_variables.py`:**
+
+```python
+from docxtpl import DocxTemplate
+
+# Test 1: Trước khi render - lấy tất cả biến
+tpl = DocxTemplate("templates/get_undeclared_variables.docx")
+undeclared = tpl.get_undeclared_template_variables()
+print(f"Variables found: {undeclared}")
+# Output: {'name', 'age', 'email', 'is_student', ...}
+
+# Test 2: Sau khi render với incomplete context - lấy biến thiếu
+context = {
+    "name": "John Doe",
+    "age": 25,
+    # Missing: has_degree, degree_field, projects, ...
+}
+
+tpl.render(context)
+missing = tpl.get_undeclared_template_variables(context=context)
+print(f"Missing variables: {missing}")
+# Output: {'has_degree', 'degree_field', 'projects', ...}
+
+# Test 3: Sau khi render với complete context - không còn biến thiếu
+complete_context = {
+    "name": "John Doe",
+    "age": 25,
+    "email": "john@example.com",
+    "is_student": True,
+    "has_degree": True,
+    "degree_field": "Computer Science",
+    "skills": ["Python", "Django"],
+    "projects": [{"name": "Project A"}],
+    "company_name": "Test Corp",
+    "page_number": 1,
+    "generation_date": "2024-01-15",
+    "author": "Test Author",
+}
+
+tpl.render(complete_context)
+all_provided = tpl.get_undeclared_template_variables(context=complete_context)
+print(f"Undeclared variables: {all_provided}")
+# Output: set() (empty set)
+```
+
+---
+
+### 25. Command Line Usage
+
+**Ví dụ từ `tests/module_execute.py`:**
+
+```bash
+python -m docxtpl template.docx data.json output.docx [-o] [-q]
+```
+
+**Options:**
+- `-o, --overwrite` - Overwrite without asking
+- `-q, --quiet` - Quiet mode
+
+**JSON file format (`data.json`):**
+```json
+{
+    "name": "John Doe",
+    "age": 30,
+    "company": "ABC Corp"
+}
+```
+
+---
+
+### 26. Template Error Handling
+
+**Ví dụ từ `tests/template_error.py`:**
+
+```python
+from docxtpl import DocxTemplate
+from jinja2.exceptions import TemplateError
+
+try:
+    tpl = DocxTemplate("templates/template_error_tpl.docx")
+    tpl.render({"test_variable": "test variable value"})
+except TemplateError as the_error:
+    print(str(the_error))
+    if hasattr(the_error, "docx_context"):
+        print("Context:")
+        for line in the_error.docx_context:
+            print(line)
+
+tpl.save("output/template_error.docx")
+```
+
+---
+
+## 📚 API Reference Chi Tiết
+
+### DocxTemplate Class
+
+Class chính để quản lý docx files như Jinja2 templates.
+
+#### `__init__(template_file: Union[IO[bytes], str, PathLike])`
+
+**Công dụng:** Khởi tạo DocxTemplate object.
+
+**Parameters:**
+- `template_file`: Đường dẫn đến template file (.docx) hoặc file-like object (BytesIO)
+
+**Internal State:**
+- `self.template_file`: Lưu đường dẫn template
+- `self.docx`: Document object (None ban đầu, load khi cần)
+- `self.is_rendered`: Flag đánh dấu đã render chưa
+- `self.is_saved`: Flag đánh dấu đã save chưa
+- `self.allow_missing_pics`: Cho phép hình ảnh thiếu (mặc định: False)
+- Gọi `reset_replacements()` để khởi tạo replacement dictionaries
+
+**Example:**
+```python
+# Với file path
+tpl = DocxTemplate("template.docx")
+
+# Với file object (cho web apps)
+import io
+with open("template.docx", "rb") as f:
+    tpl = DocxTemplate(io.BytesIO(f.read()))
+```
+
+---
+
+#### `init_docx(reload: bool = True)`
+
+**Công dụng:** Load document từ template file.
+
+**Parameters:**
+- `reload`: Nếu True, reload document nếu đã render
+
+**Logic:**
+- Chỉ load nếu `self.docx` chưa tồn tại
+- Hoặc nếu đã render và `reload=True`
+- Reset `is_rendered=False` sau khi reload
+
+**Example:**
+```python
+tpl.init_docx()  # Load document
+tpl.init_docx(reload=False)  # Không reload nếu đã có
+```
+
+---
+
+#### `render_init()`
+
+**Công dụng:** Khởi tạo trước khi render.
+
+**Internal State:**
+- Gọi `init_docx()` để load document
+- Reset `pic_map = {}` - Map hình ảnh đã thay thế
+- Reset `current_rendering_part = None` - Part đang render (cho InlineImage)
+- Reset `docx_ids_index = 1000` - Index cho docPr IDs
+- Reset `is_saved = False`
+
+**Được gọi tự động bởi:** `render()`
+
+---
+
+#### `render(context: Dict[str, Any], jinja_env: Optional[Environment] = None, autoescape: bool = False) -> None`
+
+**Công dụng:** Render template với context data.
+
+**Parameters:**
+- `context`: Dictionary chứa dữ liệu để render
+- `jinja_env`: Custom Jinja2 Environment (optional)
+- `autoescape`: Tự động escape HTML entities (mặc định: False)
+
+**Flow hoạt động:**
+
+1. **Khởi tạo:** `render_init()`
+   - Load document
+   - Reset internal state
+
+2. **Setup autoescape:**
+   - Nếu `autoescape=True` và không có `jinja_env`: Tạo Environment mới với autoescape
+   - Nếu có `jinja_env`: Set `jinja_env.autoescape = autoescape`
+
+3. **Render Body:**
+   - `build_xml()` → Lấy XML, patch, render
+   - `fix_tables()` → Sửa bảng nếu số cột thay đổi
+   - `fix_docpr_ids()` → Đánh số lại docPr IDs
+   - `map_tree()` → Thay thế body XML tree
+
+4. **Render Headers:**
+   - `build_headers_footers_xml()` → Patch và render header XML
+   - `map_headers_footers_xml()` → Cập nhật header parts
+
+5. **Render Footers:**
+   - Tương tự headers
+
+6. **Render Properties:**
+   - `render_properties()` → Render document properties (author, title, subject...)
+
+7. **Render Footnotes:**
+   - `render_footnotes()` → Render footnotes
+
+8. **Set flag:** `is_rendered = True`
+
+**Example:**
+```python
+# Render cơ bản
+tpl.render({"name": "John"})
+
+# Với autoescape
+tpl.render({"text": "Text with < > &"}, autoescape=True)
+
+# Với custom Jinja environment
+import jinja2
+env = jinja2.Environment()
+env.filters['upper'] = str.upper
+tpl.render({"name": "john"}, jinja_env=env)
+```
+
+---
+
+#### `patch_xml(src_xml: str) -> str`
+
+**Công dụng:** Chuyển đổi XML của Word thành XML tương thích Jinja2.
+
+**Đây là hàm QUAN TRỌNG NHẤT** - xử lý tất cả các tag đặc biệt và làm sạch XML.
+
+**Các bước xử lý:**
+
+1. **Loại bỏ XML tags giữa Jinja delimiters:**
+   ```python
+   # {<tags>{{var}} → {{var}}
+   # {%<tags>if%} → {%if%}
+   ```
+
+2. **Xử lý colspan:**
+   - Tìm `{% colspan N %}`
+   - Thêm `<w:gridSpan w:val="{{N}}"/>` vào cell properties
+   - Xóa empty runs chứa colspan tag
+
+3. **Xử lý cellbg:**
+   - Tìm `{% cellbg color %}`
+   - Thêm `<w:shd w:fill="{{color}}"/>` cho màu nền
+   - Xóa empty runs chứa cellbg tag
+
+4. **Space preservation:**
+   - Thêm `xml:space="preserve"` vào `<w:t>` chứa Jinja tags
+   - Xử lý `{{r ... }}` và `{%r ... %}` tags
+
+5. **Merge text với {%- và -%}:**
+   - `{%-` merge với text trước
+   - `-%}` merge với text sau
+
+6. **Xử lý special tags:**
+   - `{%p ... %}`, `{%tr ... %}`, `{%tc ... %}`, `{%r ... %}`
+   - Loại bỏ XML tags xung quanh để Jinja2 render đúng
+
+7. **Vertical merge ({% vm %}):**
+   - Tạo `vMerge` với `restart` cho `loop.first`, `continue` cho các lần khác
+   - Wrap content với `{% if loop.first %}...{% endif %}`
+
+8. **Horizontal merge ({% hm %}):**
+   - Nhân `gridSpan` với `loop.length`
+   - Wrap với `{% if loop.first %}...{% endif %}` để chỉ hiển thị cell đầu
+
+9. **Clean HTML entities:**
+   - Chuyển smart quotes, `&lt;`, `&gt;` thành ký tự thường
+
+**Returns:** XML string đã được patch
+
+**Lưu ý:** Hàm này được gọi tự động, không cần gọi trực tiếp.
+
+---
+
+#### `render_xml_part(src_xml: str, part, context: Dict[str, Any], jinja_env: Optional[Environment] = None) -> str`
+
+**Công dụng:** Render một XML part với Jinja2.
+
+**Parameters:**
+- `src_xml`: XML string cần render
+- `part`: Document part đang render (cho InlineImage)
+- `context`: Context dictionary
+- `jinja_env`: Custom Jinja environment
+
+**Flow:**
+
+1. **Thêm newline trước `<w:p>`** để dễ debug (sẽ xóa sau)
+
+2. **Set current_rendering_part:**
+   - `self.current_rendering_part = part`
+   - Cần cho InlineImage để biết part nào đang render
+
+3. **Tạo Jinja2 template:**
+   - Nếu có `jinja_env`: `jinja_env.from_string(src_xml)`
+   - Nếu không: `Template(src_xml)`
+
+4. **Render:**
+   - `template.render(context)`
+
+5. **Error handling:**
+   - Nếu có `lineno` trong exception: Thêm context lines vào `exc.docx_context`
+   - Giúp debug dễ hơn
+
+6. **Post-processing:**
+   - Xóa newline đã thêm
+   - Xử lý escape sequences: `{_{` → `{{`, `}_}` → `}}`
+   - Gọi `resolve_listing()` để xử lý `\n`, `\t`, `\a`, `\f`
+
+**Returns:** XML string đã render
+
+---
+
+#### `resolve_listing(xml: str) -> str`
+
+**Công dụng:** Chuyển escape sequences thành XML Word.
+
+**Escape sequences:**
+- `\t` → `<w:tab/>` (tab)
+- `\n` → `<w:br/>` (newline/line break)
+- `\a` → New paragraph
+- `\f` → Page break
+
+**Logic:**
+- Tìm tất cả paragraphs
+- Với mỗi paragraph, tìm runs
+- Với mỗi run, tìm text nodes
+- Thay thế escape sequences với XML tương ứng
+- Giữ nguyên run properties và paragraph properties
+
+**Example:**
+```python
+# Input: "Line 1\nLine 2\aNew paragraph\fPage break"
+# Output: XML với <w:br/>, new paragraph, và page break
+```
+
+---
+
+#### `fix_tables(xml: str) -> etree.Element`
+
+**Công dụng:** Sửa bảng khi số cột thay đổi sau vòng lặp.
+
+**Vấn đề:** Khi dùng `{%tc for ... %}` trong table, số cột có thể thay đổi, nhưng `tblGrid` (định nghĩa số cột) không tự động cập nhật.
+
+**Logic:**
+
+1. **Parse XML thành tree**
+
+2. **Với mỗi table:**
+
+   a. **Tìm số cột tối đa:**
+      - Duyệt tất cả rows
+      - Đếm số cells (tính cả gridSpan)
+      - Tìm số cột tối đa
+
+   b. **Nếu thiếu cột (to_add > 0):**
+      - Tính tổng width hiện tại
+      - Tính average width mới
+      - Scale các cột cũ để giữ tổng width
+      - Thêm `gridCol` mới với average width
+
+   c. **Nếu thừa cột (to_remove > 0):**
+      - Tính width của các cột thừa
+      - Xóa các cột thừa
+      - Phân bổ lại width cho các cột còn lại
+
+3. **Tính gridSpan:**
+   - Mỗi cell có thể có `gridSpan`
+   - Tính số cột thực tế = sum(gridSpan values)
+
+**Returns:** XML tree đã được fix
+
+**Lưu ý:** Hàm này tự động được gọi trong `render()`, không cần gọi trực tiếp.
+
+---
+
+#### `fix_docpr_ids(tree: etree.Element) -> None`
+
+**Công dụng:** Đánh số lại tất cả `wp:docPr` IDs để tránh collision.
+
+**Vấn đề:** Khi merge nhiều documents hoặc render nhiều lần, docPr IDs có thể bị trùng, gây lỗi hoặc hình ảnh biến mất.
+
+**Logic:**
+- Tìm tất cả `wp:docPr` elements trong tree
+- Với mỗi element: Tăng `self.docx_ids_index` và set ID mới
+- Bắt đầu từ 1000 (được set trong `render_init()`)
+
+**Returns:** None (modify in-place)
+
+---
+
+#### `build_xml(context: Dict[str, Any], jinja_env: Optional[Environment] = None) -> str`
+
+**Công dụng:** Build XML body đã render.
+
+**Flow:**
+1. `get_xml()` → Lấy XML body từ document
+2. `patch_xml()` → Patch XML để tương thích Jinja2
+3. `render_xml_part()` → Render với Jinja2
+4. Return XML đã render
+
+**Returns:** XML string
+
+---
+
+#### `map_tree(tree: etree.Element) -> None`
+
+**Công dụng:** Thay thế body XML tree trong document.
+
+**Logic:**
+- Lấy root element của document
+- Lấy body element
+- Thay thế body bằng tree mới
+
+**Returns:** None (modify in-place)
+
+---
+
+#### `render_properties(context: Dict[str, Any], jinja_env: Optional[Environment] = None) -> None`
+
+**Công dụng:** Render document properties với Jinja2.
+
+**Properties được render:**
+- `author`
+- `comments`
+- `identifier`
+- `language`
+- `subject`
+- `title`
+
+**Properties KHÔNG được render (commented out):**
+- `category`
+- `content_status`
+- `keywords`
+- `last_modified_by`
+- `version`
+
+**Logic:**
+- Với mỗi property:
+  - Lấy giá trị hiện tại từ `self.docx.core_properties`
+  - Tạo Jinja2 template từ giá trị
+  - Render với context
+  - Set lại giá trị
+
+**Example:**
+```python
+# Template Word Properties:
+# Author: {{ author_name }}
+# Title: {{ doc_title }}
+
+context = {
+    "author_name": "John Doe",
+    "doc_title": "My Document"
+}
+tpl.render(context)
+# Properties sẽ được render tự động
+```
+
+---
+
+#### `render_footnotes(context: Dict[str, Any], jinja_env: Optional[Environment] = None) -> None`
+
+**Công dụng:** Render footnotes với Jinja2.
+
+**Logic:**
+- Tìm tất cả footnote parts trong document
+- Với mỗi part:
+  - Decode blob (nếu là bytes)
+  - Patch XML
+  - Render với Jinja2
+  - Encode lại và cập nhật `part._blob`
+
+**Lưu ý:** 
+- Encoding được detect tự động từ XML declaration
+- Mặc định là UTF-8
+
+---
+
+#### `get_headers_footers(uri: str) -> Generator[Tuple[str, Part], None, None]`
+
+**Công dụng:** Generator trả về tất cả header/footer parts.
+
+**Parameters:**
+- `uri`: `HEADER_URI` hoặc `FOOTER_URI`
+
+**Yields:** `(relKey, target_part)` tuples
+
+**Logic:**
+- Duyệt tất cả relationships trong document part
+- Tìm relationships có type = uri và có blob
+- Yield relKey và target_part
+
+---
+
+#### `build_headers_footers_xml(context: Dict[str, Any], uri: str, jinja_env: Optional[Environment] = None) -> Generator[Tuple[str, bytes], None, None]`
+
+**Công dụng:** Build XML cho headers/footers đã render.
+
+**Yields:** `(relKey, xml_bytes)` tuples
+
+**Flow:**
+1. Lấy tất cả header/footer parts
+2. Với mỗi part:
+   - Lấy XML
+   - Detect encoding
+   - Patch XML
+   - Render với Jinja2
+   - Encode lại với encoding gốc
+   - Yield relKey và XML bytes
+
+---
+
+#### `map_headers_footers_xml(relKey: str, xml: bytes) -> None`
+
+**Công dụng:** Cập nhật header/footer part với XML mới.
+
+**Logic:**
+- Load XML thành XmlPart mới
+- Copy tất cả relationships từ part cũ
+- Cập nhật relationship target
+
+---
+
+#### `save(filename: Union[IO[bytes], str, PathLike], *args, **kwargs) -> None`
+
+**Công dụng:** Lưu document đã render.
+
+**Parameters:**
+- `filename`: Đường dẫn output hoặc file-like object
+- `*args, **kwargs`: Truyền vào `docx.save()`
+
+**Flow:**
+
+1. **Kiểm tra render:**
+   - Nếu chưa render và chưa save: Load document từ template
+
+2. **Pre-processing:**
+   - `pre_processing()` → Thay thế hình ảnh nếu có `pics_to_replace`
+
+3. **Save document:**
+   - `self.docx.save(filename, *args, **kwargs)`
+
+4. **Post-processing:**
+   - `post_processing()` → Thay thế media/embedded/zipname nếu có
+
+5. **Set flag:** `is_saved = True`
+
+**Example:**
+```python
+# Lưu vào file
+tpl.save("output.docx")
+
+# Lưu vào file object
+import io
+output = io.BytesIO()
+tpl.save(output)
+output.seek(0)
+```
+
+---
+
+#### `get_undeclared_template_variables(jinja_env: Optional[Environment] = None, context: Optional[Dict[str, Any]] = None) -> Set[str]`
+
+**Công dụng:** Lấy danh sách biến chưa khai báo trong template.
+
+**Parameters:**
+- `jinja_env`: Custom Jinja environment (optional)
+- `context`: Context dictionary để so sánh (optional)
+
+**Logic:**
+
+1. **Tạo temporary document:**
+   - Load template vào temp document (không ảnh hưởng state hiện tại)
+
+2. **Lấy XML:**
+   - Body XML
+   - Headers XML
+   - Footers XML
+   - Patch tất cả XML
+
+3. **Parse với Jinja2:**
+   - Tạo Environment (hoặc dùng custom)
+   - Parse XML
+   - Tìm tất cả undeclared variables
+
+4. **So sánh với context:**
+   - Nếu có `context`: Trả về biến thiếu (không có trong context)
+   - Nếu không: Trả về tất cả biến
+
+**Returns:** `Set[str]` - Set các biến chưa khai báo
+
+**Example:**
+```python
+# Lấy tất cả biến
+all_vars = tpl.get_undeclared_template_variables()
+# {'name', 'age', 'email', ...}
+
+# Lấy biến thiếu
+tpl.render({"name": "John"})
+missing = tpl.get_undeclared_template_variables(context={"name": "John"})
+# {'age', 'email', ...}
+```
+
+---
+
+#### `build_url_id(url: str) -> str`
+
+**Công dụng:** Tạo hyperlink relationship ID.
+
+**Parameters:**
+- `url`: URL của hyperlink
+
+**Logic:**
+- Gọi `init_docx()` để đảm bảo document đã load
+- Tạo relationship với type `HYPERLINK`
+- Return relationship ID
+
+**Returns:** Relationship ID string
+
+**Example:**
+```python
+url_id = tpl.build_url_id("http://example.com")
+rt.add("Click here", url_id=url_id)
+```
+
+---
+
+#### `new_subdoc(docpath: Optional[str] = None) -> Subdoc`
+
+**Công dụng:** Tạo Subdoc object để chèn subdocument.
+
+**Parameters:**
+- `docpath`: Đường dẫn đến file .docx để merge (optional)
+
+**Returns:** `Subdoc` object
+
+**Logic:**
+- Nếu có `docpath`: Load document và attach parts
+- Nếu không: Tạo subdoc từ scratch (dùng cùng part với master)
+
+**Example:**
+```python
+# Từ scratch
+sd = tpl.new_subdoc()
+sd.add_paragraph("Content")
+
+# Từ file
+sd = tpl.new_subdoc("subdoc.docx")
+```
+
+---
+
+#### `get_file_crc(file_obj: Union[IO[bytes], str]) -> int`
+
+**Công dụng:** Tính CRC32 của file (static method).
+
+**Parameters:**
+- `file_obj`: File path hoặc file-like object
+
+**Returns:** CRC32 value (32-bit unsigned integer)
+
+**Logic:**
+- Nếu file object: Đọc toàn bộ
+- Nếu file path: Mở và đọc
+- Tính CRC32 với `binascii.crc32()`
+- Mask với `0xFFFFFFFF` để đảm bảo unsigned
+
+**Dùng cho:** `replace_media()`, `replace_embedded()`
+
+---
+
+#### `replace_media(src_file: Union[IO[bytes], str], dst_file: Union[IO[bytes], str]) -> None`
+
+**Công dụng:** Thay thế media (hình ảnh, video...) dựa trên CRC.
+
+**Parameters:**
+- `src_file`: File gốc (PHẢI tồn tại để tính CRC)
+- `dst_file`: File mới (path hoặc file object)
+
+**Logic:**
+- Tính CRC của `src_file`
+- Đọc data của `dst_file`
+- Lưu vào `self.crc_to_new_media[CRC]`
+- Thay thế trong `post_processing()`
+
+**Lưu ý:**
+- File `src_file` PHẢI tồn tại khi render
+- Phải là cùng file đã chèn vào template
+- Aspect ratio được giữ nguyên
+
+**Example:**
+```python
+# Với file paths
+tpl.replace_media("dummy.png", "real.png")
+
+# Với file objects
+import io
+dummy = io.BytesIO(open("dummy.png", "rb").read())
+real = io.BytesIO(open("real.png", "rb").read())
+tpl.replace_media(dummy, real)
+```
+
+---
+
+#### `replace_pic(embedded_file: str, dst_file: Union[IO[bytes], str]) -> None`
+
+**Công dụng:** Thay thế hình ảnh dựa trên tên file (name/title/description).
+
+**Parameters:**
+- `embedded_file`: Tên file gốc (chỉ basename, không cần path)
+- `dst_file`: File mới (path hoặc file object)
+
+**Logic:**
+- Đọc data của `dst_file`
+- Lưu vào `self.pics_to_replace[embedded_file]`
+- Thay thế trong `pre_processing()` bằng `_replace_pics()`
+
+**Lưu ý:**
+- Chỉ cần basename (không cần full path)
+- Tìm theo name, title, hoặc description của hình
+- Không cần file gốc tồn tại
+- Format phải tương thích (extension giống nhau)
+
+**Example:**
+```python
+tpl.replace_pic("python_logo.png", "new_logo.png")
+```
+
+---
+
+#### `replace_embedded(src_file: str, dst_file: str) -> None`
+
+**Công dụng:** Thay thế embedded objects (docx, xlsx, pptx...) dựa trên CRC.
+
+**Parameters:**
+- `src_file`: File gốc (PHẢI tồn tại)
+- `dst_file`: File mới
+
+**Logic:**
+- Tính CRC của `src_file`
+- Đọc data của `dst_file`
+- Lưu vào `self.crc_to_new_embedded[CRC]`
+- Thay thế trong `post_processing()`
+
+**Lưu ý:**
+- File `src_file` PHẢI tồn tại
+- Chủ yếu dùng cho embedded docx
+- Đối với Excel/PowerPoint, dùng `replace_zipname()`
+
+---
+
+#### `replace_zipname(zipname: str, dst_file: str) -> None`
+
+**Công dụng:** Thay thế file trong docx (là file ZIP) theo đường dẫn.
+
+**Parameters:**
+- `zipname`: Đường dẫn trong ZIP (ví dụ: "word/embeddings/file.xlsx")
+- `dst_file`: File mới
+
+**Logic:**
+- Đọc data của `dst_file`
+- Lưu vào `self.zipname_to_replace[zipname]`
+- Thay thế trong `post_processing()`
+
+**Khi nào dùng:**
+- Khi `replace_embedded()` không work (CRC thay đổi sau khi Word chỉnh sửa)
+- Cho Excel và PowerPoint files
+- Phải tìm đúng zipname (Word có thể rename)
+
+**Example:**
+```python
+tpl.replace_zipname(
+    "word/embeddings/Feuille_Microsoft_Office_Excel1.xlsx",
+    "my_excel.xlsx"
+)
+```
+
+---
+
+#### `reset_replacements() -> None`
+
+**Công dụng:** Reset tất cả replacement dictionaries.
+
+**Logic:**
+- Reset `crc_to_new_media = {}`
+- Reset `crc_to_new_embedded = {}`
+- Reset `zipname_to_replace = {}`
+- Reset `pics_to_replace = {}`
+
+**Khi nào dùng:**
+- Khi render nhiều lần với cùng object
+- Cần thay đổi replacements cho mỗi lần render
+
+**Example:**
+```python
+for data in datasets:
+    tpl.reset_replacements()
+    tpl.replace_pic("logo.png", f"logo_{data['id']}.png")
+    tpl.render(data)
+    tpl.save(f"output_{data['id']}.docx")
+```
+
+---
+
+#### `pre_processing() -> None`
+
+**Công dụng:** Xử lý trước khi save (thay thế hình ảnh).
+
+**Logic:**
+- Nếu có `pics_to_replace`: Gọi `_replace_pics()`
+
+**Được gọi tự động bởi:** `save()`
+
+---
+
+#### `_replace_pics() -> None`
+
+**Công dụng:** Thay thế hình ảnh trong document.
+
+**Logic:**
+
+1. **Tạo replaced_pics dict:** Track hình nào đã được thay thế
+
+2. **Main document:**
+   - Gọi `_replace_docx_part_pics()` cho main part
+
+3. **Header/Footer:**
+   - Duyệt tất cả header/footer relationships
+   - Gọi `_replace_docx_part_pics()` cho mỗi part
+
+4. **Validation:**
+   - Nếu `allow_missing_pics=False`: Kiểm tra tất cả hình đã được thay thế
+   - Raise ValueError nếu có hình không tìm thấy
+
+---
+
+#### `_replace_docx_part_pics(doc_part, replaced_pics: Dict[str, bool]) -> None`
+
+**Công dụng:** Thay thế hình ảnh trong một document part.
+
+**Logic:**
+
+1. **Parse XML:** `etree.fromstring(doc_part.blob)`
+
+2. **Tìm tất cả hình ảnh:**
+   - XPath: `//a:graphic/a:graphicData`
+   - Kiểm tra URI = pic namespace
+   - Lấy relationship ID từ `a:blip`
+
+3. **Lấy metadata:**
+   - `filename` từ `pic:cNvPr/@name`
+   - `title` từ `pic:cNvPr/@title` (optional)
+   - `description` từ `pic:cNvPr/@descr` (optional)
+
+4. **Thay thế:**
+   - So khớp với `pics_to_replace` theo filename/title/description
+   - Thay thế `part._blob` với data mới
+   - Mark `replaced_pics[img_id] = True`
+
+5. **Update pic_map:**
+   - Lưu mapping filename → (target_ref, target_part)
+
+---
+
+#### `post_processing(docx_file: Union[IO[bytes], str]) -> None`
+
+**Công dụng:** Xử lý sau khi save (thay thế media/embedded/zipname).
+
+**Logic:**
+
+1. **Kiểm tra có replacements:**
+   - Nếu không có: Return ngay
+
+2. **Tạo temporary file:**
+   - Nếu file object: Tạo BytesIO
+   - Nếu file path: Rename file hiện tại
+
+3. **Mở ZIP:**
+   - Mở docx như ZIP file
+   - Duyệt tất cả items
+
+4. **Thay thế:**
+   - Nếu `item.filename` trong `zipname_to_replace`: Thay thế
+   - Nếu `item.filename` trong `word/media/` và `item.CRC` trong `crc_to_new_media`: Thay thế
+   - Nếu `item.filename` trong `word/embeddings/` và `item.CRC` trong `crc_to_new_embedded`: Thay thế
+   - Nếu không: Copy nguyên
+
+5. **Cleanup:**
+   - Xóa temporary file (nếu là file path)
+   - Seek file object về đầu
+
+**Được gọi tự động bởi:** `save()`
+
+---
+
+#### `get_pic_map() -> Dict[str, Tuple[str, Part]]`
+
+**Công dụng:** Lấy mapping hình ảnh đã thay thế.
+
+**Returns:** Dictionary mapping filename → (target_ref, target_part)
+
+**Dùng cho:** Debug hoặc advanced use cases
+
+---
+
+#### `xml_to_string(xml: etree.Element, encoding: str = "unicode") -> str`
+
+**Công dụng:** Chuyển XML element thành string.
+
+**Parameters:**
+- `xml`: XML element
+- `encoding`: Encoding (mặc định: "unicode")
+
+**Lưu ý:** `pretty_print=False` là bắt buộc, nếu không `patch_xml()` sẽ không work.
+
+---
+
+#### `get_docx() -> Document`
+
+**Công dụng:** Lấy document object.
+
+**Logic:**
+- Gọi `init_docx()` để đảm bảo document đã load
+- Return `self.docx`
+
+---
+
+#### `get_xml() -> str`
+
+**Công dụng:** Lấy XML body của document.
+
+**Returns:** XML string của body
+
+---
+
+#### `write_xml(filename: str) -> None`
+
+**Công dụng:** Ghi XML body ra file (debug).
+
+**Example:**
+```python
+tpl.write_xml("debug.xml")  # Xem XML để debug
+```
+
+---
+
+#### `__getattr__(name: str) -> Any`
+
+**Công dụng:** Delegate attributes đến document object.
+
+**Logic:**
+- Nếu attribute không tồn tại trong DocxTemplate
+- Delegate đến `self.docx`
+- Cho phép truy cập trực tiếp các methods của python-docx
+
+**Example:**
+```python
+tpl.add_paragraph("Text")  # Tương đương tpl.docx.add_paragraph("Text")
+tpl.sections  # Tương đương tpl.docx.sections
+```
+
+---
+
+### RichText Class
+
+Class để tạo text có định dạng (bold, italic, color, font...).
+
+#### `__init__(text: Optional[str] = None, **text_prop)`
+
+**Công dụng:** Khởi tạo RichText object.
+
+**Parameters:**
+- `text`: Text ban đầu (optional)
+- `**text_prop`: Các thuộc tính formatting (bold, italic, color...)
+
+**Internal State:**
+- `self.xml`: XML string chứa formatted text
+
+**Example:**
+```python
+rt = RichText("Hello", bold=True, color="#ff0000")
+```
+
+---
+
+#### `add(text: Union[str, RichText], style: Optional[str] = None, color: Optional[str] = None, highlight: Optional[str] = None, size: Optional[int] = None, bold: bool = False, italic: bool = False, underline: Union[bool, str] = False, strike: bool = False, font: Optional[str] = None, url_id: Optional[str] = None, rtl: bool = False, lang: Optional[str] = None, subscript: Optional[bool] = None, superscript: Optional[bool] = None) -> None`
+
+**Công dụng:** Thêm text với formatting.
+
+**Parameters chi tiết:**
+
+- `text`: Text cần thêm (có thể là RichText object)
+- `style`: Character style name (định nghĩa trong Word)
+- `color`: Màu chữ (hex: "#ff0000" hoặc "ff0000")
+- `highlight`: Màu nền (hex)
+- `size`: Font size (số)
+- `bold`: In đậm (bool)
+- `italic`: In nghiêng (bool)
+- `underline`: Gạch chân (bool hoặc "single", "double", "thick", "dotted", "dash", "dotDash", "dotDotDash", "wave")
+- `strike`: Gạch ngang (bool)
+- `font`: Tên font ("Arial", "Times New Roman", hoặc "eastAsia:Microsoft YaHei" cho fonts đặc biệt)
+- `url_id`: Hyperlink ID (dùng `build_url_id()`)
+- `rtl`: Right-to-left text (bool)
+- `lang`: Language code ("en-US", "vi-VN"...)
+- `subscript`: Subscript (bool)
+- `superscript`: Superscript (bool)
+
+**Logic:**
+
+1. **Nếu text là RichText object:**
+   - Append XML trực tiếp
+   - Return ngay
+
+2. **Convert text:**
+   - Nếu không phải string: Convert thành string
+   - Nếu là bytes: Decode UTF-8
+   - Escape HTML entities
+
+3. **Build properties:**
+   - Tạo `w:rPr` XML với các properties
+   - Xử lý color/highlight (bỏ # nếu có)
+   - Xử lý font (hỗ trợ regional fonts với `:`)
+   - Xử lý underline (validate và default "single")
+   - Xử lý RTL (thêm `bCs`, `iCs` nếu cần)
+
+4. **Build XML:**
+   - `<w:r><w:rPr>...</w:rPr><w:t>...</w:t></w:r>`
+   - Nếu có `url_id`: Wrap trong `<w:hyperlink>`
+
+5. **Append:** Thêm vào `self.xml`
+
+**Example:**
+```python
+rt = RichText()
+rt.add("Normal")
+rt.add("Bold", bold=True)
+rt.add("Red", color="ff0000")
+rt.add("Link", url_id=tpl.build_url_id("http://example.com"))
+```
+
+---
+
+#### `__str__() -> str`, `__unicode__() -> str`, `__html__() -> str`
+
+**Công dụng:** Return XML string để Jinja2 render.
+
+**Returns:** `self.xml`
+
+**Lưu ý:** Jinja2 sẽ gọi một trong các methods này khi render.
+
+---
+
+### RichTextParagraph Class
+
+Class để tạo paragraphs với paragraph styles.
+
+#### `__init__(text: Optional[str] = None, **text_prop)`
+
+**Công dụng:** Khởi tạo RichTextParagraph.
+
+**Parameters:**
+- `text`: Text ban đầu (optional)
+- `**text_prop`: Thuộc tính (sẽ được truyền vào RichText)
+
+**Internal State:**
+- `self.xml`: XML string chứa paragraphs
+
+---
+
+#### `add(text: Union[str, RichText], parastyle: Optional[str] = None) -> None`
+
+**Công dụng:** Thêm paragraph với style.
+
+**Parameters:**
+- `text`: Text hoặc RichText object
+- `parastyle`: Paragraph style name
+
+**Logic:**
+- Nếu text không phải RichText: Convert thành RichText
+- Tạo paragraph XML: `<w:p><w:pPr>...</w:pPr>...</w:p>`
+- Append vào `self.xml`
+
+**Example:**
+```python
+rtp = RichTextParagraph()
+rtp.add("Bullet point", parastyle="SquareBullet")
+rtp.add("Quote", parastyle="IntenseQuote")
+```
+
+---
+
+### InlineImage Class
+
+Class để chèn hình ảnh inline vào document.
+
+#### `__init__(tpl: DocxTemplate, image_descriptor: Union[str, IO[bytes]], width: Optional[Length] = None, height: Optional[Length] = None, anchor: Optional[str] = None)`
+
+**Công dụng:** Khởi tạo InlineImage.
+
+**Parameters:**
+- `tpl`: DocxTemplate object (cần để biết part đang render)
+- `image_descriptor`: Đường dẫn file hoặc file object
+- `width`: Chiều rộng (Mm, Inches, Pt, Cm)
+- `height`: Chiều cao (optional)
+- `anchor`: Hyperlink URL (optional)
+
+**Internal State:**
+- `self.tpl`: Template object
+- `self.image_descriptor`: Image descriptor
+- `self.width`, `self.height`: Dimensions
+- `self.anchor`: Hyperlink URL
+
+---
+
+#### `_insert_image() -> str`
+
+**Công dụng:** Tạo XML string để chèn hình ảnh.
+
+**Logic:**
+
+1. **Tạo hình ảnh:**
+   - Gọi `tpl.current_rendering_part.new_pic_inline()`
+   - Truyền image_descriptor, width, height
+   - Lấy XML
+
+2. **Nếu có hyperlink:**
+   - Parse XML
+   - Tìm `a:blip` element
+   - Gọi `_add_hyperlink()` để thêm hyperlink
+   - Lấy XML mới
+
+3. **Format XML:**
+   - Wrap trong `</w:t></w:r><w:r><w:drawing>...</w:drawing></w:r><w:r><w:t>`
+   - Để chèn vào giữa text
+
+**Returns:** XML string
+
+---
+
+#### `_add_hyperlink(run: etree.Element, url: str, part) -> etree.Element`
+
+**Công dụng:** Thêm hyperlink vào hình ảnh.
+
+**Logic:**
+- Tạo relationship cho hyperlink
+- Tìm `wp:docPr` và `pic:cNvPr` elements
+- Tạo `<a:hlinkClick>` elements
+- Append vào docPr và cNvPr
+
+**Returns:** Modified run element
+
+---
+
+### Listing Class
+
+Class để quản lý text với `\n`, `\a` mà vẫn giữ styling hiện tại.
+
+#### `__init__(text: Union[str, bytes, Any])`
+
+**Công dụng:** Khởi tạo Listing.
+
+**Parameters:**
+- `text`: Text (sẽ được convert thành string nếu cần)
+
+**Logic:**
+- Convert text thành string nếu không phải string/bytes
+- Escape HTML entities
+- Lưu vào `self.xml`
+
+**Example:**
+```python
+listing = Listing("Line 1\nLine 2\aNew paragraph")
+```
+
+---
+
+### Subdoc Class
+
+Class để chèn subdocument vào document chính.
+
+#### `__init__(tpl: DocxTemplate, docpath: Optional[str] = None)`
+
+**Công dụng:** Khởi tạo Subdoc.
+
+**Parameters:**
+- `tpl`: DocxTemplate object
+- `docpath`: Đường dẫn đến file .docx để merge (optional)
+
+**Logic:**
+
+1. **Lưu template và document:**
+   - `self.tpl = tpl`
+   - `self.docx = tpl.get_docx()`
+
+2. **Nếu có docpath:**
+   - Load document từ file
+   - Tạo `SubdocComposer`
+   - Gọi `attach_parts()` để merge styles, images, numberings...
+
+3. **Nếu không có docpath:**
+   - Dùng cùng part với master document
+   - Cho phép tạo subdoc từ scratch
+
+---
+
+#### `_get_xml() -> str`
+
+**Công dụng:** Lấy XML của subdocument body.
+
+**Logic:**
+- Loại bỏ `sectPr` (section properties)
+- Loại bỏ `<w:body>` tags
+- Return XML string
+
+**Returns:** XML string của body
+
+---
+
+#### `__getattr__(name: str) -> Any`
+
+**Công dụng:** Delegate methods đến subdocx.
+
+**Logic:**
+- Delegate tất cả attributes đến `self.subdocx`
+- Cho phép dùng như python-docx document
+
+**Example:**
+```python
+sd.add_paragraph("Text")  # Tương đương sd.subdocx.add_paragraph("Text")
+```
+
+---
+
+### SubdocComposer Class
+
+Class kế thừa từ `docxcompose.Composer` để attach parts.
+
+#### `attach_parts(doc: Document, remove_property_fields: bool = True) -> None`
+
+**Công dụng:** Attach parts từ subdoc vào master doc.
+
+**Logic:**
+
+1. **Reset reference mapping**
+
+2. **Remove custom property fields:**
+   - Dissolve fields nhưng giữ values
+
+3. **Create style ID mapping**
+
+4. **Với mỗi element trong body:**
+   - Add referenced parts (images, styles...)
+   - Add styles
+   - Add numberings
+   - Restart first numbering
+   - Add images
+   - Add diagrams
+   - Add shapes
+   - Add footnotes
+   - Remove header/footer references
+
+5. **Post-processing:**
+   - Add styles from other parts
+   - Renumber bookmarks
+   - Renumber docPr IDs
+   - Renumber nvPicPr IDs
+   - Fix section types
+
+---
+
+#### `add_diagrams(doc: Document, element: etree.Element) -> None`
+
+**Công dụng:** Attach diagram relationships.
+
+**Logic:**
+- Tìm diagram relationships
+- Với mỗi relationship type (data, layout, quick style, colors):
+  - Lấy relationship ID
+  - Tạo relationship mới trong master doc
+  - Update relationship ID trong element
+
+---
+
+## 🏗️ Internal Architecture & Implementation Details
+
+### Render Flow - Quy Trình Render Chi Tiết
+
+```
+1. DocxTemplate.__init__()
+   ├─ Lưu template_file
+   ├─ reset_replacements() → Khởi tạo replacement dicts
+   └─ Set flags: is_rendered=False, is_saved=False
+
+2. (Optional) Setup Replacements
+   ├─ replace_pic() → Lưu vào pics_to_replace
+   ├─ replace_media() → Lưu vào crc_to_new_media
+   ├─ replace_embedded() → Lưu vào crc_to_new_embedded
+   └─ replace_zipname() → Lưu vào zipname_to_replace
+
+3. render(context, jinja_env, autoescape)
+   ├─ render_init()
+   │  ├─ init_docx() → Load document
+   │  ├─ Reset pic_map, current_rendering_part, docx_ids_index
+   │  └─ Set is_saved=False
+   │
+   ├─ Setup autoescape (nếu cần)
+   │
+   ├─ Build Body XML
+   │  ├─ get_xml() → Lấy XML body
+   │  ├─ patch_xml() → Chuyển đổi XML
+   │  │  ├─ Loại bỏ XML tags giữa Jinja delimiters
+   │  │  ├─ Xử lý colspan, cellbg
+   │  │  ├─ Space preservation
+   │  │  ├─ Xử lý {%- và -%}
+   │  │  ├─ Xử lý {%p, {%tr, {%tc, {%r
+   │  │  ├─ Vertical merge ({% vm %})
+   │  │  ├─ Horizontal merge ({% hm %})
+   │  │  └─ Clean HTML entities
+   │  │
+   │  ├─ render_xml_part() → Render với Jinja2
+   │  │  ├─ Set current_rendering_part
+   │  │  ├─ Tạo Jinja2 template
+   │  │  ├─ template.render(context)
+   │  │  ├─ Error handling (thêm context lines)
+   │  │  └─ resolve_listing() → Xử lý \n, \t, \a, \f
+   │  │
+   │  └─ Return XML đã render
+   │
+   ├─ Fix Tables
+   │  ├─ Parse XML thành tree
+   │  ├─ Với mỗi table:
+   │  │  ├─ Tìm số cột tối đa (tính gridSpan)
+   │  │  ├─ Nếu thiếu: Thêm gridCol, scale width
+   │  │  └─ Nếu thừa: Xóa gridCol, phân bổ width
+   │  └─ Return tree
+   │
+   ├─ Fix docPr IDs
+   │  └─ Đánh số lại tất cả wp:docPr IDs
+   │
+   ├─ Map Tree
+   │  └─ Thay thế body XML tree
+   │
+   ├─ Render Headers
+   │  ├─ build_headers_footers_xml() → Patch và render
+   │  └─ map_headers_footers_xml() → Cập nhật parts
+   │
+   ├─ Render Footers
+   │  └─ Tương tự headers
+   │
+   ├─ Render Properties
+   │  └─ render_properties() → Render document properties
+   │
+   ├─ Render Footnotes
+   │  └─ render_footnotes() → Render footnotes
+   │
+   └─ Set is_rendered=True
+
+4. save(filename)
+   ├─ Pre-processing
+   │  └─ _replace_pics() → Thay thế hình ảnh
+   │
+   ├─ docx.save() → Lưu document
+   │
+   ├─ Post-processing
+   │  └─ post_processing() → Thay thế media/embedded/zipname
+   │     ├─ Mở docx như ZIP
+   │     ├─ Thay thế files theo dictionaries
+   │     └─ Ghi lại ZIP
+   │
+   └─ Set is_saved=True
+```
+
+---
+
+### XML Processing - Xử Lý XML
+
+#### Word Document Structure
+
+File `.docx` thực chất là file ZIP chứa:
+```
+word/
+  ├─ document.xml      # Body content
+  ├─ header1.xml       # Header
+  ├─ footer1.xml       # Footer
+  ├─ footnotes.xml     # Footnotes
+  ├─ media/            # Images, videos
+  └─ embeddings/       # Embedded files
+```
+
+#### patch_xml() - Chi Tiết Xử Lý
+
+**Input:** XML string từ Word document
+
+**Output:** XML string tương thích Jinja2
+
+**Các bước:**
+
+1. **Loại bỏ XML tags giữa delimiters:**
+   ```python
+   # Pattern: {<tags>{{var}} → {{var}}
+   re.sub(r"(?<={)(<[^>]*>)+(?=[\{%\#])", "", src_xml)
+   ```
+
+2. **Strip tags trong Jinja blocks:**
+   ```python
+   # {{<tags>var<tags>}} → {{var}}
+   def striptags(m):
+       return re.sub("</w:t>.*?(<w:t>|<w:t [^>]*>)", "", m.group(0))
+   ```
+
+3. **Colspan processing:**
+   ```python
+   # {% colspan N %} → <w:gridSpan w:val="{{N}}"/>
+   # Thêm vào w:tcPr
+   ```
+
+4. **Cell background:**
+   ```python
+   # {% cellbg color %} → <w:shd w:fill="{{color}}"/>
+   # Thêm vào w:tcPr
+   ```
+
+5. **Space preservation:**
+   ```python
+   # <w:t>{{var}}</w:t> → <w:t xml:space="preserve">{{var}}</w:t>
+   ```
+
+6. **Special tags:**
+   ```python
+   # {%p if ... %} → {% if ... %} (loại bỏ <w:p> tags)
+   # {%tr for ... %} → {% for ... %} (loại bỏ <w:tr> tags)
+   ```
+
+7. **Vertical merge:**
+   ```python
+   # {% vm %} → <w:vMerge w:val="{% if loop.first %}restart{% else %}continue{% endif %}"/>
+   ```
+
+8. **Horizontal merge:**
+   ```python
+   # {% hm %} → <w:gridSpan w:val="{{ loop.length }}"/>
+   # Wrap với {% if loop.first %}...{% endif %}
+   ```
+
+---
+
+### Table Fixing Algorithm - Thuật Toán Sửa Bảng
+
+**Vấn đề:** Khi dùng `{%tc for ... %}`, số cột có thể thay đổi, nhưng `tblGrid` không tự động cập nhật.
+
+**Giải pháp:**
+
+```python
+def fix_tables(xml):
+    tree = parse_xml(xml)
+    
+    for table in all_tables:
+        # 1. Tìm số cột tối đa
+        max_cols = 0
+        for row in table.rows:
+            cols = count_cells(row)  # Tính cả gridSpan
+            max_cols = max(max_cols, cols)
+        
+        # 2. So sánh với tblGrid
+        grid_cols = len(table.tblGrid.columns)
+        
+        # 3. Nếu thiếu: Thêm cột
+        if max_cols > grid_cols:
+            to_add = max_cols - grid_cols
+            total_width = sum(col.width for col in grid_cols)
+            new_avg_width = total_width / max_cols
+            
+            # Scale cột cũ
+            for col in grid_cols:
+                col.width = col.width * (new_avg_width / old_avg_width)
+            
+            # Thêm cột mới
+            for i in range(to_add):
+                add_column(new_avg_width)
+        
+        # 4. Nếu thừa: Xóa cột
+        elif max_cols < grid_cols:
+            to_remove = grid_cols - max_cols
+            removed_width = sum(col.width for col in last_n_cols)
+            
+            # Xóa cột
+            for col in last_n_cols:
+                remove_column(col)
+            
+            # Phân bổ width
+            extra_width = removed_width / remaining_cols
+            for col in remaining_cols:
+                col.width += extra_width
+```
+
+---
+
+### Replacement Mechanism - Cơ Chế Thay Thế
+
+#### 1. Picture Replacement (replace_pic)
+
+**Timing:** Pre-processing (trước khi save)
+
+**Method:** `_replace_pics()`
+
+**Logic:**
+- Tìm hình ảnh trong XML theo name/title/description
+- Thay thế `part._blob` trực tiếp
+- Validate tất cả hình đã được thay thế
+
+#### 2. Media Replacement (replace_media)
+
+**Timing:** Post-processing (sau khi save)
+
+**Method:** `post_processing()`
+
+**Logic:**
+- Mở docx như ZIP
+- Tìm files trong `word/media/` với CRC matching
+- Thay thế file content
+
+#### 3. Embedded Replacement (replace_embedded)
+
+**Timing:** Post-processing
+
+**Method:** `post_processing()`
+
+**Logic:**
+- Tương tự media, nhưng trong `word/embeddings/`
+
+#### 4. Zipname Replacement (replace_zipname)
+
+**Timing:** Post-processing
+
+**Method:** `post_processing()`
+
+**Logic:**
+- Thay thế file theo đường dẫn trong ZIP
+- Không cần CRC matching
+
+---
+
+### Error Handling - Xử Lý Lỗi
+
+#### TemplateError với Context
+
+Khi render gặp lỗi, exception sẽ có thêm `docx_context`:
+
+```python
+try:
+    tpl.render(context)
+except TemplateError as e:
+    if hasattr(e, "docx_context"):
+        # Context lines xung quanh lỗi
+        for line in e.docx_context:
+            print(line)  # Text đã strip XML tags
+```
+
+**Logic:**
+- Lấy line number từ exception
+- Lấy 7 lines xung quanh (4 trước, line lỗi, 2 sau)
+- Strip XML tags để dễ đọc
+- Lưu vào `exc.docx_context`
+
+---
+
+### Performance Considerations - Tối Ưu Hiệu Năng
+
+#### 1. Template Object Reuse
+
+```python
+# ✅ Tốt: Tạo một lần, dùng nhiều lần
+tpl = DocxTemplate("template.docx")
+for data in datasets:
+    tpl.render(data)
+    tpl.save(f"output_{data['id']}.docx")
+
+# ❌ Không tốt: Tạo mỗi lần
+for data in datasets:
+    tpl = DocxTemplate("template.docx")  # Chậm
+    tpl.render(data)
+    tpl.save(f"output_{data['id']}.docx")
+```
+
+#### 2. XML Processing
+
+- `patch_xml()` sử dụng regex, có thể chậm với documents lớn
+- `fix_tables()` parse XML, có thể chậm với nhiều tables
+- `resolve_listing()` xử lý từng paragraph, có thể chậm với nhiều paragraphs
+
+#### 3. Memory Usage
+
+- Document được load vào memory
+- XML được parse và render trong memory
+- Với documents rất lớn (>100MB), có thể tốn nhiều memory
+
+---
+
+### Security Considerations - Bảo Mật
+
+#### 1. File Path Validation
+
+- Không validate file paths
+- Có thể bị path traversal nếu dùng user input
+- Nên validate paths trước khi truyền vào
+
+#### 2. XML Injection
+
+- Jinja2 tự động escape trong template
+- Nhưng nếu dùng `autoescape=False`, có thể bị XML injection
+- Nên dùng `autoescape=True` hoặc escape manually
+
+#### 3. File Execution
+
+- Không execute code từ template
+- Nhưng Jinja2 có thể execute code trong filters
+- Nên validate custom filters
+
+---
+
+## 💡 Best Practices
+
+### 1. Template Design
+- ✅ Luôn có space trong tags: `{{ name }}`
+- ✅ Dùng `{%p`, `{%tr`, `{%tc`, `{%r` cho paragraph/row/cell/run level
+- ✅ Test template với dữ liệu mẫu trước
+- ❌ Không dùng `{{name}}` (thiếu space)
+- ❌ Không dùng 2 lần `{%p` trong cùng paragraph
+- ❌ Không dùng `<`, `>`, `&` trong variables (trừ khi escape)
+
+### 2. Code Organization
+```python
+# Tốt: Tách logic
+def create_richtext(name, is_important):
+    rt = RichText()
+    if is_important:
+        rt.add(name, bold=True, color="ff0000")
+    else:
+        rt.add(name)
+    return rt
+
+def build_context(data):
+    return {
+        "name": create_richtext(data["name"], data["important"]),
+        "date": data["date"],
+    }
+```
+
+### 3. Error Handling
+```python
+from jinja2.exceptions import TemplateError
+
+try:
+    tpl.render(context)
+except TemplateError as e:
+    print(f"Template error: {e}")
+    if hasattr(e, "docx_context"):
+        print("Context:")
+        for line in e.docx_context:
+            print(line)
+```
+
+### 4. Performance
+```python
+# Tốt: Tạo template object một lần
+tpl = DocxTemplate("template.docx")
+for data in datasets:
+    tpl.render(data)
+    tpl.save(f"output_{data['id']}.docx")
+```
+
+### 5. File Paths
+```python
+import os
+from pathlib import Path
+
+# Tốt: Dùng absolute paths
+base_dir = Path(__file__).parent
+template_path = base_dir / "templates" / "template.docx"
+output_path = base_dir / "output" / "result.docx"
+```
+
+---
+
+### RichText Class
+
+#### `__init__(text=None, **text_prop)`
+Khởi tạo RichText.
+
+**Example:**
+```python
+rt = RichText("Hello", bold=True)
+```
+
+#### `add(text, **kwargs)`
+Thêm text với formatting.
+
+**Parameters:**
+- `text`: Text cần thêm
+- `style`, `color`, `highlight`, `size`, `bold`, `italic`, `underline`, `strike`, `font`, `url_id`, `rtl`, `lang`, `subscript`, `superscript`
+
+**Example:**
+```python
+rt.add("Bold text", bold=True, color="#ff0000")
+```
+
+---
+
+### InlineImage Class
+
+#### `__init__(tpl, image_descriptor, width=None, height=None, anchor=None)`
+Khởi tạo InlineImage.
+
+**Example:**
+```python
+img = InlineImage(tpl, "image.png", width=Mm(50))
+```
+
+---
+
+### Listing Class
+
+#### `__init__(text)`
+Khởi tạo Listing.
+
+**Example:**
+```python
+listing = Listing("Line 1\nLine 2\n")
+```
+
+---
+
+### RichTextParagraph Class
+
+#### `__init__(text=None, **text_prop)`
+Khởi tạo RichTextParagraph.
+
+**Example:**
+```python
+rtp = RichTextParagraph()
+```
+
+#### `add(text, parastyle=None)`
+Thêm paragraph với style.
+
+**Example:**
+```python
+rtp.add("Text", parastyle="SquareBullet")
+```
+
+---
+
+## 💡 Best Practices
+
+### 1. Template Design
+- ✅ Luôn có space trong tags: `{{ name }}`
+- ✅ Dùng `{%p`, `{%tr`, `{%tc`, `{%r` cho paragraph/row/cell/run level
+- ❌ Không dùng `{{name}}` (thiếu space)
+- ❌ Không dùng 2 lần `{%p` trong cùng paragraph
+
+### 2. Performance
+```python
+# ✅ Tốt: Tạo template object một lần
+tpl = DocxTemplate("template.docx")
+for data in datasets:
+    tpl.render(data)
+    tpl.save(f"output_{data['id']}.docx")
+
+# ❌ Không tốt: Tạo template object mỗi lần
+for data in datasets:
+    tpl = DocxTemplate("template.docx")  # Chậm
+```
+
+### 3. Error Handling
+```python
+from jinja2.exceptions import TemplateError
+
+try:
+    tpl.render(context)
+except TemplateError as e:
+    print(f"Error: {e}")
+    if hasattr(e, "docx_context"):
+        for line in e.docx_context:
+            print(line)
+```
+
+### 4. Validate Variables
+```python
+# Kiểm tra biến thiếu trước khi render
+missing = tpl.get_undeclared_template_variables()
+if missing:
+    print(f"Missing variables: {missing}")
+```
+
+### 5. Code Organization
+```python
+# Tốt: Tách logic thành functions
+def create_richtext(name, is_important):
+    rt = RichText()
+    if is_important:
+        rt.add(name, bold=True, color="ff0000")
+    else:
+        rt.add(name)
+    return rt
+
+def build_context(data):
+    return {
+        "name": create_richtext(data["name"], data["important"]),
+        "date": data["date"],
+    }
+
+# Sử dụng
+tpl = DocxTemplate("template.docx")
+context = build_context({"name": "John", "important": True, "date": "2024-01-15"})
+tpl.render(context)
+tpl.save("output.docx")
+```
+
+### 6. File Paths
+```python
+import os
+from pathlib import Path
+
+# Tốt: Dùng absolute paths
+base_dir = Path(__file__).parent
+template_path = base_dir / "templates" / "template.docx"
+output_path = base_dir / "output" / "result.docx"
+
+tpl = DocxTemplate(str(template_path))
+tpl.render(context)
+tpl.save(str(output_path))
+```
+
+### 7. Conditional Paragraphs/Rows
+```python
+# Template Word:
+# {%p if show_intro %}
+# This is the introduction paragraph.
+# {%p endif %}
+
+# {%tr if show_row %}
+# | Data 1 | Data 2 |
+# {%tr endif %}
+
+context = {
+    "show_intro": True,
+    "show_row": False
+}
+```
+
+### 8. Merge Text với {%- và -%}
+```python
+# Template Word:
+# My house is located
+# {%- if in_town -%}
+#  in urban area
+# {%- else -%}
+#  in countryside
+# {%- endif -%}
+#  and I love it.
+
+context = {"in_town": True}
+# Output: "My house is located in urban area and I love it."
+```
+
+### 9. Listing Class - Text với newlines
+```python
+from docxtpl import Listing
+
+# Listing giữ nguyên styling hiện tại
+context = {
+    "mylisting": Listing(
+        "Line 1\n"
+        "Line 2\n"
+        "New paragraph\a"
+        "Page break\f"
+    )
+}
+
+# Template: {{ mylisting }}
+```
+
+### 10. Custom Jinja2 Filters
+```python
+from docxtpl import DocxTemplate
+import jinja2
+
+# Định nghĩa filter
+def multiply_by(value, by):
+    return value * by
+
+def format_currency(value, symbol="$"):
+    return f"{symbol}{value:,.2f}"
+
+# Tạo Jinja environment
+jinja_env = jinja2.Environment()
+jinja_env.filters['multiply_by'] = multiply_by
+jinja_env.filters['format_currency'] = format_currency
+
+# Sử dụng
+tpl = DocxTemplate("template.docx")
+context = {"price": 1000, "quantity": 5}
+
+tpl.render(context, jinja_env=jinja_env)
+
+# Template:
+# Price: {{ price|format_currency }}
+# Total: {{ price|multiply_by(quantity)|format_currency }}
+```
+
+### 11. Auto-escaping
+```python
+# Tự động escape HTML entities
+context = {
+    "text": "This has <tags> & special chars"
+}
+
+# Cách 1: Autoescape trong render
+tpl.render(context, autoescape=True)
+
+# Cách 2: Dùng filter |e trong template
+# Template: {{ text|e }}
+
+# Cách 3: Dùng RichText
+from docxtpl import RichText
+context = {
+    "text": RichText("This has <tags> & special chars")
+}
+# Template: {{r text }}
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### 1. Variables không hiển thị
+
+**Vấn đề:** `{{ name }}` không được thay thế
+
+**Giải pháp:**
+- Kiểm tra có space: `{{ name }}` (không phải `{{name}}`)
+- Kiểm tra variable name trong context
+- Kiểm tra template có đúng encoding (UTF-8)
+- Kiểm tra variable có trong context dictionary
+
+**Debug:**
+```python
+# Kiểm tra biến trong template
+all_vars = tpl.get_undeclared_template_variables()
+print(f"Variables in template: {all_vars}")
+
+# Kiểm tra biến thiếu
+tpl.render(context)
+missing = tpl.get_undeclared_template_variables(context=context)
+print(f"Missing variables: {missing}")
+```
+
+---
+
+### 2. RichText không có formatting
+
+**Vấn đề:** RichText hiển thị nhưng không có formatting
+
+**Giải pháp:**
+- Phải dùng `{{r rt }}` (có `r`), không phải `{{ rt }}`
+- Kiểm tra RichText object có được tạo đúng
+- Kiểm tra có gọi `rt.add()` với đúng parameters
+
+**Example:**
+```python
+# ✅ Đúng
+rt = RichText("Bold", bold=True)
+# Template: {{r rt }}
+
+# ❌ Sai
+rt = RichText("Bold", bold=True)
+# Template: {{ rt }}  # Sẽ mất formatting
+```
+
+---
+
+### 3. Hình ảnh không hiển thị
+
+**Vấn đề:** InlineImage không xuất hiện
+
+**Giải pháp:**
+- Kiểm tra đường dẫn file hình
+- Kiểm tra file hình có tồn tại
+- Kiểm tra format (PNG, JPEG được hỗ trợ)
+- Kiểm tra `tpl.current_rendering_part` đã được set (tự động trong render)
+
+**Debug:**
+```python
+import os
+
+# Kiểm tra file tồn tại
+if not os.path.exists("image.png"):
+    print("Image file not found!")
+
+# Kiểm tra format
+if not image_path.endswith(('.png', '.jpg', '.jpeg')):
+    print("Unsupported image format")
+```
+
+---
+
+### 4. Table bị lỗi sau loop
+
+**Vấn đề:** Table có số cột không đúng sau `{% for %}`
+
+**Giải pháp:**
+- Thư viện tự động fix với `fix_tables()`, nhưng nếu vẫn lỗi:
+- Kiểm tra `{%tc` tags
+- Đảm bảo mỗi row có cùng số cells (tính cả gridSpan)
+- Kiểm tra không có cells bị merge không đúng
+
+**Example:**
+```python
+# Template Word:
+# | Header 1 | Header 2 |
+# {% for item in items %}
+# | {{ item.col1 }} | {{ item.col2 }} |
+# {% endfor %}
+
+# Đảm bảo mỗi item có đủ 2 columns
+context = {
+    "items": [
+        {"col1": "A", "col2": "B"},  # ✅ Đúng
+        {"col1": "C", "col2": "D"},  # ✅ Đúng
+    ]
+}
+```
+
+---
+
+### 5. Header/Footer không render
+
+**Vấn đề:** Biến trong header/footer không được render
+
+**Giải pháp:**
+- Header/footer được render tự động khi gọi `render()`
+- Kiểm tra encoding của header/footer (UTF-8)
+- Kiểm tra variable names
+- Kiểm tra header/footer có được tạo trong Word
+
+**Debug:**
+```python
+# Kiểm tra headers/footers có tồn tại
+for relKey, part in tpl.get_headers_footers(tpl.HEADER_URI):
+    print(f"Header found: {relKey}")
+
+for relKey, part in tpl.get_headers_footers(tpl.FOOTER_URI):
+    print(f"Footer found: {relKey}")
+```
+
+---
+
+### 6. Special characters bị lỗi
+
+**Vấn đề:** `<`, `>`, `&` gây lỗi XML
+
+**Giải pháp:**
+
+**Cách 1: Dùng RichText**
+```python
+from docxtpl import RichText
+
+context = {"text": RichText("Text with < > &")}
+# Template: {{r text }}
+```
+
+**Cách 2: Escape trong Python**
+```python
+from html import escape
+
+context = {"text": escape("Text with < > &")}
+# Template: {{ text }}
+```
+
+**Cách 3: Autoescape**
+```python
+tpl.render(context, autoescape=True)
+# Template: {{ text }}
+```
+
+**Cách 4: Filter trong template**
+```python
+# Template: {{ text|e }}
+context = {"text": "Text with < > &"}
+```
+
+---
+
+### 7. File không tìm thấy
+
+**Vấn đề:** `FileNotFoundError`
+
+**Giải pháp:**
+```python
+import os
+from pathlib import Path
+
+# Dùng absolute path
+template_path = os.path.abspath("template.docx")
+# Hoặc
+template_path = Path(__file__).parent / "template.docx"
+
+tpl = DocxTemplate(str(template_path))
+```
+
+---
+
+### 8. Multi-rendering không work
+
+**Vấn đề:** Render lần 2 bị lỗi hoặc dữ liệu cũ
+
+**Giải pháp:**
+```python
+# Reset replacements nếu dùng replace methods
+for data in datasets:
+    tpl.reset_replacements()  # Reset trước mỗi lần render
+    tpl.replace_pic("logo.png", f"logo_{data['id']}.png")
+    tpl.render(data)
+    tpl.save(f"output_{data['id']}.docx")
+```
+
+**Lưu ý:** Template object tự động reload document nếu cần, nhưng replacements cần reset manually.
+
+---
+
+### 9. Template Error không có context
+
+**Vấn đề:** TemplateError nhưng không biết lỗi ở đâu
+
+**Giải pháp:**
+```python
+from jinja2.exceptions import TemplateError
+
+try:
+    tpl.render(context)
+except TemplateError as e:
+    print(f"Error: {e}")
+    if hasattr(e, "docx_context"):
+        print("Context around error:")
+        for line in e.docx_context:
+            print(f"  {line}")
+    else:
+        print("No context available")
+```
+
+---
+
+### 10. Word 2016 Spaces/Tabs bị mất
+
+**Vấn đề:** Word 2016 ignore spaces/tabs
+
+**Giải pháp:**
+```python
+from docxtpl import RichText
+
+# Dùng RichText để đảm bảo spaces/tabs được preserve
+context = {
+    "test_space": RichText("          "),  # 10 spaces
+    "test_tabs": RichText(5 * "\t"),       # 5 tabs
+}
+
+# Template:
+# {{r test_space }} Spaces will be preserved
+# {{r test_tabs }} Tabs will be preserved
+```
+
+---
+
+### 11. Replace picture không work
+
+**Vấn đề:** `replace_pic()` không thay thế hình
+
+**Giải pháp:**
+- Kiểm tra tên file đúng (chỉ basename, không path)
+- Kiểm tra hình có trong template
+- Kiểm tra tên/title/description của hình trong Word
+- Set `allow_missing_pics=True` nếu muốn bỏ qua hình không tìm thấy
+
+**Debug:**
+```python
+tpl.allow_missing_pics = True  # Không raise error nếu hình không tìm thấy
+tpl.replace_pic("logo.png", "new_logo.png")
+tpl.render(context)
+tpl.save("output.docx")
+```
+
+---
+
+### 12. Subdoc không merge đúng
+
+**Vấn đề:** Subdoc không merge styles/images
+
+**Giải pháp:**
+- Đảm bảo đã cài `docxtpl[subdoc]`
+- Kiểm tra `docxcompose` đã được cài đặt
+- Nếu merge từ file: Kiểm tra file tồn tại
+
+**Example:**
+```python
+# Kiểm tra subdoc support
+try:
+    from docxtpl import Subdoc
+    print("Subdoc support available")
+except ImportError:
+    print("Subdoc support not available. Install: pip install 'docxtpl[subdoc]'")
+```
+
+---
+
+## 📝 Ví Dụ Thực Tế Hoàn Chỉnh
+
+### Ví dụ 1: Invoice Template (Hóa Đơn)
+
+Tạo một invoice template với logo, items, và total.
+
+**Template Word (`invoice_template.docx`):**
+```
+Invoice #{{ invoice_number }}
+Date: {{ date }}
+
+{{ logo }}
+
+Bill To: {{ customer_name }}
+
+| Description | Quantity | Price |
+{% for item in items %}
+| {{ item.description }} | {{ item.quantity }} | ${{ item.price }} |
+{% endfor %}
+
+{{r total }}
+```
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate, RichText, InlineImage
+from docx.shared import Mm
+from datetime import datetime
+
+# Load template
+tpl = DocxTemplate("invoice_template.docx")
+
+# Tạo RichText cho total
+total_rt = RichText()
+total_rt.add("Total: ", bold=True)
+total_rt.add("$1,000.00", bold=True, color="ff0000", size=16)
+
+# Tạo context
+context = {
+    "invoice_number": "INV-2024-001",
+    "date": datetime.now().strftime("%Y-%m-%d"),
+    "company_name": "ABC Company",
+    "customer_name": "John Doe",
+    "logo": InlineImage(tpl, "logo.png", width=Mm(50)),
+    "items": [
+        {"description": "Product A", "quantity": 2, "price": 100},
+        {"description": "Product B", "quantity": 1, "price": 200},
+    ],
+    "total": total_rt,
+}
+
+# Render và save
+tpl.render(context)
+tpl.save("invoice_output.docx")
+```
+
+---
+
+### Ví dụ 2: Report với Subdoc (Báo Cáo với Tài Liệu Con)
+
+Tạo report với appendix được tạo từ subdoc.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate
+from docx.shared import Inches
+
+tpl = DocxTemplate("report_template.docx")
+
+# Tạo subdoc cho appendix
+appendix = tpl.new_subdoc()
+appendix.add_heading("Appendix A: Data Tables", level=1)
+
+# Thêm table vào appendix
+table = appendix.add_table(rows=1, cols=3)
+hdr = table.rows[0].cells
+hdr[0].text = "Metric"
+hdr[1].text = "Value"
+hdr[2].text = "Unit"
+
+for metric, value, unit in [
+    ("Revenue", "1000000", "USD"),
+    ("Profit", "200000", "USD"),
+]:
+    row = table.add_row().cells
+    row[0].text = metric
+    row[1].text = value
+    row[2].text = unit
+
+# Context
+context = {
+    "title": "Annual Report 2024",
+    "author": "John Doe",
+    "appendix": appendix,
+}
+
+tpl.render(context)
+tpl.save("report_output.docx")
+```
+
+**Template Word (`report_template.docx`):**
+```
+{{ title }}
+
+Author: {{ author }}
+
+Main content here...
+
+{{p appendix }}
+```
+
+---
+
+### Ví dụ 3: Certificate Template (Chứng Chỉ)
+
+Tạo certificate với logo, tên người nhận, và ngày.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate, RichText, InlineImage
+from docx.shared import Mm
+from datetime import datetime
+
+tpl = DocxTemplate("certificate_template.docx")
+
+# Tạo RichText cho tên người nhận
+name_rt = RichText()
+name_rt.add("NGUYỄN VĂN A", bold=True, size=24, color="000080")
+
+context = {
+    "recipient_name": name_rt,
+    "course_name": "Python Programming",
+    "date": datetime.now().strftime("%B %d, %Y"),
+    "logo": InlineImage(tpl, "logo.png", width=Mm(40)),
+    "signature": InlineImage(tpl, "signature.png", width=Mm(50)),
+}
+
+tpl.render(context)
+tpl.save("certificate_output.docx")
+```
+
+---
+
+### Ví dụ 4: Contract Template (Hợp Đồng)
+
+Tạo contract với điều khoản động và bảng giá.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("contract_template.docx")
+
+# Tạo RichText cho điều khoản quan trọng
+clause_rt = RichText()
+clause_rt.add("Điều 5: ", bold=True, color="ff0000")
+clause_rt.add("Thanh toán: ", bold=True)
+clause_rt.add("Khách hàng phải thanh toán trong vòng 30 ngày.")
+
+context = {
+    "contract_number": "CT-2024-001",
+    "party_a": "Công ty ABC",
+    "party_b": "Công ty XYZ",
+    "effective_date": "2024-01-01",
+    "expiry_date": "2024-12-31",
+    "important_clause": clause_rt,
+    "pricing": [
+        {"service": "Consulting", "rate": "$100/hour", "hours": 40},
+        {"service": "Development", "rate": "$150/hour", "hours": 80},
+    ],
+}
+
+tpl.render(context)
+tpl.save("contract_output.docx")
+```
+
+---
+
+### Ví dụ 5: Multi-rendering với Replacements
+
+Render nhiều documents với hình ảnh khác nhau.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate
+import os
+
+tpl = DocxTemplate("template.docx")
+
+# Danh sách dữ liệu
+customers = [
+    {"id": 1, "name": "John Doe", "logo": "logo_1.png"},
+    {"id": 2, "name": "Jane Smith", "logo": "logo_2.png"},
+    {"id": 3, "name": "Bob Johnson", "logo": "logo_3.png"},
+]
+
+# Tạo output directory
+os.makedirs("output", exist_ok=True)
+
+# Render cho mỗi customer
+for customer in customers:
+    # Reset replacements cho mỗi lần render
+    tpl.reset_replacements()
+    
+    # Thay hình logo
+    if os.path.exists(customer["logo"]):
+        tpl.replace_pic("dummy_logo.png", customer["logo"])
+    
+    # Render
+    context = {
+        "customer_name": customer["name"],
+        "customer_id": customer["id"],
+    }
+    
+    tpl.render(context)
+    tpl.save(f"output/customer_{customer['id']}.docx")
+    
+    print(f"Generated: output/customer_{customer['id']}.docx")
+```
+
+---
+
+### Ví dụ 6: Dynamic Table với Colspan và Cell Background
+
+Tạo bảng động với colspan và màu nền.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("table_template.docx")
+
+context = {
+    "alerts": [
+        {
+            "date": "2024-01-10",
+            "desc": RichText("Critical alert", color="FF0000", bold=True),
+            "type": "CRITICAL",
+            "bg": "FF0000",  # Màu đỏ
+        },
+        {
+            "date": "2024-01-11",
+            "desc": RichText("Warning"),
+            "type": "WARNING",
+            "bg": "FFDD00",  # Màu vàng
+        },
+        {
+            "date": "2024-01-12",
+            "desc": RichText("Information"),
+            "type": "INFO",
+            "bg": "8888FF",  # Màu xanh
+        },
+    ],
+}
+
+tpl.render(context)
+tpl.save("output/alerts_table.docx")
+```
+
+**Template Word:**
+```
+| Date | {% cellbg bg %} {{ desc }} | Type |
+{% for alert in alerts %}
+| {{ alert.date }} | {% cellbg alert.bg %} {{r alert.desc }} | {{ alert.type }} |
+{% endfor %}
+```
+
+---
+
+### Ví dụ 7: Document với Header/Footer và Properties
+
+Tạo document với header, footer, và document properties.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate, InlineImage
+from docx.shared import Mm
+from datetime import datetime
+
+tpl = DocxTemplate("document_template.docx")
+
+context = {
+    "title": "Annual Report 2024",
+    "author": "John Doe",
+    "company_name": "ABC Corporation",
+    "year": datetime.now().year,
+    "page_number": 1,
+    "header_logo": InlineImage(tpl, "header_logo.png", height=Mm(10)),
+    "footer_logo": InlineImage(tpl, "footer_logo.png", height=Mm(8)),
+}
+
+tpl.render(context)
+tpl.save("output/report.docx")
+```
+
+**Template Word:**
+- **Header:** `{{ header_logo }} {{ company_name }} - {{ title }}`
+- **Footer:** `© {{ year }} {{ company_name }} | Page {{ page_number }}`
+- **Document Properties:**
+  - Author: `{{ author }}`
+  - Title: `{{ title }}`
+  - Subject: `Annual Report`
+
+---
+
+### Ví dụ 8: Nested Loops trong Template
+
+Tạo document với nested loops (vòng lặp lồng nhau).
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate
+
+tpl = DocxTemplate("nested_template.docx")
+
+context = {
+    "dishes": [
+        {
+            "name": "Pizza",
+            "ingredients": ["bread", "tomato", "ham", "cheese"],
+        },
+        {
+            "name": "Hamburger",
+            "ingredients": ["bread", "chopped steak", "cheese", "sauce"],
+        },
+        {
+            "name": "Apple pie",
+            "ingredients": ["flour", "apples", "sugar", "quince jelly"],
+        },
+    ],
+    "authors": [
+        {
+            "name": "Saint-Exupery",
+            "books": [
+                {"title": "Le petit prince"},
+                {"title": "L'aviateur"},
+                {"title": "Vol de nuit"},
+            ],
+        },
+        {
+            "name": "Barjavel",
+            "books": [
+                {"title": "Ravage"},
+                {"title": "La nuit des temps"},
+                {"title": "Le grand secret"},
+            ],
+        },
+    ],
+}
+
+tpl.render(context)
+tpl.save("output/nested.docx")
+```
+
+**Template Word:**
+```
+Dishes:
+{% for dish in dishes %}
+  {{ dish.name }}:
+  {% for ingredient in dish.ingredients %}
+    - {{ ingredient }}
+  {% endfor %}
+{% endfor %}
+
+Authors:
+{% for author in authors %}
+  {{ author.name }}:
+  {% for book in author.books %}
+    - {{ book.title }}
+  {% endfor %}
+{% endfor %}
+```
+
+---
+
+### Ví dụ 9: Conditional Content (Nội Dung Có Điều Kiện)
+
+Tạo document với nội dung có điều kiện.
+
+**Code Python:**
+```python
+from docxtpl import DocxTemplate, RichText
+
+tpl = DocxTemplate("conditional_template.docx")
+
+context = {
+    "customer_name": "John Doe",
+    "is_vip": True,
+    "discount": 15,
+    "show_intro": True,
+    "show_footer": True,
+}
+
+tpl.render(context)
+tpl.save("output/conditional.docx")
+```
+
+**Template Word:**
+```
+Dear {{ customer_name }},
+
+{%p if show_intro %}
+This is the introduction paragraph.
+{%p endif %}
+
+{% if is_vip %}
+You are a VIP customer and get {{ discount }}% discount!
+{% else %}
+Thank you for your business.
+{% endif %}
+
+{%p if show_footer %}
+For questions, contact support@example.com
+{%p endif %}
+```
+
+---
+
+### Ví dụ 10: Command-Line Usage
+
+Sử dụng library từ command line.
+
+**Template Word (`template.docx`):**
+```
+Hello {{ name }}!
+
+Your age is {{ age }}.
+```
+
+**JSON file (`data.json`):**
+```json
+{
+  "name": "John Doe",
+  "age": 30
+}
+```
+
+**Command:**
+```bash
+python -m docxtpl template.docx data.json output.docx
+```
+
+**Với options:**
+```bash
+# Overwrite nếu file đã tồn tại
+python -m docxtpl template.docx data.json output.docx --overwrite
+
+# Quiet mode (không in messages)
+python -m docxtpl template.docx data.json output.docx --quiet
+```
+
+---
+
+## 📖 Tài Liệu Tham Khảo
+
+- **Official Documentation:** http://docxtpl.readthedocs.org
+- **GitHub Repository:** https://github.com/elapouya/python-docx-template
+- **Examples:** Xem thư mục `tests/` trong repository
+
+---
+
+## 📝 License
+
+LGPL-2.1-only
+
+---
+
+## 👥 Contributors
+
+- Eric Lapouyade (Author)
+- Và nhiều contributors khác (xem GitHub)
+
+---
+
+**Happy coding! 🚀**
+

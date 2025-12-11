@@ -113,7 +113,20 @@ class ASRService:
         """Load tokenizer based on config."""
         tokenizer_type = self.config.get('tokenizer_type', 'bpe')
         
-        if tokenizer_type == 'bpe':
+        if tokenizer_type == 'sentencepiece':
+            from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
+            model_path = self.config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
+            
+            # Resolve path relative to project root
+            project_root = Path(__file__).parent.parent
+            model_path = project_root / model_path
+            
+            if not model_path.exists():
+                raise FileNotFoundError(f"SentencePiece model not found: {model_path}")
+            
+            self.tokenizer = SentencePieceTokenizer(str(model_path))
+            logger.info(f"SentencePiece tokenizer loaded from {model_path} ({len(self.tokenizer)} tokens)")
+        elif tokenizer_type == 'bpe':
             from preprocessing.bpe_tokenizer import BPETokenizer
             bpe_path = self.config.get('bpe_vocab_path', 'models/bilingual_bpe_2k.json')
             

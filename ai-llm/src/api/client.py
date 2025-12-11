@@ -101,6 +101,80 @@ class AILLMClient:
         response.raise_for_status()
         return response.json()
 
+    def audio_to_answer_file(
+        self,
+        audio_path: str,
+        task: str = "summarize",
+        question: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Kết hợp Whisper + Qwen: Transcribe audio và xử lý bằng Qwen LLM
+        
+        Args:
+            audio_path: Path to audio file on server
+            task: Task type - "summarize" (default), "answer", "translate", "analyze", "extract"
+            question: Optional question if task is "answer"
+            
+        Returns:
+            Dict with 'transcription', 'response', 'language', and 'task' keys
+        """
+        response = self.session.post(
+            f"{self.base_url}/audio-to-answer",
+            json={
+                "audio_path": audio_path,
+                "task": task,
+                "question": question
+            },
+            timeout=self.timeout
+        )
+        response.raise_for_status()
+        return response.json()
+    
+    def audio_to_answer_upload(
+        self,
+        file_path: str,
+        task: str = "summarize",
+        question: Optional[str] = None,
+        language: Optional[str] = None,
+        model_size: str = "small"
+    ) -> Dict[str, Any]:
+        """
+        Kết hợp Whisper + Qwen: Upload audio, transcribe và xử lý bằng Qwen LLM
+        
+        Args:
+            file_path: Local path to audio file
+            task: Task type - "summarize" (default), "answer", "translate", "analyze", "extract"
+            question: Optional question if task is "answer"
+            language: Language code (e.g., 'vi', 'en', None for auto-detect)
+            model_size: Whisper model size ('tiny', 'base', 'small', 'medium', 'large')
+            
+        Returns:
+            Dict with 'transcription', 'response', 'language', and 'task' keys
+        """
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"Audio file not found: {file_path}")
+        
+        with open(file_path, 'rb') as f:
+            files = {'file': (file_path.name, f, 'audio/wav')}
+            data = {
+                'task': task,
+                'model_size': model_size
+            }
+            if question:
+                data['question'] = question
+            if language:
+                data['language'] = language
+            
+            response = self.session.post(
+                f"{self.base_url}/audio-to-answer/upload",
+                files=files,
+                data=data,
+                timeout=self.timeout
+            )
+        response.raise_for_status()
+        return response.json()
+
 
 # Convenience function for quick usage
 def create_client(base_url: str = "http://localhost:8000") -> AILLMClient:
