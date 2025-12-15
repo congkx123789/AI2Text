@@ -14,7 +14,7 @@ LOG_DIR="$ROOT/logs/run"
 mkdir -p "$LOG_DIR"
 
 AI2TEXT_CMD=(uvicorn api.app:app --host 0.0.0.0 --port 8000)
-CTC_CMD=("$ROOT/ai-llm/.venv/bin/python" -m uvicorn src.asr.api:app --host 0.0.0.0 --port 8001)
+CTC_CMD=(bash -lc "cd \"$ROOT/ai-llm-ss\" && TORCH_DEVICE=cpu \"$ROOT/ai-llm/.venv/bin/python\" -m uvicorn src.asr.api:app --host 0.0.0.0 --port 8001")
 WHISPER_CT2_CMD=(bash -lc "cd \"$ROOT/ai-llm\" && source .venv/bin/activate && ASR_MODEL=\"$ROOT/ai-llm/models/final/whisper-vi-en-ct2\" ASR_DEVICE=cpu ASR_COMPUTE=int8 uvicorn src.api.server:app --host 0.0.0.0 --port 8002")
 WHISPER_BASE_CMD=(bash -lc "cd \"$ROOT/ai-llm\" && source .venv/bin/activate && ASR_MODEL=\"$ROOT/ai-llm/models/base/whisper-small\" ASR_DEVICE=cpu ASR_COMPUTE=int8 uvicorn src.api.server:app --host 0.0.0.0 --port 8003")
 FRONTEND_CMD=(python3 -m http.server 8080)
