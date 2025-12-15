@@ -53,14 +53,13 @@ class BPETokenizer:
         # Special tokens
         self.unk_token = '<unk>'
         self.pad_token = '<pad>'
-        self.blank_token = '<blank>'  # For CTC
         self.sos_token = '<sos>'
         self.eos_token = '<eos>'
         self.space_token = ' '  # Space token for word separation
         
         self.unk_token_id = self.vocab_to_id.get(self.unk_token, 0)
         self.pad_token_id = self.vocab_to_id.get(self.pad_token, 1)
-        self.blank_token_id = self.vocab_to_id.get(self.blank_token, 2)
+        # blank_token_id removed (not needed for seq2seq)
         self.space_token_id = self.vocab_to_id.get(self.space_token, None)
     
     def _process_text_batch(self, batch: List[str]) -> Dict[str, int]:
@@ -354,7 +353,7 @@ class BPETokenizer:
         
         # Add special tokens (including space token)
         # We use regular space ' ' instead of special characters like Ġ or _
-        special_tokens = [self.unk_token, self.pad_token, self.blank_token, self.sos_token, self.eos_token, self.space_token]
+        special_tokens = [self.unk_token, self.pad_token, self.sos_token, self.eos_token, self.space_token]
         for token in special_tokens:
             if token not in self.vocab:
                 self.vocab.insert(0, token)
@@ -366,7 +365,7 @@ class BPETokenizer:
         # Set special token IDs
         self.unk_token_id = self.vocab_to_id.get(self.unk_token, 0)
         self.pad_token_id = self.vocab_to_id.get(self.pad_token, 1)
-        self.blank_token_id = self.vocab_to_id.get(self.blank_token, 2)
+        # blank_token_id removed (not needed for seq2seq)
         self.space_token_id = self.vocab_to_id.get(self.space_token, None)
     
     def encode(self, text: str) -> List[int]:
@@ -453,7 +452,7 @@ class BPETokenizer:
             token = self.id_to_vocab.get(token_id, self.unk_token)
             
             if skip_special_tokens and token in [self.unk_token, self.pad_token, 
-                                                   self.blank_token, self.sos_token, self.eos_token]:
+                                                   self.sos_token, self.eos_token]:
                 continue
             
             # Handle space token: convert to actual space character
@@ -502,7 +501,7 @@ class BPETokenizer:
         # Set special token IDs
         self.unk_token_id = self.vocab_to_id.get(self.unk_token, 0)
         self.pad_token_id = self.vocab_to_id.get(self.pad_token, 1)
-        self.blank_token_id = self.vocab_to_id.get(self.blank_token, 2)
+        # blank_token_id removed (not needed for seq2seq)
         self.space_token_id = self.vocab_to_id.get(self.space_token, None)
         
         # Ensure space token exists in vocab if loading from file

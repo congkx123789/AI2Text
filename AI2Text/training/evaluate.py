@@ -48,10 +48,16 @@ class ASREvaluator:
             vocab_size=len(self.tokenizer),
             d_model=config.get('d_model', 1024),
             num_encoder_layers=config.get('num_encoder_layers', 24),
+            num_decoder_layers=config.get('num_decoder_layers', 6),
             num_heads=config.get('num_heads', 16),
             d_ff=config.get('d_ff', 4096),
             dropout=0.0  # No dropout during inference
         )
+        
+        # Special token IDs for seq2seq
+        self.sos_token_id = getattr(self.tokenizer, 'sos_token_id', 2)
+        self.eos_token_id = getattr(self.tokenizer, 'eos_token_id', 3)
+        self.pad_token_id = getattr(self.tokenizer, 'pad_token_id', 0)
         
         # Load checkpoint
         checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
@@ -62,20 +68,6 @@ class ASREvaluator:
         print(f"Loaded model from {model_path}")
         print(f"Running on device: {self.device}")
     
-    def _ctc_decode(self, tokens: list) -> str:
-        """CTC greedy decoding."""
-        # Remove consecutive duplicates
-        collapsed = []
-        prev = None
-        for token in tokens:
-            if token != prev:
-                collapsed.append(token)
-                prev = token
-        
-        # Remove blank tokens
-        filtered = [t for t in collapsed if t != self.tokenizer.blank_token_id]
-        
-        return self.tokenizer.decode(filtered)
     
     @torch.no_grad()
     def transcribe_file(self, audio_path: str) -> str:
@@ -96,13 +88,27 @@ class ASREvaluator:
         features = torch.from_numpy(mel_spec.T).unsqueeze(0).float().to(self.device)
         lengths = torch.tensor([features.size(1)]).to(self.device)
         
-        # Forward pass
-        logits, _ = self.model(features, lengths)
+        # Generate transcription using seq2seq autoregressive generation
+        generated_tokens = self.model.generate(
+            features,
+            lengths=lengths,
+            max_len=512,
+            sos_token_id=self.sos_token_id,
+            eos_token_id=self.eos_token_id,
+            pad_token_id=self.pad_token_id,
+            temperature=1.0
+        )
         
-        # Decode
-        predictions = torch.argmax(logits, dim=-1)
-        pred_tokens = predictions[0].cpu().tolist()
-        transcription = self._ctc_decode(pred_tokens)
+        # Decode generated tokens
+        gen_seq = generated_tokens[0].cpu().tolist()
+        decoded_tokens = []
+        for token in gen_seq:
+            if token == self.eos_token_id:
+                break
+            if token != self.sos_token_id and token != self.pad_token_id:
+                decoded_tokens.append(token)
+        
+        transcription = self.tokenizer.decode(decoded_tokens)
         
         return transcription
     
@@ -125,16 +131,28 @@ class ASREvaluator:
             text_lengths = batch['text_lengths']
             transcripts = batch['transcripts']
             
-            # Forward pass
-            logits, output_lengths = self.model(audio_features, audio_lengths)
+            # Generate transcriptions using seq2seq autoregressive generation
+            generated_tokens = self.model.generate(
+                audio_features,
+                lengths=audio_lengths,
+                max_len=512,
+                sos_token_id=self.sos_token_id,
+                eos_token_id=self.eos_token_id,
+                pad_token_id=self.pad_token_id,
+                temperature=1.0
+            )
             
-            # Decode predictions
-            predictions = torch.argmax(logits, dim=-1)
-            
-            for i in range(predictions.size(0)):
-                pred_tokens = predictions[i, :output_lengths[i]].cpu().tolist()
-                pred_text = self._ctc_decode(pred_tokens)
+            # Decode generated tokens
+            for i in range(generated_tokens.size(0)):
+                gen_seq = generated_tokens[i].cpu().tolist()
+                decoded_tokens = []
+                for token in gen_seq:
+                    if token == self.eos_token_id:
+                        break
+                    if token != self.sos_token_id and token != self.pad_token_id:
+                        decoded_tokens.append(token)
                 
+                pred_text = self.tokenizer.decode(decoded_tokens)
                 all_predictions.append(pred_text)
                 all_references.append(transcripts[i])
         

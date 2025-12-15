@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
 import os
-from src.config import ASR_MODEL, GEN_MODEL, GEN_MAX_TOKENS
+from src.config import ASR_MODEL, GEN_MODEL, GEN_MAX_TOKENS, LLM_PROVIDER
 from src.tools.ai2text_bridge import transcribe
 from src.llm.infer import generate_text
 
@@ -21,21 +21,24 @@ class UnifiedModelManager:
         asr_model: Optional[str] = None,
         gen_model: Optional[str] = None,
         asr_device: Optional[str] = None,
-        asr_compute: Optional[str] = None
+        asr_compute: Optional[str] = None,
+        llm_provider: Optional[str] = None
     ):
         """
         Initialize unified model manager
         
         Args:
             asr_model: Whisper model path or size (default: from config)
-            gen_model: Qwen model path (default: from config)
+            gen_model: Qwen model path (default: from config, only used if provider="qwen")
             asr_device: Device for ASR ('cuda', 'cpu', 'auto')
             asr_compute: Compute type for ASR ('float16', 'int8')
+            llm_provider: LLM provider - "qwen" (local) or "gemini" (API). Default: from config
         """
         self.asr_model = asr_model or ASR_MODEL
         self.gen_model = gen_model or GEN_MODEL
         self.asr_device = asr_device
         self.asr_compute = asr_compute
+        self.llm_provider = llm_provider or LLM_PROVIDER
         
         # Models will be loaded lazily
         self._asr_loaded = False
@@ -43,7 +46,11 @@ class UnifiedModelManager:
         
         print(f"[UnifiedModel] Initialized with:")
         print(f"  - ASR Model: {self.asr_model}")
-        print(f"  - GEN Model: {self.gen_model}")
+        print(f"  - LLM Provider: {self.llm_provider}")
+        if self.llm_provider == "qwen":
+            print(f"  - GEN Model: {self.gen_model}")
+        elif self.llm_provider == "gemini":
+            print(f"  - GEN Model: Gemini API")
     
     def ensure_models_loaded(self):
         """Ensure both models are loaded (lazy loading)"""
@@ -101,11 +108,14 @@ class UnifiedModelManager:
         else:
             text_to_process = transcription
         
-        print(f"[UnifiedModel] Processing with Qwen (task: {task})...")
+        provider_name = "Gemini" if self.llm_provider == "gemini" else "Qwen"
+        print(f"[UnifiedModel] Processing with {provider_name} (task: {task})...")
         response = generate_text(
             text_to_process,
             task=task,
-            max_new_tokens=max_tokens or GEN_MAX_TOKENS
+            question=question if task == "answer" else None,
+            max_new_tokens=max_tokens or GEN_MAX_TOKENS,
+            provider=self.llm_provider
         )
         
         print(f"[UnifiedModel] Generated response: {response[:100]}...")
@@ -146,14 +156,16 @@ class UnifiedModelManager:
         self,
         text: str,
         task: str = "summarize",
+        question: Optional[str] = None,
         max_tokens: Optional[int] = None
     ) -> str:
         """
-        Chỉ generate text với Qwen (không cần audio)
+        Chỉ generate text với LLM (Qwen local hoặc Gemini API)
         
         Args:
             text: Input text
             task: Task type
+            question: Optional question if task is "answer"
             max_tokens: Max tokens for generation
         
         Returns:
@@ -162,7 +174,9 @@ class UnifiedModelManager:
         return generate_text(
             text,
             task=task,
-            max_new_tokens=max_tokens or GEN_MAX_TOKENS
+            question=question,
+            max_new_tokens=max_tokens or GEN_MAX_TOKENS,
+            provider=self.llm_provider
         )
 
 
@@ -174,16 +188,18 @@ def get_unified_manager(
     asr_model: Optional[str] = None,
     gen_model: Optional[str] = None,
     asr_device: Optional[str] = None,
-    asr_compute: Optional[str] = None
+    asr_compute: Optional[str] = None,
+    llm_provider: Optional[str] = None
 ) -> UnifiedModelManager:
     """
     Get or create global unified model manager instance
     
     Args:
         asr_model: Whisper model path or size
-        gen_model: Qwen model path
+        gen_model: Qwen model path (only used if provider="qwen")
         asr_device: Device for ASR
         asr_compute: Compute type for ASR
+        llm_provider: LLM provider - "qwen" or "gemini"
     
     Returns:
         UnifiedModelManager instance
@@ -195,15 +211,17 @@ def get_unified_manager(
             asr_model=asr_model,
             gen_model=gen_model,
             asr_device=asr_device,
-            asr_compute=asr_compute
+            asr_compute=asr_compute,
+            llm_provider=llm_provider
         )
-    elif asr_model or gen_model or asr_device or asr_compute:
+    elif asr_model or gen_model or asr_device or asr_compute or llm_provider:
         # Recreate if different config requested
         _unified_manager = UnifiedModelManager(
             asr_model=asr_model or _unified_manager.asr_model,
             gen_model=gen_model or _unified_manager.gen_model,
             asr_device=asr_device or _unified_manager.asr_device,
-            asr_compute=asr_compute or _unified_manager.asr_compute
+            asr_compute=asr_compute or _unified_manager.asr_compute,
+            llm_provider=llm_provider or _unified_manager.llm_provider
         )
     
     return _unified_manager

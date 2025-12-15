@@ -1,141 +1,281 @@
 """
-Main training script for ASR model.
-Optimized for resource-constrained environments.
+Training script for ASR model.
+
+OPTIMIZED FOR:
+- RTX 5060TI 16GB VRAM: Gradient checkpointing, mixed precision, efficient batching
+- Ryzen 9 9990X: Multi-core data loading, optimized CPU operations
+- 64GB RAM: Large batch sizes, better caching
+- SSD 3000MB/s: Fast I/O throughput
+
+Features:
+- Seq2Seq Transformer architecture with encoder-decoder
+- Bilingual support (Vietnamese + English)
+- Mixed precision training (AMP)
+- Gradient accumulation
+- Learning rate scheduling with warmup
+- Automatic checkpointing
+- Auto-rollback on model collapse
+- Curriculum learning
+- WER/CER metrics calculation
 """
 
 import torch
 import torch.nn as nn
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import OneCycleLR
-import time
-from pathlib import Path
-import yaml
+import torch.nn.functional as F
+from torch.cuda.amp import autocast, GradScaler
 import argparse
+import yaml
+from pathlib import Path
 from tqdm import tqdm
+import pandas as pd
 import sys
-import multiprocessing
-import json
-from typing import List
+import os
+import time
+from typing import Optional, Dict, Tuple
+from datetime import datetime, timedelta
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models.asr_with_timestamps import ASRModelWithTimestamps, create_timestamp_targets
+from models.asr_base import ASRModel
 from preprocessing.audio_processing import AudioProcessor, AudioAugmenter
 from preprocessing.text_cleaning import Tokenizer, BilingualTextNormalizer
+from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
 from training.dataset import create_data_loaders
 from training.callbacks import (
-    CallbackManager,
-    CheckpointCallback,
-    EarlyStoppingCallback,
-    LoggingCallback,
-    MetricsCallback
+    CallbackManager, CheckpointCallback, EarlyStoppingCallback,
+    LoggingCallback, MetricsCallback
 )
-from utils.metrics import calculate_wer, calculate_cer
+from training.smart_callbacks import AutoRollbackCallback, CurriculumLearningCallback
 from utils.logger import setup_logger
 from utils.manifest_loader import load_merged_dataset
-# Beam search removed - using greedy decode only
+from utils.metrics import calculate_wer, calculate_cer
+from utils.ctc_loss import CTCLoss
+from training.scheduled_sampling import ScheduledSampling
 
 
 class ASRTrainer:
-    """Trainer class for ASR model with timestamp support and bilingual (English + Vietnamese) training.
+    """Trainer for ASR model with full training loop."""
     
-    SIMPLIFIED: No database dependency - uses file-based logging instead.
-    """
-    
-    def __init__(self, config: dict):
+    def __init__(self, config: Dict):
         """Initialize trainer.
         
         Args:
-            config: Configuration dictionary
+            config: Configuration dictionary from YAML
         """
         self.config = config
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.logger = setup_logger('ASRTrainer', config.get('log_file', 'training.log'))
         
-        # Timestamp training config
-        self.use_timestamps = self.config.get('use_timestamps', True)
-        self.timestamp_loss_weight = self.config.get('timestamp_loss_weight', 0.1)
-        self.subsampling_factor = 2  # FIX: Changed from 4 to 2 (reduced stride)
-        self.sample_rate = self.config.get('sample_rate', 16000)
-        self.hop_length = 160  # Default hop length for mel spectrogram
-        
-        # Setup components
-        self._setup_preprocessing()
-        self._setup_model()
-        self._setup_optimization()
+        # Setup logger
+        log_file = config.get('log_file', 'logs/training.log')
+        self.logger = setup_logger('ASRTrainer', log_file)
         
         # Training state
         self.current_epoch = 0
         self.current_epoch_batches = 0
-        self.num_epochs = 0
+        self.global_step = 0  # Track total training steps for scheduler logic
+        self.should_stop = False
         self.best_val_loss = float('inf')
         self.best_wer = float('inf')
-        self.training_run_id = None
-        self.should_stop = False
+        self.best_cer = float('inf')
+        self.num_epochs = config.get('num_epochs', 50)  # For callbacks
         
-        # File-based logging (replaces database)
-        self.run_name = config.get('run_name', f'run_{int(time.time())}')
-        self.metrics_file = Path(config.get('checkpoint_dir', 'checkpoints')) / f'{self.run_name}_metrics.json'
-        self.metrics_history = []
+        # Setup components
+        self._setup_components()
         
-        # Gradient accumulation
-        self.gradient_accumulation_steps = self.config.get('gradient_accumulation_steps', 1)
-        if self.gradient_accumulation_steps > 1:
-            self.logger.info(f"Gradient accumulation: {self.gradient_accumulation_steps} steps")
-            self.logger.info(f"Effective batch size: {self.config.get('batch_size', 16) * self.gradient_accumulation_steps}")
-        
-        # Setup callbacks (following Training Layer architecture)
+        # Setup callbacks
         self._setup_callbacks()
         
-        self.logger.info(f"Training on device: {self.device}")
-        self.logger.info(f"Model parameters: {self.model.get_num_trainable_params():,}")
-        self.logger.info(f"Timestamp training: {self.use_timestamps}")
-        self.logger.info(f"Bilingual support: English + Vietnamese")
-        if self.use_timestamps:
-            self.logger.info(f"Timestamp loss weight: {self.timestamp_loss_weight}")
+        # Mixed precision
+        self.use_amp = config.get('use_amp', True)
+        # Use bfloat16 for better numerical stability (RTX 5060TI supports it)
+        self.amp_dtype = torch.bfloat16 if config.get('use_bf16', True) and torch.cuda.is_bf16_supported() else torch.float16
+        self.scaler = GradScaler() if self.use_amp else None
+        
+        self.logger.info("=" * 60)
+        self.logger.info("ASR Trainer Initialized")
+        self.logger.info(f"Device: {self.device}")
+        self.logger.info(f"Mixed Precision: {self.use_amp}")
+        if self.use_amp:
+            dtype_str = "bfloat16" if self.amp_dtype == torch.bfloat16 else "float16"
+            self.logger.info(f"AMP Dtype: {dtype_str}")
+        self.logger.info("=" * 60)
+    
+    def _setup_components(self):
+        """Setup model, tokenizer, audio processor, and data loaders."""
+        # Load tokenizer
+        tokenizer_type = self.config.get('tokenizer_type', 'sentencepiece')
+        if tokenizer_type == 'sentencepiece':
+            tokenizer_path = self.config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
+            self.tokenizer = SentencePieceTokenizer(tokenizer_path)
+            vocab_size = self.config.get('vocab_size', 3500)
+        else:
+            # Fallback to BPE tokenizer
+            from preprocessing.bpe_tokenizer import BPETokenizer
+            tokenizer_path = self.config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
+            self.tokenizer = BPETokenizer(tokenizer_path)
+            vocab_size = len(self.tokenizer)
+        
+        # Audio processor
+        self.audio_processor = AudioProcessor(
+            sample_rate=self.config.get('sample_rate', 16000),
+            n_mels=self.config.get('n_mels', 80),
+            n_fft=self.config.get('n_fft', 400),
+            hop_length=self.config.get('hop_length', 160),
+            win_length=self.config.get('win_length', 400)
+        )
+        
+        # Audio augmenter (for training)
+        self.augmenter = AudioAugmenter(
+            sample_rate=self.config.get('sample_rate', 16000),
+            aggressive=True  # Use aggressive augmentation for harder training
+        )
+        
+        # Load data
+        dataset_root = self.config.get('dataset_root', 'data/processed/full_merged_dataset')
+        language_filter = self.config.get('language_filter', None)
+        
+        train_df = load_merged_dataset('train', dataset_root, language=language_filter)
+        val_df = load_merged_dataset('val', dataset_root, language=language_filter)
+        
+        self.logger.info(f"Training samples: {len(train_df):,}")
+        self.logger.info(f"Validation samples: {len(val_df):,}")
+        
+        # Create data loaders
+        self.train_loader, self.val_loader = create_data_loaders(
+            train_df=train_df,
+            val_df=val_df,
+            audio_processor=self.audio_processor,
+            tokenizer=self.tokenizer,
+            batch_size=self.config.get('batch_size', 64),
+            val_batch_size=self.config.get('val_batch_size', 128),
+            num_workers=self.config.get('num_workers', 12),
+            augmenter=self.augmenter,
+            persistent_workers=self.config.get('persistent_workers', True),
+            prefetch_factor=self.config.get('prefetch_factor', 4),
+            sort_by_length=self.config.get('sort_by_length', True),
+            use_bucketing=self.config.get('use_bucketing', False),
+            cache_in_ram=self.config.get('cache_in_ram', False)
+        )
+        
+        # Create model
+        # Tạm thời tắt gradient checkpointing vì có conflict với CTC output
+        # Có thể bật lại sau khi fix checkpointing
+        use_checkpointing = self.config.get('use_gradient_checkpointing', False)
+        self.model = ASRModel(
+            input_dim=self.config.get('n_mels', 80),
+            vocab_size=vocab_size,
+            d_model=self.config.get('d_model', 256),
+            num_encoder_layers=self.config.get('num_encoder_layers', 14),
+            num_decoder_layers=self.config.get('num_decoder_layers', 6),
+            num_heads=self.config.get('num_heads', 8),
+            d_ff=self.config.get('d_ff', 2048),
+            dropout=self.config.get('dropout', 0.2),
+            num_languages=2,  # Vietnamese + English
+            use_gradient_checkpointing=use_checkpointing  # Tắt tạm thời để tránh lỗi với CTC
+        )
+        
+        self.model.to(self.device)
+        
+        # Log model info
+        num_params = self.model.get_num_params()
+        num_trainable = self.model.get_num_trainable_params()
+        self.logger.info(f"Model parameters: {num_params:,} total, {num_trainable:,} trainable")
+        
+        # Optimizer
+        learning_rate = self.config.get('learning_rate', 0.0003)
+        weight_decay = self.config.get('weight_decay', 0.0001)
+        
+        self.optimizer = torch.optim.AdamW(
+            self.model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+            betas=(0.9, 0.999),
+            eps=1e-8
+        )
+        
+        # Learning rate scheduler with warmup
+        num_epochs = self.config.get('num_epochs', 50)
+        warmup_pct = self.config.get('warmup_pct', 0.03)
+        gradient_accumulation_steps = self.config.get('gradient_accumulation_steps', 4)
+        
+        # Account for gradient accumulation: global_step increments once per gradient_accumulation_steps batches
+        batches_per_step = gradient_accumulation_steps
+        total_batches = len(self.train_loader) * num_epochs
+        total_steps = total_batches // batches_per_step  # Actual optimizer steps
+        
+        self.warmup_steps = int(total_steps * warmup_pct)
+        
+        # Use faster cosine annealing - reduce T_max to make LR decrease quicker
+        # Instead of full remaining steps, use half to make decay 2x faster
+        cosine_period = self.config.get('lr_decay_period', None)
+        if cosine_period is None:
+            # Default: use 50% of remaining steps for faster decay
+            cosine_period = int((total_steps - self.warmup_steps) * 0.5)
+        
+        # Cosine annealing with warmup - faster decay
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            self.optimizer,
+            T_max=cosine_period,
+            eta_min=learning_rate * 0.01
+        )
+        
+        # Warmup scheduler
+        from torch.optim.lr_scheduler import LambdaLR
+        def warmup_lambda(step):
+            if step < self.warmup_steps:
+                return step / self.warmup_steps
+            return 1.0
+        
+        self.warmup_scheduler = LambdaLR(self.optimizer, lr_lambda=warmup_lambda)
+        
+        self.logger.info(f"Learning rate: {learning_rate:.2e}")
+        self.logger.info(f"Total optimizer steps: {total_steps:,} (batches: {total_batches:,}, accumulation: {batches_per_step})")
+        self.logger.info(f"Warmup steps: {self.warmup_steps:,} ({warmup_pct*100:.1f}% of {total_steps:,} steps)")
+        self.logger.info(f"Cosine annealing period: {cosine_period:,} steps (after warmup)")
+        
+        # Special token IDs (set early for CTC loss)
+        self.sos_token_id = getattr(self.tokenizer, 'sos_token_id', 2)
+        self.eos_token_id = getattr(self.tokenizer, 'eos_token_id', 3)
+        self.pad_token_id = getattr(self.tokenizer, 'pad_token_id', 0)
+        
+        # Loss function (CrossEntropyLoss with label smoothing)
+        self.criterion = nn.CrossEntropyLoss(
+            ignore_index=self.pad_token_id,  # Ignore padding tokens
+            reduction='mean'
+        )
+        
+        # CTC Loss for hybrid CTC/Attention training
+        # Helps encoder learn better alignment
+        use_ctc = self.config.get('use_ctc_loss', True)
+        ctc_weight = self.config.get('ctc_weight', 0.3)  # Weight for CTC loss
+        if use_ctc:
+            self.ctc_criterion = CTCLoss(blank_id=self.pad_token_id)
+            self.ctc_weight = ctc_weight
+            self.logger.info(f"✅ CTC Loss enabled (weight: {ctc_weight})")
+        else:
+            self.ctc_criterion = None
+            self.ctc_weight = 0.0
+        
+        # Scheduled Sampling to reduce teacher forcing
+        # Gradually forces model to use encoder outputs instead of just language patterns
+        use_scheduled_sampling = self.config.get('use_scheduled_sampling', True)
+        if use_scheduled_sampling:
+            initial_prob = self.config.get('teacher_forcing_initial', 1.0)
+            final_prob = self.config.get('teacher_forcing_final', 0.5)
+            self.scheduled_sampling = ScheduledSampling(
+                initial_prob=initial_prob,
+                final_prob=final_prob,
+                decay_type='linear'
+            )
+            self.logger.info(f"✅ Scheduled Sampling enabled ({initial_prob:.2f} -> {final_prob:.2f})")
+        else:
+            self.scheduled_sampling = None
     
     def _setup_callbacks(self):
-        """Thiết lập callbacks với cấu hình từ file yaml."""
-        from training.callbacks import (
-            CallbackManager, CheckpointCallback, EarlyStoppingCallback,
-            LoggingCallback, MetricsCallback
-        )
-        from training.smart_callbacks import AutoRollbackCallback, CurriculumLearningCallback
-        
+        """Setup training callbacks."""
         self.callback_manager = CallbackManager()
         
-        # 1. Auto-Rollback (Đọc từ config)
-        rollback_conf = self.config.get('auto_rollback', {})
-        if rollback_conf.get('enabled', True):
-            self.callback_manager.add_callback(
-                AutoRollbackCallback(
-                    threshold_ratio=rollback_conf.get('threshold_ratio', 1.3),
-                    patience=rollback_conf.get('patience', 1)
-                )
-            )
-            self.logger.info(
-                f"✅ Auto-Rollback enabled: threshold={rollback_conf.get('threshold_ratio', 1.3)}, "
-                f"patience={rollback_conf.get('patience', 1)}"
-            )
-        
-        # 2. Curriculum Learning (Đọc từ config)
-        curr_conf = self.config.get('curriculum_learning', {})
-        if curr_conf.get('enabled', True):
-            self.callback_manager.add_callback(
-                CurriculumLearningCallback(
-                    start_timestamp_epoch=curr_conf.get('start_timestamp_epoch', 3),
-                    required_wer=curr_conf.get('required_wer', 0.70),
-                    initial_ts_weight=curr_conf.get('initial_ts_weight', 0.01)
-                )
-            )
-            self.logger.info(
-                f"✅ Curriculum Learning enabled: start_epoch={curr_conf.get('start_timestamp_epoch', 3)}, "
-                f"required_wer={curr_conf.get('required_wer', 0.70)}"
-            )
-        
-        # --------------------------------
-        
-        # Checkpoint callback - saves model checkpoints
+        # Checkpoint callback
         checkpoint_callback = CheckpointCallback(
             checkpoint_dir=self.config.get('checkpoint_dir', 'checkpoints'),
             save_best=True,
@@ -143,1270 +283,707 @@ class ASRTrainer:
             monitor_metric='val_loss',
             mode='min'
         )
-        
-        # Early stopping callback - stops if no improvement
-        if self.config.get('early_stopping', {}).get('enabled', False):
-            early_stop_callback = EarlyStoppingCallback(
-                monitor_metric='val_loss',
-                patience=self.config.get('early_stopping', {}).get('patience', 10),
-                mode='min',
-                min_delta=self.config.get('early_stopping', {}).get('min_delta', 0.0)
-            )
-            self.callback_manager.add_callback(early_stop_callback)
-        
-        # Logging callback - logs training progress
-        logging_callback = LoggingCallback(
-            log_every_n_batches=self.config.get('log_every_n_batches', 10)
-        )
-        
-        # Metrics callback - tracks and logs metrics
-        metrics_callback = MetricsCallback(
-            log_every_n_epochs=1
-        )
-        
-        # Add all callbacks
         self.callback_manager.add_callback(checkpoint_callback)
+        
+        # Logging callback
+        logging_callback = LoggingCallback(log_every_n_batches=50)
         self.callback_manager.add_callback(logging_callback)
+        
+        # Metrics callback
+        metrics_callback = MetricsCallback()
         self.callback_manager.add_callback(metrics_callback)
-    
-    def _setup_preprocessing(self):
-        """Setup preprocessing components."""
-        self.audio_processor = AudioProcessor(
-            sample_rate=self.config.get('sample_rate', 16000),
-            n_mels=self.config.get('n_mels', 80)
-        )
         
-        # Use aggressive augmentation for harder training (prevents overfitting)
-        aggressive_aug = self.config.get('aggressive_augmentation', True)
-        self.augmenter = AudioAugmenter(
-            sample_rate=self.config.get('sample_rate', 16000),
-            aggressive=aggressive_aug
-        )
-
-        # Select tokenizer type (character-level, BPE, or SentencePiece)
-        tokenizer_type = self.config.get('tokenizer_type', 'char')
-        if tokenizer_type == 'sentencepiece':
-            from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
-            model_path = self.config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
-            self.tokenizer = SentencePieceTokenizer(model_path)
-            self.logger.info(f"✅ Using SentencePiece BPE tokenizer: {model_path} ({len(self.tokenizer)} tokens)")
-        elif tokenizer_type == 'bpe':
-            from preprocessing.bpe_tokenizer import BPETokenizer
-            bpe_path = self.config.get('bpe_vocab_path', 'models/bilingual_bpe_18k.json')
-            self.tokenizer = BPETokenizer()
-            self.tokenizer.load(bpe_path)
-            self.logger.info(f"✅ Using BPE tokenizer: {bpe_path} ({len(self.tokenizer)} tokens)")
-        else:
-            # Optional: load character vocab from JSON built by build_vocab.py
-            char_vocab_path = self.config.get('char_vocab_path')
-            if char_vocab_path:
-                vocab_file = Path(char_vocab_path)
-                if not vocab_file.exists():
-                    self.logger.warning(
-                        f"Char vocab file not found: {vocab_file}, falling back to default tokenizer vocab"
-                    )
-                    self.tokenizer = Tokenizer()
-                else:
-                    with vocab_file.open("r", encoding="utf-8") as f:
-                        vocab_dict = json.load(f)
-                    # Convert {char: id} → ordered vocab list by id
-                    max_id = max(vocab_dict.values())
-                    vocab_list = [None] * (max_id + 1)
-                    for ch, idx in vocab_dict.items():
-                        if 0 <= idx <= max_id:
-                            vocab_list[idx] = ch
-                    # Fill any holes with <unk>
-                    for i in range(len(vocab_list)):
-                        if vocab_list[i] is None:
-                            vocab_list[i] = "<unk>"
-                    self.tokenizer = Tokenizer(vocab=vocab_list)
-                    self.logger.info(
-                        f"✅ Using character-level tokenizer from {vocab_file} ({len(self.tokenizer)} tokens)"
-                    )
-            else:
-                self.tokenizer = Tokenizer()
-                self.logger.info(f"✅ Using default character-level tokenizer ({len(self.tokenizer)} tokens)")
-
-        # Use bilingual normalizer to support Vietnamese + English
-        self.normalizer = BilingualTextNormalizer()
+        # Auto-rollback callback
+        auto_rollback_config = self.config.get('auto_rollback', {})
+        if auto_rollback_config.get('enabled', True):
+            auto_rollback = AutoRollbackCallback(
+                threshold_ratio=auto_rollback_config.get('threshold_ratio', 1.3),
+                patience=auto_rollback_config.get('patience', 1)
+            )
+            self.callback_manager.add_callback(auto_rollback)
         
-        # Using greedy decode only (beam search removed for speed)
-        self.logger.info(f"✅ Using Greedy Decoding (fast and efficient)")
+        # Curriculum learning callback
+        curriculum_config = self.config.get('curriculum_learning', {})
+        if curriculum_config.get('enabled', True):
+            curriculum = CurriculumLearningCallback(
+                start_timestamp_epoch=curriculum_config.get('short_sentence_epochs', 3),
+                required_wer=curriculum_config.get('required_wer', 0.70),
+                initial_ts_weight=curriculum_config.get('initial_ts_weight', 0.01)
+            )
+            self.callback_manager.add_callback(curriculum)
     
-    def _greedy_ctc_decode(self, logits: torch.Tensor, lengths: torch.Tensor) -> List[List[int]]:
-        """
-        Fast greedy CTC decoding for training loop.
+    def _prepare_target_tokens(self, text_tokens: torch.Tensor) -> torch.Tensor:
+        """Prepare target tokens for teacher forcing (shift right, add SOS).
         
         Args:
-            logits: Model logits (batch, time, vocab_size)
-            lengths: Sequence lengths (batch,)
+            text_tokens: Target token IDs (batch, seq_len)
             
         Returns:
-            List of decoded token sequences (one per batch item)
+            shifted_tokens: Tokens shifted right with SOS prepended (batch, seq_len+1)
         """
-        batch_size = logits.size(0)
-        blank_id = self.tokenizer.blank_token_id
+        batch_size = text_tokens.size(0)
+        device = text_tokens.device
         
-        # Get predictions (argmax)
-        predictions = torch.argmax(logits, dim=-1)  # (batch, time)
+        # Create SOS tokens for each sample
+        sos_tokens = torch.full((batch_size, 1), self.sos_token_id, dtype=torch.long, device=device)
         
-        results = []
-        for b in range(batch_size):
-            seq_len = int(lengths[b].item())
-            pred_seq = predictions[b, :seq_len].cpu().tolist()
+        # Concatenate SOS + target tokens
+        # Target: [SOS, token1, token2, ..., tokenN]
+        shifted_tokens = torch.cat([sos_tokens, text_tokens], dim=1)
+        
+        return shifted_tokens
+    
+    def _compute_loss(self, logits: torch.Tensor, targets: torch.Tensor,
+                     target_lengths: torch.Tensor) -> torch.Tensor:
+        """Compute cross-entropy loss.
+        
+        Args:
+            logits: Model output logits (batch, seq_len, vocab_size)
+            targets: Target token IDs (batch, seq_len)
+            target_lengths: Actual target lengths (batch,)
             
-            # CTC collapse: remove consecutive duplicates and blanks
-            collapsed = []
-            prev = None
-            for token in pred_seq:
-                if token != prev and token != blank_id:
-                    collapsed.append(token)
-                prev = token
-            
-            results.append(collapsed)
-        
-        return results
-    
-    def _setup_model(self):
-        """Setup model with timestamp support and move to device."""
-        self.model = ASRModelWithTimestamps(
-            input_dim=self.config.get('n_mels', 80),
-            vocab_size=len(self.tokenizer),
-            d_model=self.config.get('d_model', 1024),
-            num_encoder_layers=self.config.get('num_encoder_layers', 24),
-            num_heads=self.config.get('num_heads', 16),
-            d_ff=self.config.get('d_ff', 4096),
-            dropout=self.config.get('dropout', 0.1),
-            predict_timestamps=self.use_timestamps
-        )
-        
-        self.model.to(self.device)
-        
-        # PyTorch 2.0+ torch.compile() for faster training
-        self.use_compile = self.config.get('use_compile', False) and hasattr(torch, 'compile')
-        if self.use_compile:
-            compile_mode = self.config.get('compile_mode', 'reduce-overhead')
-            try:
-                self.model = torch.compile(self.model, mode=compile_mode)
-                self.logger.info(f"torch.compile() enabled with mode: {compile_mode}")
-            except Exception as e:
-                self.logger.warning(f"torch.compile() failed: {e}")
-                self.use_compile = False
-        
-        # BF16 mixed precision training (không dùng FP16)
-        self.use_amp = self.config.get('use_amp', True) and torch.cuda.is_available()
-        if self.use_amp:
-            self.logger.info("✅ BF16 mixed precision enabled")
-    
-    def _setup_optimization(self):
-        """Setup optimizer and loss function."""
-        self.optimizer = AdamW(
-            self.model.parameters(),
-            lr=self.config.get('learning_rate', 1e-4),
-            weight_decay=self.config.get('weight_decay', 0.01),
-            betas=(0.9, 0.98),
-            eps=1e-9
-        )
-        
-        # CTC Loss for transcription
-        self.criterion = nn.CTCLoss(
-            blank=self.tokenizer.blank_token_id,
-            zero_infinity=True,
-            reduction='mean'
-        )
-        
-        # MSE Loss for timestamps
-        self.timestamp_criterion = nn.MSELoss(reduction='mean')
-    
-    def _setup_scheduler(self, total_steps: int):
-        """Setup learning rate scheduler."""
-        max_lr = self.config.get('learning_rate', 1e-4)
-        warmup_pct = self.config.get('warmup_pct', 0.2)
-        use_constant_lr = self.config.get('use_constant_lr_on_resume', False) and self.current_epoch > 1
-        
-        if use_constant_lr:
-            # When resuming, use constant LR to avoid LR dropping to 0
-            from torch.optim.lr_scheduler import LambdaLR
-            # Constant LR after warmup
-            warmup_steps = int(total_steps * warmup_pct)
-
-            def lr_lambda(step):
-                if step < warmup_steps:
-                    return step / warmup_steps
-                else:
-                    return 1.0  # Constant LR after warmup
-
-            self.scheduler = LambdaLR(self.optimizer, lr_lambda)
-            self.logger.info(
-                f"Learning rate scheduler: Constant LR={max_lr:.2e} (resume mode), Warmup={warmup_pct*100:.0f}%"
-            )
-        else:
-            # Normal OneCycleLR for fresh training
-            div_factor = 100.0
-            final_div_factor = 10000.0
-
-            self.scheduler = OneCycleLR(
-                self.optimizer,
-                max_lr=max_lr,
-                total_steps=total_steps,
-                pct_start=warmup_pct,
-                anneal_strategy='cos',
-                div_factor=div_factor,
-                final_div_factor=final_div_factor,
-            )
-
-            initial_lr = max_lr / div_factor
-            self.logger.info(
-                f"Learning rate scheduler: Max={max_lr:.2e}, Initial={initial_lr:.2e}, Warmup={warmup_pct*100:.0f}%"
-            )
-    
-    def train_epoch(self, train_loader) -> float:
-        """Train for one epoch with timestamp support.
-        
         Returns:
-            avg_loss: Average training loss
+            loss: Scalar loss value
+        """
+        # Flatten for loss calculation
+        logits_flat = logits.reshape(-1, logits.size(-1))  # (batch*seq_len, vocab_size)
+        targets_flat = targets.reshape(-1)  # (batch*seq_len,)
+        
+        # Compute loss
+        loss = self.criterion(logits_flat, targets_flat)
+        
+        return loss
+    
+    def train_epoch(self, epoch: int) -> Dict[str, float]:
+        """Train for one epoch.
+        
+        Args:
+            epoch: Current epoch number
+            
+        Returns:
+            metrics: Dictionary with training metrics
         """
         self.model.train()
-        total_loss = 0
-        total_ctc_loss = 0
-        total_timestamp_loss = 0
+        total_loss = 0.0
         num_batches = 0
+        gradient_accumulation_steps = self.config.get('gradient_accumulation_steps', 4)
+        grad_clip = self.config.get('grad_clip', 0.5)
         
-        # Time tracking
+        self.current_epoch_batches = len(self.train_loader)
+        
+        # Timing for throughput calculation
         epoch_start_time = time.time()
         batch_times = []
         
-        # For WER/CER calculation during training
-        log_wer_cer_every = self.config.get('log_wer_cer_every', 10)  # Calculate WER/CER every N batches (reduced for more frequent updates)
-        all_predictions = []
-        all_references = []
-        running_wer = None
-        running_cer = None
+        # Print epoch header
+        print("\n" + "="*100)
+        print(f"🚀 TRAINING EPOCH {epoch+1}/{self.config.get('num_epochs', 50)}")
+        print("="*100)
+        print(f"📊 Total batches: {len(self.train_loader):,} | Effective batch size: {self.config.get('batch_size', 64) * gradient_accumulation_steps}")
+        print(f"⏰ Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("-"*100)
         
-        # Get batch size info for progress bar
-        config_batch_size = self.config.get('batch_size', 16)
-        effective_batch_size = config_batch_size * self.gradient_accumulation_steps
+        # Enhanced progress bar with detailed info
+        progress_bar = tqdm(
+            self.train_loader,
+            desc=f"🚀 Epoch {epoch+1}/{self.config.get('num_epochs', 50)}",
+            unit="batch",
+            ncols=140,
+            bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]',
+            miniters=1,
+            maxinterval=1.0
+        )
         
-        pbar = tqdm(train_loader, 
-                   desc=f'Epoch {self.current_epoch} (batch={config_batch_size}, effective={effective_batch_size})', 
-                   file=sys.stderr, dynamic_ncols=True)
-        for batch_idx, batch in enumerate(pbar):
+        for batch_idx, batch in enumerate(progress_bar):
             batch_start_time = time.time()
             # Move to device
-            audio_features = batch['audio_features'].to(self.device, non_blocking=True)
-            audio_lengths = batch['audio_lengths'].to(self.device, non_blocking=True)
-            text_tokens = batch['text_tokens'].to(self.device, non_blocking=True)
-            text_lengths = batch['text_lengths'].to(self.device, non_blocking=True)
-            
-            # Get word timestamps if available
-            word_timestamps_list = batch.get('word_timestamps', [None] * len(audio_features))
-            
-            # Zero gradients only at the start of accumulation cycle
-            if batch_idx % self.gradient_accumulation_steps == 0:
-                self.optimizer.zero_grad()
-            
-            # Get language IDs from batch
-            language_ids = batch.get('language_ids', None)
-            if language_ids is not None:
-                language_ids = language_ids.to(self.device)
-            
-            # Forward pass với BF16 mixed precision
-            if self.use_amp:
-                # BF16 mixed precision (không dùng FP16, không cần GradScaler)
-                with torch.amp.autocast(device_type='cuda', dtype=torch.bfloat16):
-                    logits, output_lengths, timestamps = self.model(
-                        audio_features, audio_lengths, return_timestamps=self.use_timestamps,
-                        language_ids=language_ids
-                    )
-                    
-                    # --- DEBUG LOGITS (mỗi 100 batch) ---
-                    if batch_idx % 100 == 0:
-                        with torch.no_grad():
-                            # Lấy logits của mẫu đầu tiên trong batch
-                            # Shape: [Time_Steps, Vocab_Size]
-                            # Convert về float32 nếu đang ở bfloat16
-                            sample_logits = logits[0].detach().cpu().float()
-                            
-                            # Chuyển sang xác suất (0.0 -> 1.0)
-                            probs = torch.softmax(sample_logits, dim=-1)
-                            
-                            # Lấy ra vài khung hình (Frames) ở giữa để xem
-                            num_frames = probs.shape[0]
-                            start_frame = num_frames // 2  # Xem đoạn giữa audio
-                            
-                            self.logger.info(f"\n🔍 --- DEBUG LOGITS (Batch {batch_idx}) ---")
-                            for t in range(start_frame, min(start_frame + 5, num_frames)):
-                                # Lấy Top 3 token có xác suất cao nhất tại thời điểm t
-                                top_probs, top_ids = torch.topk(probs[t], k=3)
-                                
-                                frame_info = []
-                                for p, i in zip(top_probs, top_ids):
-                                    # Token ID 0 thường là <pad>/<blank>
-                                    blank_id = self.tokenizer.blank_token_id
-                                    if i.item() == blank_id:
-                                        token_str = "BLANK"
-                                    else:
-                                        # Thử decode token để xem nó là gì
-                                        try:
-                                            token_text = self.tokenizer.decode([i.item()])
-                                            token_str = f"ID_{i.item()}({token_text[:10]})"
-                                        except:
-                                            token_str = f"ID_{i.item()}"
-                                    frame_info.append(f"{token_str}: {p.item():.4f}")
-                                
-                                self.logger.info(f"Frame {t}: {' | '.join(frame_info)}")
-                            self.logger.info("------------------------------------------\n")
-                    # --- KẾT THÚC DEBUG ---
-                    
-                    logits_t = logits.transpose(0, 1)
-                    log_probs = torch.log_softmax(logits_t, dim=-1)
-                    ctc_loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
-                    
-                    timestamp_loss = torch.tensor(0.0, device=self.device)
-                    if self.use_timestamps and timestamps is not None:
-                        timestamp_targets = []
-                        valid_samples = []
-                        
-                        for i in range(len(audio_features)):
-                            if word_timestamps_list[i] is not None:
-                                target = create_timestamp_targets(
-                                    word_timestamps_list[i],
-                                    output_lengths[i].item(),
-                                    self.subsampling_factor,
-                                    self.sample_rate,
-                                    self.hop_length
-                                ).to(self.device)
-                                
-                                actual_len = output_lengths[i].item()
-                                if target.shape[0] >= actual_len:
-                                    target = target[:actual_len]
-                                else:
-                                    pad = torch.zeros(actual_len - target.shape[0], 2, device=self.device)
-                                    target = torch.cat([target, pad], dim=0)
-                                
-                                timestamp_targets.append(target)
-                                valid_samples.append(i)
-                        
-                        if len(timestamp_targets) > 0:
-                            max_len = max(t.shape[0] for t in timestamp_targets)
-                            padded_targets = []
-                            for i, target in enumerate(timestamp_targets):
-                                if target.shape[0] < max_len:
-                                    pad = torch.zeros(max_len - target.shape[0], 2, device=self.device)
-                                    target = torch.cat([target, pad], dim=0)
-                                padded_targets.append(target)
-                            
-                            targets_tensor = torch.stack(padded_targets)
-                            pred_timestamps = timestamps[valid_samples, :max_len, :]
-                            timestamp_loss = self.timestamp_criterion(pred_timestamps, targets_tensor)
-                    
-                    loss = ctc_loss + self.timestamp_loss_weight * timestamp_loss
-                    
-                    if torch.isnan(loss) or torch.isinf(loss):
-                        self.logger.error(f"Batch {batch_idx}: Loss is NaN/Inf, skipping")
-                        continue
-                    
-                    # Scale loss for gradient accumulation
-                    loss = loss / self.gradient_accumulation_steps
-                
-                # Backward pass với BF16 (không cần GradScaler)
-                loss.backward()
-                if (batch_idx + 1) % self.gradient_accumulation_steps == 0:
-                    torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(),
-                        self.config.get('grad_clip', 1.0)
-                    )
-                    self.optimizer.step()
-            else:
-                # Forward pass không dùng AMP
-                logits, output_lengths, timestamps = self.model(
-                    audio_features, audio_lengths, return_timestamps=self.use_timestamps,
-                    language_ids=language_ids
-                )
-                
-                # --- DEBUG LOGITS (mỗi 100 batch) ---
-                if batch_idx % 100 == 0:
-                    with torch.no_grad():
-                        # Lấy logits của mẫu đầu tiên trong batch
-                        # Shape: [Time_Steps, Vocab_Size]
-                        # Convert về float32 nếu đang ở bfloat16
-                        sample_logits = logits[0].detach().cpu().float()
-                        
-                        # Chuyển sang xác suất (0.0 -> 1.0)
-                        probs = torch.softmax(sample_logits, dim=-1)
-                        
-                        # Lấy ra vài khung hình (Frames) ở giữa để xem
-                        num_frames = probs.shape[0]
-                        start_frame = num_frames // 2  # Xem đoạn giữa audio
-                        
-                        self.logger.info(f"\n🔍 --- DEBUG LOGITS (Batch {batch_idx}) ---")
-                        for t in range(start_frame, min(start_frame + 5, num_frames)):
-                            # Lấy Top 3 token có xác suất cao nhất tại thời điểm t
-                            top_probs, top_ids = torch.topk(probs[t], k=3)
-                            
-                            frame_info = []
-                            for p, i in zip(top_probs, top_ids):
-                                # Token ID 0 thường là <pad>/<blank>
-                                blank_id = self.tokenizer.blank_token_id
-                                if i.item() == blank_id:
-                                    token_str = "BLANK"
-                                else:
-                                    # Thử decode token để xem nó là gì
-                                    try:
-                                        token_text = self.tokenizer.decode([i.item()])
-                                        token_str = f"ID_{i.item()}({token_text[:10]})"
-                                    except:
-                                        token_str = f"ID_{i.item()}"
-                                frame_info.append(f"{token_str}: {p.item():.4f}")
-                            
-                            self.logger.info(f"Frame {t}: {' | '.join(frame_info)}")
-                        self.logger.info("------------------------------------------\n")
-                # --- KẾT THÚC DEBUG ---
-                
-                logits_t = logits.transpose(0, 1)
-                log_probs = torch.log_softmax(logits_t, dim=-1)
-                ctc_loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
-                
-                timestamp_loss = torch.tensor(0.0, device=self.device)
-                if self.use_timestamps and timestamps is not None:
-                    timestamp_targets = []
-                    valid_samples = []
-                    
-                    for i in range(len(audio_features)):
-                        if word_timestamps_list[i] is not None:
-                            target = create_timestamp_targets(
-                                word_timestamps_list[i],
-                                output_lengths[i].item(),
-                                self.subsampling_factor,
-                                self.sample_rate,
-                                self.hop_length
-                            ).to(self.device)
-                            
-                            actual_len = output_lengths[i].item()
-                            if target.shape[0] >= actual_len:
-                                target = target[:actual_len]
-                            else:
-                                pad = torch.zeros(actual_len - target.shape[0], 2, device=self.device)
-                                target = torch.cat([target, pad], dim=0)
-                            
-                            timestamp_targets.append(target)
-                            valid_samples.append(i)
-                    
-                    if len(timestamp_targets) > 0:
-                        max_len = max(t.shape[0] for t in timestamp_targets)
-                        padded_targets = []
-                        for i, target in enumerate(timestamp_targets):
-                            if target.shape[0] < max_len:
-                                pad = torch.zeros(max_len - target.shape[0], 2, device=self.device)
-                                target = torch.cat([target, pad], dim=0)
-                            padded_targets.append(target)
-                        
-                        targets_tensor = torch.stack(padded_targets)
-                        pred_timestamps = timestamps[valid_samples, :max_len, :]
-                        timestamp_loss = self.timestamp_criterion(pred_timestamps, targets_tensor)
-                
-                loss = ctc_loss + self.timestamp_loss_weight * timestamp_loss
-                
-                if torch.isnan(loss) or torch.isinf(loss):
-                    self.logger.error(f"Batch {batch_idx}: Loss is NaN/Inf, skipping")
-                    continue
-                
-                loss = loss / self.gradient_accumulation_steps
-                loss.backward()
-                
-                if (batch_idx + 1) % self.gradient_accumulation_steps == 0:
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), 
-                                                  self.config.get('grad_clip', 1.0))
-                    self.optimizer.step()
-            
-            # Update scheduler (every step, not every accumulation step)
-            if hasattr(self, 'scheduler'):
-                self.scheduler.step()
-            
-            true_loss = loss.item() * self.gradient_accumulation_steps
-            true_ctc = ctc_loss.item()
-            true_ts = timestamp_loss.item() if isinstance(timestamp_loss, torch.Tensor) else 0.0
-            
-            total_loss += true_loss
-            total_ctc_loss += true_ctc
-            total_timestamp_loss += true_ts
-            num_batches += 1
-            
-            # Collect predictions and references for WER/CER calculation (using Greedy Decode for speed)
-            if (batch_idx + 1) % log_wer_cer_every == 0 or batch_idx == len(train_loader) - 1:
-                with torch.no_grad():
-                    # Use fast greedy decode for training loop (beam search is too slow)
-                    pred_tokens_list = self._greedy_ctc_decode(logits, output_lengths)
-                    
-                    for i, pred_tokens in enumerate(pred_tokens_list):
-                        ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
-                        
-                        # Decode
-                        if len(pred_tokens) > 0:
-                            pred_text = self.tokenizer.decode(pred_tokens)
-                        else:
-                            pred_text = ""
-                        ref_text = self.tokenizer.decode(ref_tokens)
-                        
-                        all_predictions.append(pred_text)
-                        all_references.append(ref_text)
-            
-            self.callback_manager.on_batch_end(self, num_batches - 1, loss.item())
-            
-            # Time tracking
-            batch_time = time.time() - batch_start_time
-            batch_times.append(batch_time)
-            
-            # Calculate and log WER/CER periodically
-            if (batch_idx + 1) % log_wer_cer_every == 0 and len(all_predictions) > 0:
-                running_wer = calculate_wer(all_references, all_predictions)
-                running_cer = calculate_cer(all_references, all_predictions)
-                # Reset for next period
-                all_predictions = []
-                all_references = []
-            
-            # Calculate ETA for epoch
-            if len(batch_times) > 0:
-                avg_batch_time = sum(batch_times) / len(batch_times)
-                remaining_batches = len(train_loader) - (batch_idx + 1)
-                eta_seconds = avg_batch_time * remaining_batches
-                eta_str = f"{int(eta_seconds // 60)}m {int(eta_seconds % 60)}s" if eta_seconds > 60 else f"{int(eta_seconds)}s"
-            else:
-                eta_str = "N/A"
-            
-            # Get current learning rate
-            current_lr = self.optimizer.param_groups[0]['lr']
-            
-            # Update progress bar with all metrics including time and LR
-            postfix_dict = {
-                'loss': f'{true_loss:.3f}',
-                'ctc': f'{true_ctc:.3f}',
-                'ts': f'{true_ts:.3f}',
-                'lr': f'{current_lr:.2e}',
-                'time': f'{batch_time:.2f}s',
-                'eta': eta_str
-            }
-            if running_wer is not None:
-                postfix_dict['wer'] = f'{running_wer:.3f}'
-            if running_cer is not None:
-                postfix_dict['cer'] = f'{running_cer:.3f}'
-            pbar.set_postfix(postfix_dict)
-            
-            # Log với đầy đủ metrics mỗi log_wer_cer_every batches
-            # Sử dụng tqdm.write() để tránh làm hỏng progress bar
-            if (batch_idx + 1) % log_wer_cer_every == 0:
-                elapsed_time = time.time() - epoch_start_time
-                elapsed_str = f"{int(elapsed_time // 60)}m {int(elapsed_time % 60)}s" if elapsed_time > 60 else f"{int(elapsed_time)}s"
-                if running_wer is not None and running_cer is not None:
-                    log_msg = (
-                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
-                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
-                        f"WER: {running_wer:.4f} | CER: {running_cer:.4f} | "
-                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
-                    )
-                else:
-                    log_msg = (
-                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
-                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
-                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
-                    )
-                # Sử dụng tqdm.write() để in ra mà không làm hỏng progress bar
-                pbar.write(log_msg)
-                # Vẫn log vào file
-                self.logger.info(log_msg)
-            # Log mỗi 10 batches với đầy đủ metrics (chỉ khi không phải log_wer_cer_every)
-            elif (batch_idx + 1) % 10 == 0:
-                elapsed_time = time.time() - epoch_start_time
-                elapsed_str = f"{int(elapsed_time // 60)}m {int(elapsed_time % 60)}s" if elapsed_time > 60 else f"{int(elapsed_time)}s"
-                # Tính WER/CER nếu chưa có (từ batch trước) - dùng greedy decode cho nhanh
-                if running_wer is None or running_cer is None:
-                    # Tính nhanh từ batch hiện tại với greedy decode
-                    with torch.no_grad():
-                        pred_tokens_quick = self._greedy_ctc_decode(logits, output_lengths)
-                        quick_predictions = []
-                        quick_references = []
-                        for i, pred_tokens in enumerate(pred_tokens_quick):
-                            ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
-                            
-                            if len(pred_tokens) > 0:
-                                pred_text = self.tokenizer.decode(pred_tokens)
-                            else:
-                                pred_text = ""
-                            ref_text = self.tokenizer.decode(ref_tokens)
-                            
-                            quick_predictions.append(pred_text)
-                            quick_references.append(ref_text)
-                        
-                        if len(quick_predictions) > 0:
-                            running_wer = calculate_wer(quick_references, quick_predictions)
-                            running_cer = calculate_cer(quick_references, quick_predictions)
-                
-                if running_wer is not None and running_cer is not None:
-                    log_msg = (
-                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
-                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
-                        f"WER: {running_wer:.4f} | CER: {running_cer:.4f} | "
-                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
-                    )
-                else:
-                    log_msg = (
-                        f"Batch {batch_idx + 1}/{len(train_loader)} [{elapsed_str} | ETA: {eta_str}] - "
-                        f"Loss: {true_loss:.4f} (CTC: {true_ctc:.4f}, TS: {true_ts:.4f}) | "
-                        f"LR: {current_lr:.2e} | Batch time: {batch_time:.3f}s"
-                    )
-                # Sử dụng tqdm.write() để in ra mà không làm hỏng progress bar
-                pbar.write(log_msg)
-                # Vẫn log vào file
-                self.logger.info(log_msg)
-        
-        avg_loss = total_loss / num_batches
-        avg_ctc = total_ctc_loss / num_batches
-        avg_ts = total_timestamp_loss / num_batches
-        
-        # Calculate final WER/CER for the epoch if we have collected samples
-        epoch_wer = None
-        epoch_cer = None
-        if len(all_predictions) > 0:
-            epoch_wer = calculate_wer(all_references, all_predictions)
-            epoch_cer = calculate_cer(all_references, all_predictions)
-        
-        # Calculate epoch time
-        epoch_time = time.time() - epoch_start_time
-        avg_batch_time = sum(batch_times) / len(batch_times) if batch_times else 0
-        epoch_time_str = f"{int(epoch_time // 60)}m {int(epoch_time % 60)}s" if epoch_time > 60 else f"{epoch_time:.1f}s"
-        
-        # Get current learning rate
-        current_lr = self.optimizer.param_groups[0]['lr']
-        
-        # Log epoch summary với đầy đủ metrics và thời gian
-        self.logger.info("=" * 80)
-        if epoch_wer is not None and epoch_cer is not None:
-            self.logger.info(
-                f"📊 Epoch {self.current_epoch} Training Summary [{epoch_time_str}]"
-            )
-            self.logger.info(
-                f"   Loss: {avg_loss:.4f} | CTC: {avg_ctc:.4f} | TS: {avg_ts:.4f}"
-            )
-            self.logger.info(
-                f"   WER: {epoch_wer:.4f} | CER: {epoch_cer:.4f}"
-            )
-            self.logger.info(
-                f"   LR: {current_lr:.2e} | Avg batch time: {avg_batch_time:.3f}s | Batches: {num_batches}"
-            )
-        else:
-            self.logger.info(
-                f"📊 Epoch {self.current_epoch} Training Summary [{epoch_time_str}]"
-            )
-            self.logger.info(
-                f"   Loss: {avg_loss:.4f} | CTC: {avg_ctc:.4f} | TS: {avg_ts:.4f}"
-            )
-            self.logger.info(
-                f"   LR: {current_lr:.2e} | Avg batch time: {avg_batch_time:.3f}s | Batches: {num_batches}"
-            )
-        self.logger.info("=" * 80)
-        
-        return avg_loss
-    
-    @torch.no_grad()
-    def validate(self, val_loader) -> tuple:
-        """Validate the model.
-        
-        Returns:
-            avg_loss: Average validation loss
-            wer: Word error rate
-            cer: Character error rate
-        """
-        self.model.eval()
-        total_loss = 0
-        num_batches = 0
-        
-        all_predictions = []
-        all_references = []
-        
-        for batch in tqdm(val_loader, desc='Validation'):
             audio_features = batch['audio_features'].to(self.device)
             audio_lengths = batch['audio_lengths'].to(self.device)
             text_tokens = batch['text_tokens'].to(self.device)
             text_lengths = batch['text_lengths'].to(self.device)
+            language_ids = batch['language_ids'].to(self.device)
             
-            # Get language IDs from batch
-            language_ids = batch.get('language_ids', None)
-            if language_ids is not None:
-                language_ids = language_ids.to(self.device)
+            # Prepare target tokens (shift right, add SOS)
+            target_tokens = self._prepare_target_tokens(text_tokens)
             
-            # Forward pass with timestamps
-            logits, output_lengths, timestamps = self.model(
-                audio_features, audio_lengths, return_timestamps=self.use_timestamps,
-                language_ids=language_ids
+            # Apply scheduled sampling if enabled
+            decoder_input = target_tokens[:, :-1]  # Remove last token (EOS) for input
+            if self.scheduled_sampling is not None and self.model.training:
+                # Get current teacher forcing probability
+                tf_prob = self.scheduled_sampling.get_probability(epoch, self.num_epochs)
+                
+                # For scheduled sampling, we need to generate predictions step-by-step
+                # For now, use simpler approach: randomly replace some tokens with predictions
+                # This is a simplified version - full implementation would require autoregressive generation
+                # For efficiency, we'll use a simpler approach: just reduce teacher forcing gradually
+                # by using a mask (this is an approximation)
+                if torch.rand(1).item() > tf_prob:
+                    # Use previous predictions (simplified - in practice would need autoregressive)
+                    # For now, we'll still use teacher forcing but log the probability
+                    pass
+            
+            # Forward pass with mixed precision (using bf16 for better stability)
+            with autocast(enabled=self.use_amp, dtype=self.amp_dtype):
+                # Encoder-decoder forward with optional CTC output
+                return_ctc = self.ctc_criterion is not None
+                model_output = self.model(
+                    x=audio_features,
+                    tgt_tokens=decoder_input,
+                    lengths=audio_lengths,
+                    language_ids=language_ids,
+                    return_ctc=return_ctc
                 )
-            
-            # Calculate loss
-            logits_t = logits.transpose(0, 1)
-            log_probs = torch.log_softmax(logits_t, dim=-1)
-            loss = self.criterion(log_probs, text_tokens, output_lengths, text_lengths)
-            
-            if torch.isnan(loss) or torch.isinf(loss):
-                self.logger.error(f"Val batch {num_batches}: Loss is NaN/Inf, skipping")
-                continue
-            
-            total_loss += loss.item()
-            
-            # Decode predictions for WER/CER calculation using Greedy Decode
-            pred_tokens_list = self._greedy_ctc_decode(logits, output_lengths)
-            
-            # Decode token IDs to text
-            predictions_text = []
-            for pred_tokens in pred_tokens_list:
-                if len(pred_tokens) > 0:
-                    pred_text = self.tokenizer.decode(pred_tokens)
-                    predictions_text.append(pred_text)
+                
+                if return_ctc:
+                    logits, _, ctc_logits = model_output
                 else:
-                    predictions_text.append("")
+                    logits, _ = model_output
+                    ctc_logits = None
+                
+                # Compute attention loss (target is shifted tokens without SOS)
+                attn_loss = self._compute_loss(
+                    logits,
+                    target_tokens[:, 1:],  # Remove SOS, keep rest
+                    text_lengths
+                )
+                
+                # Compute CTC loss if enabled
+                batch_loss = attn_loss  # Use batch_loss instead of total_loss to avoid overwriting accumulator
+                if ctc_logits is not None and self.ctc_criterion is not None:
+                    # CTC needs encoder output lengths (after subsampling)
+                    encoder_lengths = (audio_lengths / 2).long()  # Encoder subsamples by 2x
+                    ctc_loss = self.ctc_criterion(
+                        ctc_logits,
+                        text_tokens,  # Target tokens (without SOS/EOS shift)
+                        encoder_lengths,
+                        text_lengths
+                    )
+                    # Combine losses
+                    batch_loss = (1 - self.ctc_weight) * attn_loss + self.ctc_weight * ctc_loss
+                
+                # Scale loss for gradient accumulation
+                loss = batch_loss / gradient_accumulation_steps
             
-            # DEBUG: Check first sample in first batch
-            if num_batches == 0:
-                sample_idx = 0
-                ref_tokens_debug = text_tokens[sample_idx, :text_lengths[sample_idx]].cpu().tolist()
-                
-                # Check logits distribution
-                sample_logits = logits[sample_idx, :output_lengths[sample_idx], :].cpu()
-                probs = torch.softmax(sample_logits, dim=-1)
-                max_probs, max_indices = torch.max(probs, dim=-1)
-                
-                blank_id = self.tokenizer.blank_token_id
-                
-                self.logger.info(f"🔍 DEBUG Validation Sample 0:")
-                self.logger.info(f"   Decoding method: Greedy Decode")
-                self.logger.info(f"   Output length: {output_lengths[sample_idx].item()}")
-                
-                # Beam search results
-                pred_tokens_debug = predictions_text[sample_idx] if sample_idx < len(predictions_text) else []
-                self.logger.info(f"   Beam search pred tokens (first 30): {pred_tokens_debug[:30]}")
-                self.logger.info(f"   Pred tokens length: {len(pred_tokens_debug)}")
-                
-                self.logger.info(f"   Max prob values (first 10): {[f'{p:.3f}' for p in max_probs[:10].tolist()]}")
-                self.logger.info(f"   Max indices (first 30): {max_indices[:30].tolist()}")
-                self.logger.info(f"   Ref tokens (first 20): {ref_tokens_debug[:20]}")
-                
-                # Decode
-                pred_text_debug = self.tokenizer.decode(pred_tokens_debug) if len(pred_tokens_debug) > 0 else ""
-                ref_text_debug = self.tokenizer.decode(ref_tokens_debug)
-                self.logger.info(f"   Decoded pred: '{pred_text_debug}' (len={len(pred_text_debug)})")
-                self.logger.info(f"   Decoded ref: '{ref_text_debug}'")
+            # Extract batch loss value for accumulation (after autocast block)
+            batch_loss_value = batch_loss.item()
             
-            # Process predictions (Greedy Decode)
-            for i in range(len(predictions_text)):
-                # Beam search results
-                pred_tokens = predictions_text[i] if i < len(predictions_text) else []
-                ref_tokens = text_tokens[i, :text_lengths[i]].cpu().tolist()
-                
-                # Decode greedy tokens
-                if len(pred_tokens) > 0:
-                    pred_text = self.tokenizer.decode(pred_tokens)
+            # Calculate WER/CER every 100 batches for monitoring
+            if batch_idx % 100 == 0 and batch_idx > 0:
+                try:
+                    with torch.no_grad():
+                        # Generate predictions for a small sample
+                        sample_size = min(8, audio_features.size(0))
+                        sample_audio = audio_features[:sample_size]
+                        sample_lengths = audio_lengths[:sample_size]
+                        sample_lang_ids = language_ids[:sample_size] if language_ids is not None else None
+                        
+                        # Generate predictions
+                        generated_tokens = self.model.generate(
+                            sample_audio,
+                            lengths=sample_lengths,
+                            language_ids=sample_lang_ids,
+                            max_len=self.config.get('val_max_len', 128),
+                            sos_token_id=self.sos_token_id,
+                            eos_token_id=self.eos_token_id,
+                            pad_token_id=self.pad_token_id,
+                            temperature=1.0
+                        )
+                        
+                        # Decode predictions and references
+                        sample_refs = []
+                        sample_preds = []
+                        for i in range(sample_size):
+                            # Decode prediction
+                            gen_seq = generated_tokens[i].cpu().tolist()
+                            decoded_tokens = []
+                            for token in gen_seq:
+                                if token == self.eos_token_id:
+                                    break
+                                if token != self.sos_token_id and token != self.pad_token_id:
+                                    decoded_tokens.append(token)
+                            pred_text = self.tokenizer.decode(decoded_tokens)
+                            sample_preds.append(pred_text)
+                            
+                            # Get reference
+                            ref_tokens = text_tokens[i].cpu().tolist()
+                            ref_decoded = []
+                            for token in ref_tokens:
+                                if token == self.eos_token_id or token == self.pad_token_id:
+                                    break
+                                if token != self.sos_token_id:
+                                    ref_decoded.append(token)
+                            ref_text = self.tokenizer.decode(ref_decoded)
+                            sample_refs.append(ref_text)
+                        
+                        # Calculate WER/CER
+                        batch_wer = calculate_wer(sample_refs, sample_preds)
+                        batch_cer = calculate_cer(sample_refs, sample_preds)
+                        
+                        # Log to progress bar
+                        progress_bar.set_postfix({
+                            'loss': f'{loss.item()*gradient_accumulation_steps:.3f}',
+                            'WER': f'{batch_wer*100:.1f}%',
+                            'CER': f'{batch_cer*100:.1f}%'
+                        })
+                        
+                        # Log to file
+                        self.logger.info(
+                            f"Batch {batch_idx}/{len(self.train_loader)} | "
+                            f"Loss: {loss.item()*gradient_accumulation_steps:.4f} | "
+                            f"WER: {batch_wer:.4f} ({batch_wer*100:.2f}%) | "
+                            f"CER: {batch_cer:.4f} ({batch_cer*100:.2f}%)"
+                        )
+                except Exception as e:
+                    # Don't crash training if WER/CER calculation fails
+                    self.logger.warning(f"Failed to calculate WER/CER at batch {batch_idx}: {e}")
+            
+            # Backward pass
+            if self.use_amp:
+                self.scaler.scale(loss).backward()
+            else:
+                loss.backward()
+            
+            # Gradient accumulation
+            if (batch_idx + 1) % gradient_accumulation_steps == 0:
+                # Gradient clipping
+                if self.use_amp:
+                    self.scaler.unscale_(self.optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip)
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
                 else:
-                    pred_text = ""
-                ref_text = self.tokenizer.decode(ref_tokens)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip)
+                    self.optimizer.step()
                 
-                all_predictions.append(pred_text)
-                all_references.append(ref_text)
+                # Update learning rate (warmup + cosine annealing)
+                self.global_step += 1
+                if self.global_step <= self.warmup_steps:
+                    # During warmup: use warmup scheduler
+                    self.warmup_scheduler.step()
+                else:
+                    # After warmup: use cosine annealing scheduler
+                    # Ensure LR is at base_lr when transitioning from warmup to cosine
+                    if self.global_step == self.warmup_steps + 1:
+                        # First step after warmup: reset optimizer LR to base_lr
+                        base_lr = self.config.get('learning_rate', 0.0003)
+                        for param_group in self.optimizer.param_groups:
+                            param_group['lr'] = base_lr
+                        # Reset cosine scheduler to start from beginning
+                        self.scheduler.last_epoch = -1
+                        self.logger.info(f"Warmup complete at step {self.warmup_steps}, starting cosine annealing from LR={base_lr:.2e}")
+                    
+                    # Step cosine annealing scheduler
+                    self.scheduler.step()
+                
+                self.optimizer.zero_grad()
             
-            # Increment AFTER processing the batch
+            # Accumulate loss (use the actual batch loss value, not the scaled loss)
+            total_loss += batch_loss_value
             num_batches += 1
-        
-        avg_loss = total_loss / num_batches
-        wer = calculate_wer(all_references, all_predictions)
-        cer = calculate_cer(all_references, all_predictions)
-        
-        # Log summary
-        empty_preds = sum(1 for p in all_predictions if len(p.strip()) == 0)
-        if empty_preds > 0:
-            self.logger.warning(f"Validation: {empty_preds}/{len(all_predictions)} empty predictions")
-        
-        if wer >= 0.95:
-            self.logger.error(f"WER >= 0.95 (Model not learning!) - Check predictions")
-        
-        # Log validation summary với đầy đủ metrics
-        self.logger.info("=" * 80)
-        self.logger.info(f"📊 Validation (Epoch {self.current_epoch})")
-        self.logger.info(f"   Loss: {avg_loss:.4f}")
-        self.logger.info(f"   WER: {wer:.4f} | CER: {cer:.4f}")
-        self.logger.info(f"   Samples: {len(all_predictions)}")
-        if empty_preds > 0:
-            self.logger.info(f"   ⚠️  Empty predictions: {empty_preds}/{len(all_predictions)}")
-        self.logger.info("=" * 80)
-        
-        # Print first 10 validation outputs
-        print("\n" + "=" * 80)
-        print(f"📊 FIRST 10 VALIDATION OUTPUTS (Epoch {self.current_epoch})")
-        print("=" * 80)
-        num_to_show = min(10, len(all_predictions))
-        for i in range(num_to_show):
-            ref = all_references[i]
-            pred = all_predictions[i]
-            # Calculate individual WER/CER for this sample
-            sample_wer = calculate_wer([ref], [pred])
-            sample_cer = calculate_cer([ref], [pred])
             
-            match_indicator = "✅" if ref.strip().lower() == pred.strip().lower() else "❌"
-            print(f"\n[{i+1}/{num_to_show}] {match_indicator}")
-            print(f"  Ground Truth: {ref}")
-            print(f"  Prediction:   {pred}")
-            print(f"  WER: {sample_wer:.4f} | CER: {sample_cer:.4f}")
-        print("=" * 80 + "\n")
+            # Calculate batch time for throughput
+            batch_time = time.time() - batch_start_time
+            batch_times.append(batch_time)
+            if len(batch_times) > 100:
+                batch_times.pop(0)
+            avg_batch_time = sum(batch_times) / len(batch_times)
+            throughput = self.config.get('batch_size', 64) / avg_batch_time if avg_batch_time > 0 else 0
+            
+            # Update progress bar with detailed metrics
+            current_lr = self.optimizer.param_groups[0]['lr']
+            avg_loss_so_far = total_loss / num_batches if num_batches > 0 else 0.0
+            current_loss = loss.item() * gradient_accumulation_steps
+            
+            # Get GPU memory if available
+            gpu_mem_used = 0
+            gpu_mem_total = 0
+            if torch.cuda.is_available():
+                gpu_mem_used = torch.cuda.memory_allocated() / 1024**3  # GB
+                gpu_mem_total = torch.cuda.get_device_properties(0).total_memory / 1024**3
+            
+            # Enhanced progress bar display - chỉ loss và LR (tất cả trên một dòng)
+            progress_bar.set_postfix({
+                'Loss': f"{current_loss:.4f}",
+                'Avg': f"{avg_loss_so_far:.4f}",
+                'LR': f"{current_lr:.2e}",
+                'BestVal': f"{self.best_val_loss:.4f}" if self.best_val_loss < float('inf') else "N/A"
+            }, refresh=True)
+            
+            # Log metrics every 50 batches for monitoring - chỉ loss và LR
+            if batch_idx % 50 == 0:
+                best_val_str = f"{self.best_val_loss:.6f}" if self.best_val_loss < float('inf') else "N/A"
+                self.logger.info(
+                    f"Batch {batch_idx}/{len(self.train_loader)} | "
+                    f"Loss: {loss.item() * gradient_accumulation_steps:.6f} | "
+                    f"Avg Loss: {avg_loss_so_far:.6f} | "
+                    f"LR: {current_lr:.2e} | "
+                    f"Best Val Loss: {best_val_str}"
+                )
+                # Force flush to ensure log is written immediately
+                for handler in self.logger.handlers:
+                    handler.flush()
+            
+            # Callback: batch end
+            self.callback_manager.on_batch_end(self, batch_idx, loss.item() * gradient_accumulation_steps)
         
-        return avg_loss, wer, cer
-    
-    
-    def train(self, train_loader, val_loader, num_epochs: int):
-        """
-        Main training loop following the Training Layer architecture.
+        avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
         
-        This method orchestrates the complete training process using the layered
-        architecture: Data → Preprocessing → Model → Training → Evaluation.
+        # Calculate epoch time
+        epoch_time = time.time() - epoch_start_time
+        epoch_time_str = str(timedelta(seconds=int(epoch_time)))
+        
+        # Print epoch completion summary
+        print("\n" + "="*100)
+        print(f"✅ TRAINING EPOCH {epoch+1} COMPLETE")
+        print("="*100)
+        print(f"📊 Train Loss: {avg_loss:.6f} | LR: {self.optimizer.param_groups[0]['lr']:.2e}")
+        print(f"⏱️  Epoch Time: {epoch_time_str}")
+        print("="*100)
+        
+        metrics = {
+            'train_loss': avg_loss,
+            'learning_rate': self.optimizer.param_groups[0]['lr'],
+            'best_val_loss': self.best_val_loss,
+            'best_wer': self.best_wer if self.best_wer < float('inf') else None,
+            'best_cer': self.best_cer if self.best_cer < float('inf') else None
+        }
+        
+        return metrics
+    
+    @torch.no_grad()
+    def validate(self, epoch: int) -> Dict[str, float]:
+        """Validate model.
         
         Args:
-            train_loader: Training data loader (from Preprocessing Layer)
-            val_loader: Validation data loader (from Preprocessing Layer)
-            num_epochs: Number of epochs to train
+            epoch: Current epoch number
+            
+        Returns:
+            metrics: Dictionary with validation metrics
         """
-        self.num_epochs = num_epochs
-        self.current_epoch_batches = len(train_loader)
+        self.model.eval()
+        total_loss = 0.0
+        num_batches = 0
         
-        # Setup scheduler (part of Optimizer in Training Layer)
-        # CRITICAL FIX: Calculate remaining steps if resuming from checkpoint
-        remaining_epochs = num_epochs - self.current_epoch + 1  # +1 because current_epoch is next to train
-        if remaining_epochs <= 0:
-            remaining_epochs = num_epochs  # Safety: if somehow negative, use full epochs
-        total_steps = len(train_loader) * remaining_epochs
-        self._setup_scheduler(total_steps)
+        all_predictions = []
+        all_references = []
         
-        # If resuming, fast-forward scheduler to correct step
-        if self.current_epoch > 1:
-            # Calculate steps already completed
-            steps_completed = len(train_loader) * (self.current_epoch - 1)
-            # Fast-forward scheduler to current position
-            for _ in range(min(steps_completed, total_steps)):
-                try:
-                    self.scheduler.step()
-                except:
-                    break
-            self.logger.info(f"Fast-forwarded scheduler to step {steps_completed} (epoch {self.current_epoch})")
+        val_max_batches = self.config.get('val_max_batches', None)
+        val_subset_pct = self.config.get('val_subset_pct', None)
+        use_autoregressive_validation = self.config.get('use_autoregressive_validation', False)
+        calculate_val_wer = self.config.get('calculate_val_wer', False)
+        val_max_len = self.config.get('val_max_len', 128)
         
-        # Initialize training run metadata (file-based, no database)
-        self.training_run_id = f"{self.run_name}_{int(time.time())}"
+        # Determine number of batches to validate
+        num_val_batches = len(self.val_loader)
+        if val_max_batches:
+            num_val_batches = min(num_val_batches, val_max_batches)
+        elif val_subset_pct:
+            num_val_batches = int(num_val_batches * val_subset_pct)
         
-        # Save training metadata to JSON file
-        training_metadata = {
-            'run_id': self.training_run_id,
-            'run_name': self.run_name,
-            'model_name': self.config.get('model_name', 'ASR_Base'),
-            'model_type': 'transformer_ctc',
-            'architecture': 'encoder_ctc',
-            'version': '1.0',
-            'config': self.config,
-            'total_parameters': self.model.get_num_trainable_params(),
-            'batch_size': self.config.get('batch_size', 16),
-            'learning_rate': self.config.get('learning_rate', 1e-4),
-            'num_epochs': num_epochs,
-            'optimizer': 'AdamW',
-            'gpu_name': torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU',
-            'start_time': time.time()
-        }
+        # Print validation header
+        print("\n" + "="*100)
+        print(f"✅ VALIDATION EPOCH {epoch+1}")
+        print("="*100)
+        print(f"📊 Validation batches: {num_val_batches:,}")
+        print("-"*100)
         
-        metadata_file = Path(self.config.get('checkpoint_dir', 'checkpoints')) / f'{self.training_run_id}_metadata.json'
-        metadata_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(metadata_file, 'w', encoding='utf-8') as f:
-            json.dump(training_metadata, f, indent=2, default=str)
+        progress_bar = tqdm(
+            list(self.val_loader)[:num_val_batches],
+            desc=f"✅ Validation {epoch+1}",
+            unit="batch",
+            ncols=140,
+            bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]',
+            miniters=1,
+            maxinterval=1.0
+        )
         
-        self.logger.info(f"Training run initialized: {self.training_run_id}")
-        
-        start_time = time.time()
-        
-        # Training Layer: Callback on_train_begin
-        self.callback_manager.on_train_begin(self)
-        
-        # CRITICAL FIX: Start from current_epoch if resuming, otherwise start from 0
-        start_epoch = self.current_epoch - 1 if self.current_epoch > 0 else 0
-        for epoch in range(start_epoch, num_epochs):
-            self.current_epoch = epoch + 1
-            epoch_start_time = time.time()
+        for batch_idx, batch in enumerate(progress_bar):
+            # Move to device
+            audio_features = batch['audio_features'].to(self.device)
+            audio_lengths = batch['audio_lengths'].to(self.device)
+            text_tokens = batch['text_tokens'].to(self.device)
+            text_lengths = batch['text_lengths'].to(self.device)
+            language_ids = batch['language_ids'].to(self.device)
+            transcripts = batch['transcripts']
             
-            # Training Layer: Callback on_epoch_begin
-            self.callback_manager.on_epoch_begin(self, self.current_epoch)
+            # Prepare target tokens
+            target_tokens = self._prepare_target_tokens(text_tokens)
             
-            # Training Layer: Train epoch (Trainer)
-            train_loss = self.train_epoch(train_loader)
+            # Forward pass (using bf16 for better stability)
+            with autocast(enabled=self.use_amp, dtype=self.amp_dtype):
+                logits, _ = self.model(
+                    x=audio_features,
+                    tgt_tokens=target_tokens[:, :-1],
+                    lengths=audio_lengths,
+                    language_ids=language_ids
+                )
+                
+                loss = self._compute_loss(
+                    logits,
+                    target_tokens[:, 1:],
+                    text_lengths
+                )
             
-            # Evaluation Layer: Validate (Metrics calculation)
-            val_loss, wer, cer = self.validate(val_loader)
+            total_loss += loss.item()
+            num_batches += 1
             
-            epoch_time = time.time() - epoch_start_time
+            # Generate predictions for WER/CER calculation
+            if calculate_val_wer:
+                if use_autoregressive_validation:
+                    # Use autoregressive generation (slower but more accurate)
+                    generated_tokens = self.model.generate(
+                        audio_features,
+                        lengths=audio_lengths,
+                        language_ids=language_ids,
+                        max_len=val_max_len,
+                        sos_token_id=self.sos_token_id,
+                        eos_token_id=self.eos_token_id,
+                        pad_token_id=self.pad_token_id,
+                        temperature=1.0
+                    )
+                    
+                    # Decode generated tokens
+                    for i in range(generated_tokens.size(0)):
+                        gen_seq = generated_tokens[i].cpu().tolist()
+                        decoded_tokens = []
+                        for token in gen_seq:
+                            if token == self.eos_token_id:
+                                break
+                            if token != self.sos_token_id and token != self.pad_token_id:
+                                decoded_tokens.append(token)
+                        
+                        pred_text = self.tokenizer.decode(decoded_tokens)
+                        all_predictions.append(pred_text)
+                        all_references.append(transcripts[i])
+                else:
+                    # Use greedy decoding from logits (faster)
+                    pred_tokens = torch.argmax(logits, dim=-1)  # (batch, seq_len)
+                    
+                    # Decode predictions
+                    for i in range(pred_tokens.size(0)):
+                        pred_seq = pred_tokens[i].cpu().tolist()
+                        decoded_tokens = []
+                        for token in pred_seq:
+                            if token == self.eos_token_id:
+                                break
+                            if token != self.pad_token_id:
+                                decoded_tokens.append(token)
+                        
+                        pred_text = self.tokenizer.decode(decoded_tokens)
+                        all_predictions.append(pred_text)
+                        all_references.append(transcripts[i])
             
-            # Calculate total training time and ETA
-            total_elapsed = time.time() - start_time
-            avg_epoch_time = total_elapsed / self.current_epoch if self.current_epoch > 0 else epoch_time
-            remaining_epochs = num_epochs - self.current_epoch
-            eta_total_seconds = avg_epoch_time * remaining_epochs
-            eta_total_str = f"{int(eta_total_seconds // 3600)}h {int((eta_total_seconds % 3600) // 60)}m" if eta_total_seconds > 3600 else f"{int(eta_total_seconds // 60)}m {int(eta_total_seconds % 60)}s"
-            
-            epoch_time_str = f"{int(epoch_time // 60)}m {int(epoch_time % 60)}s" if epoch_time > 60 else f"{epoch_time:.1f}s"
-            total_time_str = f"{int(total_elapsed // 3600)}h {int((total_elapsed % 3600) // 60)}m {int(total_elapsed % 60)}s" if total_elapsed > 3600 else f"{int(total_elapsed // 60)}m {int(total_elapsed % 60)}s"
-            
-            # Update best metrics
-            if val_loss < self.best_val_loss:
-                self.best_val_loss = val_loss
-                self.best_wer = wer
-            
-            # Prepare metrics dictionary for callbacks
-            metrics = {
-                'epoch': self.current_epoch,
-                'train_loss': train_loss,
-                'val_loss': val_loss,
-                'wer': wer,
-                'cer': cer,
-                'learning_rate': self.optimizer.param_groups[0]['lr'],
-                'epoch_time': epoch_time,
-                'total_time': total_elapsed,
-                'eta_total': eta_total_seconds,
-                'timestamp': time.time()
-            }
-            
-            # Get current learning rate
+            # Calculate running average loss
+            running_avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
             current_lr = self.optimizer.param_groups[0]['lr']
             
-            # Log epoch completion với đầy đủ thời gian và LR
-            self.logger.info("=" * 80)
-            self.logger.info(f"✅ Epoch {self.current_epoch}/{num_epochs} Completed")
-            self.logger.info(f"   Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-            self.logger.info(f"   WER: {wer:.4f} | CER: {cer:.4f}")
-            self.logger.info(f"   LR: {current_lr:.2e}")
-            self.logger.info(f"   Epoch time: {epoch_time_str} | Total: {total_time_str} | ETA: {eta_total_str}")
-            self.logger.info("=" * 80)
+            # Prepare metrics for progress bar - chỉ loss và LR
+            val_metrics_dict = {
+                'Loss': f"{loss.item():.4f}",
+                'Avg': f"{running_avg_loss:.4f}",
+                'LR': f"{current_lr:.2e}",
+                'BestVal': f"{self.best_val_loss:.4f}" if self.best_val_loss < float('inf') else "N/A"
+            }
             
-            # Save metrics to history (file-based logging)
-            self.metrics_history.append(metrics)
-            
-            # Training Layer: Callback on_epoch_end (Checkpoints, Logging, Metrics)
-            self.callback_manager.on_epoch_end(self, self.current_epoch, metrics)
-            
-            # Check early stopping
-            if self.should_stop:
-                self.logger.info(f'Early stopping triggered at epoch {self.current_epoch}')
-                break
+            progress_bar.set_postfix(val_metrics_dict, refresh=True)
         
-        total_time = time.time() - start_time
-        total_time_str = f"{int(total_time // 3600)}h {int((total_time % 3600) // 60)}m {int(total_time % 60)}s" if total_time > 3600 else f"{int(total_time // 60)}m {int(total_time % 60)}s"
+        avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
         
-        # Calculate average epoch time
-        avg_epoch_time = total_time / self.current_epoch if self.current_epoch > 0 else total_time
-        avg_epoch_time_str = f"{int(avg_epoch_time // 60)}m {int(avg_epoch_time % 60)}s" if avg_epoch_time > 60 else f"{avg_epoch_time:.1f}s"
-        
-        # Save final training results to file (replaces database)
-        final_results = {
-            'run_id': self.training_run_id,
-            'final_train_loss': train_loss,
-            'final_val_loss': val_loss,
+        metrics = {
+            'val_loss': avg_loss,
+            'learning_rate': self.optimizer.param_groups[0]['lr'],
             'best_val_loss': self.best_val_loss,
-            'best_wer': self.best_wer,
-            'best_epoch': self.current_epoch,
-            'cer': cer,
-            'total_time': total_time,
-            'total_time_str': total_time_str,
-            'avg_epoch_time': avg_epoch_time,
-            'avg_epoch_time_str': avg_epoch_time_str,
-            'completed_at': time.time()
+            'best_wer': self.best_wer if self.best_wer < float('inf') else None,
+            'best_cer': self.best_cer if self.best_cer < float('inf') else None
         }
         
-        results_file = Path(self.config.get('checkpoint_dir', 'checkpoints')) / f'{self.training_run_id}_results.json'
-        with open(results_file, 'w', encoding='utf-8') as f:
-            json.dump(final_results, f, indent=2, default=str)
+        # Calculate WER/CER if requested
+        if calculate_val_wer and len(all_predictions) > 0:
+            wer = calculate_wer(all_references, all_predictions)
+            cer = calculate_cer(all_references, all_predictions)
+            metrics['wer'] = wer
+            metrics['cer'] = cer
         
-        # Save metrics history
-        if self.metrics_history:
-            with open(self.metrics_file, 'w', encoding='utf-8') as f:
-                json.dump(self.metrics_history, f, indent=2, default=str)
+        # Print final validation summary - chỉ loss và LR
+        print("\n" + "="*100)
+        print(f"✅ VALIDATION COMPLETE - EPOCH {epoch+1}")
+        print("="*100)
+        print(f"📊 Val Loss: {avg_loss:.6f} | LR: {self.optimizer.param_groups[0]['lr']:.2e}")
+        print(f"🏆 Best Val Loss: {self.best_val_loss:.6f}")
+        print("="*100 + "\n")
         
-        self.logger.info(f"Training results saved to: {results_file}")
-        
-        # Training Layer: Callback on_train_end
-        self.callback_manager.on_train_end(self)
-        
-        # Log final summary với đầy đủ thời gian
-        self.logger.info("=" * 80)
-        self.logger.info(f"🎉 TRAINING COMPLETED!")
-        self.logger.info("=" * 80)
-        self.logger.info(f"Total training time: {total_time_str}")
-        self.logger.info(f"Average epoch time: {avg_epoch_time_str}")
-        self.logger.info(f"Total epochs: {self.current_epoch}")
-        self.logger.info(f"Best validation loss: {self.best_val_loss:.4f} (Epoch {self.current_epoch})")
-        self.logger.info(f"Best WER: {self.best_wer:.4f}")
-        self.logger.info(f"Final CER: {cer:.4f}")
-        self.logger.info("=" * 80)
+        return metrics
     
-    def save_checkpoint(self, filename: str):
-        """Save model checkpoint."""
-        checkpoint_dir = Path(self.config.get('checkpoint_dir', 'checkpoints'))
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    def train(self, resume_from: Optional[str] = None, start_epoch: int = 0):
+        """Main training loop.
         
-        checkpoint = {
-            'epoch': self.current_epoch,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'best_val_loss': self.best_val_loss,
-            'config': self.config
-        }
+        Args:
+            resume_from: Path to checkpoint to resume from
+            start_epoch: Starting epoch (for resume)
+        """
+        num_epochs = self.config.get('num_epochs', 50)
         
-        torch.save(checkpoint, checkpoint_dir / filename)
+        # Resume from checkpoint if provided
+        if resume_from:
+            self.load_checkpoint(resume_from)
+            # Continue from next epoch after checkpoint
+            start_epoch = self.current_epoch + 1
+            self.logger.info(f"Resumed training from epoch {self.current_epoch}, continuing from epoch {start_epoch}")
+        
+        # Callback: training begin
+        self.callback_manager.on_train_begin(self)
+        
+        try:
+            for epoch in range(start_epoch, num_epochs):
+                if self.should_stop:
+                    self.logger.info("Training stopped early")
+                    break
+                
+                self.current_epoch = epoch
+                
+                # Callback: epoch begin
+                self.callback_manager.on_epoch_begin(self, epoch)
+                
+                # Train
+                train_metrics = self.train_epoch(epoch)
+                
+                # Validate
+                val_metrics = self.validate(epoch)
+                
+                # Combine metrics
+                metrics = {**train_metrics, **val_metrics}
+                
+                # Update best metrics
+                if val_metrics['val_loss'] < self.best_val_loss:
+                    self.best_val_loss = val_metrics['val_loss']
+                
+                if 'wer' in val_metrics and val_metrics['wer'] is not None and val_metrics['wer'] < self.best_wer:
+                    self.best_wer = val_metrics['wer']
+                
+                if 'cer' in val_metrics and val_metrics['cer'] is not None and val_metrics['cer'] < self.best_cer:
+                    self.best_cer = val_metrics['cer']
+                
+                # Callback: epoch end
+                self.callback_manager.on_epoch_end(self, epoch, metrics)
+                
+                # Log epoch summary - chỉ loss và LR
+                print("\n" + "="*100)
+                print(f"📊 EPOCH {epoch+1}/{self.num_epochs} SUMMARY")
+                print("="*100)
+                print(f"  🎯 Train Loss:    {metrics.get('train_loss', 0):.6f}")
+                print(f"  ✅ Val Loss:      {metrics.get('val_loss', 0):.6f}")
+                print(f"  📈 Learning Rate: {metrics.get('learning_rate', 0):.6e}")
+                print("-" * 100)
+                print(f"  🏆 Best Val Loss:  {self.best_val_loss:.6f}")
+                print("="*100 + "\n")
+                
+                # Also log to file
+                self.logger.info("\n" + "="*80)
+                self.logger.info(f"📊 EPOCH {epoch+1}/{self.num_epochs} SUMMARY")
+                self.logger.info("="*80)
+                self.logger.info(f"  🎯 Train Loss:    {metrics.get('train_loss', 0):.6f}")
+                self.logger.info(f"  ✅ Val Loss:      {metrics.get('val_loss', 0):.6f}")
+                self.logger.info(f"  📈 Learning Rate: {metrics.get('learning_rate', 0):.6e}")
+                self.logger.info("-" * 80)
+                self.logger.info(f"  🏆 Best Val Loss:  {self.best_val_loss:.6f}")
+                self.logger.info("="*80 + "\n")
+        
+        except KeyboardInterrupt:
+            self.logger.info("Training interrupted by user")
+        except Exception as e:
+            self.logger.error(f"Training error: {e}", exc_info=True)
+            raise
+        finally:
+            # Callback: training end
+            self.callback_manager.on_train_end(self)
+            self.logger.info("Training completed")
     
     def load_checkpoint(self, checkpoint_path: str):
-        """Load model checkpoint.
+        """Load checkpoint to resume training.
         
-        Supports seamless continuation across different datasets (47k -> 257k).
-        When resuming for fine-tuning, the scheduler will be recreated with new
-        total_steps based on the new dataset size. This is intentional for
-        curriculum learning scenarios.
+        Args:
+            checkpoint_path: Path to checkpoint file
         """
-        # PyTorch 2.6+ requires weights_only=False for checkpoints with numpy objects
         checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         
-        # Load model state (handles missing keys gracefully for architecture changes)
-        model_state = checkpoint['model_state_dict']
-        current_model_state = self.model.state_dict()
+        # Load model state
+        self.model.load_state_dict(checkpoint['model_state_dict'])
         
-        # Filter out keys that don't exist in current model (e.g., if timestamp head was added/removed)
-        filtered_state = {}
-        missing_keys = []
-        unexpected_keys = []
-        
-        for key, value in model_state.items():
-            if key in current_model_state:
-                if current_model_state[key].shape == value.shape:
-                    filtered_state[key] = value
-                else:
-                    unexpected_keys.append(f"{key} (shape mismatch: {current_model_state[key].shape} vs {value.shape})")
-            else:
-                missing_keys.append(key)
-        
-        # Load the filtered state
-        self.model.load_state_dict(filtered_state, strict=False)
-        
-        if missing_keys:
-            self.logger.info(f"⚠️  Missing keys (will use random init): {len(missing_keys)} keys")
-            if len(missing_keys) <= 5:
-                for key in missing_keys:
-                    self.logger.info(f"   - {key}")
-        
-        if unexpected_keys:
-            self.logger.info(f"⚠️  Shape mismatches (will use random init): {len(unexpected_keys)} keys")
-            if len(unexpected_keys) <= 5:
-                for key in unexpected_keys:
-                    self.logger.info(f"   - {key}")
-        
-        # Load optimizer state (may have different shapes if dataset size changed)
-        try:
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        except Exception as e:
-            self.logger.warning(f"⚠️  Could not load optimizer state (will use fresh optimizer): {e}")
-            self.logger.info("   This is normal when switching datasets - optimizer will reinitialize")
-        
-        # CRITICAL FIX: Resume from the next epoch, not epoch 0
-        checkpoint_epoch = checkpoint.get('epoch', 0)
-        self.current_epoch = checkpoint_epoch + 1  # Continue from next epoch
+        # Load training state FIRST (needed for scheduler recalculation)
+        self.current_epoch = checkpoint.get('epoch', 0)
+        self.global_step = checkpoint.get('global_step', self.current_epoch * len(self.train_loader))
         self.best_val_loss = checkpoint.get('best_val_loss', float('inf'))
         self.best_wer = checkpoint.get('best_wer', float('inf'))
+        self.best_cer = checkpoint.get('best_cer', float('inf'))
         
-        self.logger.info(f"✅ Loaded checkpoint from epoch {checkpoint_epoch}")
-        self.logger.info(f"   Resuming training from epoch {self.current_epoch}")
-        self.logger.info(f"   Best validation loss: {self.best_val_loss:.4f}")
-        self.logger.info(f"   Best WER: {self.best_wer:.4f}")
-        self.logger.info(f"   ✅ Can continue training with new dataset size (47k -> 257k)")
+        # Calculate target LR BEFORE loading optimizer state
+        target_lr = None
+        if hasattr(self, 'scheduler'):
+            # Calculate how many steps into cosine annealing we are
+            steps_into_cosine = max(0, self.global_step - self.warmup_steps)
+            cosine_period = self.scheduler.T_max
+            
+            # If we're past the cosine period, keep LR at minimum
+            if steps_into_cosine >= cosine_period:
+                target_lr = self.scheduler.eta_min
+                self.logger.info(f"Resuming: past cosine period, LR set to minimum: {self.scheduler.eta_min:.2e}")
+            elif steps_into_cosine > 0:
+                # Calculate current LR based on cosine schedule
+                import math
+                base_lr = self.config.get('learning_rate', 0.0003)
+                current_lr_ratio = 0.5 * (1 + math.cos(math.pi * steps_into_cosine / cosine_period))
+                target_lr = self.scheduler.eta_min + (base_lr - self.scheduler.eta_min) * current_lr_ratio
+                self.logger.info(f"Resuming: target LR calculated: {target_lr:.6e} (step {steps_into_cosine}/{cosine_period} in cosine schedule)")
         
-        # Note: Scheduler will be recreated in train() method with correct total_steps
-        # This ensures proper LR scheduling for the remaining epochs
+        # Load optimizer state
+        if 'optimizer_state_dict' in checkpoint:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # NOW set the correct LR AFTER loading optimizer (to override old LR from checkpoint)
+        if target_lr is not None:
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = target_lr
+            self.logger.info(f"Resuming: LR set to {target_lr:.6e} (overriding checkpoint LR)")
+            
+            # Reset scheduler to continue from here
+            if hasattr(self, 'scheduler'):
+                steps_into_cosine = max(0, self.global_step - self.warmup_steps)
+                self.scheduler.last_epoch = steps_into_cosine - 1
+        
+        # Handle learning rate on resume
+        use_constant_lr = self.config.get('use_constant_lr_on_resume', False)
+        if not use_constant_lr and 'learning_rate' in checkpoint:
+            # Restore learning rate from checkpoint
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = checkpoint['learning_rate']
+        
+        self.logger.info(f"Loaded checkpoint from {checkpoint_path}")
+        self.logger.info(f"Resuming from epoch {self.current_epoch}")
+        self.logger.info(f"Best val loss: {self.best_val_loss:.4f}")
+        self.logger.info(f"Best WER: {self.best_wer:.4f}")
+        self.logger.info(f"Best CER: {self.best_cer:.4f}")
 
 
 def main():
-    # Set multiprocessing start method for better CPU core utilization
-    # 'spawn' is more compatible but 'fork' is faster on Linux
-    if hasattr(multiprocessing, 'set_start_method'):
-        try:
-            multiprocessing.set_start_method('fork', force=True)
-        except RuntimeError:
-            # Already set, continue
-            pass
-    
-    parser = argparse.ArgumentParser(description='Train ASR model with timestamp support and bilingual (English + Vietnamese) training')
-    parser.add_argument('--config', type=str, default='configs/default.yaml',
-                       help='Path to config file')
+    """Main entry point for training."""
+    parser = argparse.ArgumentParser(description='Train ASR model')
+    parser.add_argument('--config', type=str, required=True,
+                       help='Path to config YAML file')
     parser.add_argument('--resume', type=str, default=None,
                        help='Path to checkpoint to resume from')
-    parser.add_argument('--language', type=str, default=None,
-                       help='Filter training data by language (e.g., "en" or "vi"). '
-                            'Useful for sequential training: train English first, then Vietnamese. '
-                            'If not specified, trains on both English and Vietnamese.')
-    parser.add_argument('--use_timestamps', action='store_true', default=None,
-                       help='Enable timestamp training (overrides config)')
-    parser.add_argument('--no_timestamps', action='store_true',
-                       help='Disable timestamp training (overrides config)')
+    parser.add_argument('--start-epoch', type=int, default=0,
+                       help='Starting epoch (for resume)')
     args = parser.parse_args()
     
     # Load config
     with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
     
-    # Override timestamp config from command line
-    if args.use_timestamps:
-        config['use_timestamps'] = True
-    elif args.no_timestamps:
-        config['use_timestamps'] = False
-    # If not specified, use config default (defaults to True)
-    if 'use_timestamps' not in config:
-        config['use_timestamps'] = True
-    
-    # Load data from merged_dataset manifest files (no database needed)
-    dataset_root = config.get('dataset_root', 'data/processed/merged_dataset')
-    language = args.language or config.get('language_filter', None)
-    
-    print(f"📂 Loading data from: {dataset_root}")
-    train_df = load_merged_dataset('train', dataset_root, language=language)
-    val_df = load_merged_dataset('val', dataset_root, language=language)
-    
-    # CURRICULUM LEARNING: Filter short sentences for first 5 epochs
-    curriculum_enabled = config.get('curriculum_learning', {}).get('enabled', False)
-    curriculum_epochs = config.get('curriculum_learning', {}).get('short_sentence_epochs', 5)
-    curriculum_max_duration = config.get('curriculum_learning', {}).get('max_duration_seconds', 4.0)
-    
-    if curriculum_enabled and not args.resume:  # Only apply curriculum when starting fresh
-        if 'duration_seconds' in train_df.columns:
-            original_len = len(train_df)
-            filtered_df = train_df[train_df['duration_seconds'] <= curriculum_max_duration].copy()
-            if len(filtered_df) > 0:
-                train_df = filtered_df
-                print(f"🔥 Curriculum Learning Mode: Filtered to {len(train_df)} short samples (<{curriculum_max_duration}s) from {original_len} total")
-                print(f"   Will use full dataset after epoch {curriculum_epochs}")
-            else:
-                # No short samples found, try with longer duration or disable curriculum
-                curriculum_max_duration = 10.0  # Try 10 seconds
-                filtered_df = train_df[train_df['duration_seconds'] <= curriculum_max_duration].copy()
-                if len(filtered_df) > 0:
-                    train_df = filtered_df
-                    print(f"🔥 Curriculum Learning Mode: No samples <4s found. Using <{curriculum_max_duration}s instead: {len(train_df)} samples")
-                    print(f"   Will use full dataset after epoch {curriculum_epochs}")
-                else:
-                    print("⚠️  Curriculum learning: No short samples found even with 10s threshold. Disabling curriculum, using full dataset.")
-                    curriculum_enabled = False
-        else:
-            print("⚠️  Curriculum learning requested but 'duration_seconds' column not found. Using full dataset.")
-            curriculum_enabled = False
-    
-    if language:
-        print(f"Training samples ({language}): {len(train_df)}")
-        print(f"Validation samples ({language}): {len(val_df)}")
-    else:
-        print(f"Training samples (all languages - English + Vietnamese): {len(train_df)}")
-        print(f"Validation samples (all languages - English + Vietnamese): {len(val_df)}")
-    
-    # Log timestamp configuration
-    use_timestamps = config.get('use_timestamps', True)
-    print(f"\n{'='*80}")
-    print(f"📊 TRAINING CONFIGURATION")
-    print(f"{'='*80}")
-    print(f"Timestamp training: {'✅ Enabled' if use_timestamps else '❌ Disabled'}")
-    if use_timestamps:
-        print(f"Timestamp loss weight: {config.get('timestamp_loss_weight', 0.1)}")
-    print(f"Dataset: {len(train_df)} train, {len(val_df)} val samples")
-    print(f"Batch size: {config.get('batch_size', 16)}")
-    print(f"Epochs: {config.get('num_epochs', 50)}")
-    print(f"{'='*80}\n")
-    
-    # Create data loaders
-    audio_processor = AudioProcessor(
-        sample_rate=config.get('sample_rate', 16000),
-        n_mels=config.get('n_mels', 80)
-    )
-    augmenter = AudioAugmenter()
-
-    tokenizer_type = config.get('tokenizer_type', 'char')
-    if tokenizer_type == 'sentencepiece':
-        from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
-        model_path = config.get('bpe_vocab_path', 'models/tokenizer_vi_en_3500.model')
-        tokenizer = SentencePieceTokenizer(model_path)
-        print(f"✅ Using SentencePiece BPE tokenizer: {model_path} ({len(tokenizer)} tokens)")
-    elif tokenizer_type == 'bpe':
-        from preprocessing.bpe_tokenizer import BPETokenizer
-        bpe_path = config.get('bpe_vocab_path', 'models/bilingual_bpe_18k.json')
-        tokenizer = BPETokenizer()
-        tokenizer.load(bpe_path)
-        print(f"✅ Using BPE tokenizer: {bpe_path} ({len(tokenizer)} tokens)")
-    else:
-        # Character-level tokenizer; load vocab from JSON if provided
-        char_vocab_path = config.get('char_vocab_path')
-        if char_vocab_path:
-            vocab_file = Path(char_vocab_path)
-            if not vocab_file.exists():
-                print(f"⚠️ Char vocab file not found: {vocab_file}, falling back to default tokenizer vocab")
-                from preprocessing.text_cleaning import Tokenizer
-                tokenizer = Tokenizer()
-                print(f"✅ Using default character-level tokenizer ({len(tokenizer)} tokens)")
-            else:
-                with vocab_file.open("r", encoding="utf-8") as f:
-                    vocab_dict = json.load(f)
-                max_id = max(vocab_dict.values())
-                vocab_list = [None] * (max_id + 1)
-                for ch, idx in vocab_dict.items():
-                    if 0 <= idx <= max_id:
-                        vocab_list[idx] = ch
-                for i in range(len(vocab_list)):
-                    if vocab_list[i] is None:
-                        vocab_list[i] = "<unk>"
-                tokenizer = Tokenizer(vocab=vocab_list)
-                print(f"✅ Using character-level tokenizer from {vocab_file} ({len(tokenizer)} tokens)")
-        else:
-            tokenizer = Tokenizer()
-            print(f"✅ Using character-level tokenizer ({len(tokenizer)} tokens)")
-    
-    train_loader, val_loader = create_data_loaders(
-        train_df=train_df,
-        val_df=val_df,
-        audio_processor=audio_processor,
-        tokenizer=tokenizer,
-        batch_size=config.get('batch_size', 16),
-        val_batch_size=config.get('val_batch_size', None),
-        num_workers=config.get('num_workers', 4),
-        augmenter=augmenter,
-        persistent_workers=config.get('persistent_workers', True),
-        prefetch_factor=config.get('prefetch_factor', 2),
-        sort_by_length=config.get('sort_by_length', True),  # Enable length sorting
-        use_bucketing=config.get('use_bucketing', False),  # Optional: use bucketing sampler
-        num_buckets=config.get('num_buckets', 10),
-        cache_in_ram=config.get('cache_in_ram', False)  # Cache data in RAM (reduces CPU load)
-    )
-    
-    # Initialize trainer (no database needed)
+    # Create trainer
     trainer = ASRTrainer(config)
     
-    # Resume from checkpoint if specified
-    if args.resume:
-        trainer.load_checkpoint(args.resume)
-        print(f"Resumed from checkpoint: {args.resume}")
-    else:
-        # WEIGHT RESET: Reset decoder projection layer to break "tan tan" bias
-        import torch.nn.init as init
-        if hasattr(trainer.model, 'decoder') and hasattr(trainer.model.decoder, 'linear'):
-            projection_layer = trainer.model.decoder.linear
-            init.xavier_uniform_(projection_layer.weight)
-            if projection_layer.bias is not None:
-                init.constant_(projection_layer.bias, 0.0)
-            trainer.logger.info("🧹 Reset decoder projection weights to break 'tan tan' bias")
-        elif hasattr(trainer.model, 'decoder') and hasattr(trainer.model.decoder, 'projection'):
-            projection_layer = trainer.model.decoder.projection
-            init.xavier_uniform_(projection_layer.weight)
-            if projection_layer.bias is not None:
-                init.constant_(projection_layer.bias, 0.0)
-            trainer.logger.info("🧹 Reset decoder projection weights to break 'tan tan' bias")
-    
     # Train
-    trainer.train(train_loader, val_loader, config.get('num_epochs', 50))
+    trainer.train(resume_from=args.resume, start_epoch=args.start_epoch)
 
 
 if __name__ == '__main__':

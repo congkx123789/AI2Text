@@ -10,13 +10,14 @@ Hệ thống ASR (Automatic Speech Recognition) từ đầu sử dụng kiến t
 - [Cài đặt](#cài-đặt)
 - [Dataset](#dataset)
 - [Training](#training)
+- [Evaluation & Metrics](#evaluation--metrics)
+- [Visualization](#visualization)
 - [Sử dụng Model](#sử-dụng-model)
 - [API Server](#api-server)
 - [Cấu hình tối ưu](#cấu-hình-tối-ưu)
 - [Cấu trúc Project](#cấu-trúc-project)
 - [Scripts](#scripts)
 - [Chi tiết kỹ thuật](#chi-tiết-kỹ-thuật)
-- [Examples](#examples)
 
 ## 🎯 Tổng quan
 
@@ -26,6 +27,8 @@ Project này implement một hệ thống ASR hoàn chỉnh từ đầu với:
 - **Loss**: CTC Loss
 - **Decoder**: Greedy Decoding
 - **Dataset**: Hỗ trợ LibriSpeech (English) và VietSpeech (Vietnamese)
+- **Evaluation**: WER, CER, SER, RTF metrics với visualization
+- **Logging**: TensorBoard integration
 
 ## 🏗️ Kiến trúc Model
 
@@ -116,6 +119,16 @@ source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
+**Dependencies chính:**
+- `torch`, `torchaudio` - PyTorch và audio processing
+- `numpy` - Numerical computing
+- `librosa` - Audio analysis
+- `jiwer` - WER/CER calculation
+- `fastapi`, `uvicorn` - API server
+- `matplotlib` - Visualization
+- `tensorboard` - Training visualization
+- `tqdm` - Progress bars
+
 ### 4. Kiểm tra cài đặt
 ```bash
 python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}')"
@@ -187,58 +200,6 @@ python scripts/prepare_data.py
 python scripts/train_from_config.py config/train_merged.json
 ```
 
-### Cách chạy nhanh (mặc định 5M CRNN-CTC)
-
-```bash
-# 1) Kích hoạt môi trường ảo (nếu có)
-source .venv/bin/activate
-
-# 2) Huấn luyện với cấu hình mặc định (char-level, ~5M tham số)
-python scripts/train_from_config.py config/train_merged.json
-
-# Ghi chú:
-# - Manifest train: data/processed/full_merged_dataset/train/manifest.csv
-# - Vocab: data/processed/vocab.json (char-level)
-# - Checkpoint sẽ lưu mỗi epoch tại data/results/checkpoints
-# - Mô hình cuối lưu tại data/results/asr_ctc.pt
-```
-
-### 📺 Trạng thái hiển thị trên Terminal
-
-Khi training đang chạy, bạn sẽ thấy output trực tiếp trên terminal như sau:
-
-```
-Using bfloat16 (bf16) precision with AMP
-Memory optimization: Emptying CUDA cache after each batch
-Gradient accumulation: 5 steps (effective batch size: 160)
-Resuming from checkpoint: data/results/checkpoints/checkpoint_epoch_8.pt
-Resuming from epoch 9
-
-epoch 9 [||||||||||||||||||||] 20/6080 | loss 2.345
-epoch 9 [||||||||||||||||||||] 40/6080 | loss 2.312
-epoch 9 [||||||||||||||||||||] 60/6080 | loss 2.298
-...
-epoch 9 [||||||||||||||||||||] 6080/6080 | loss 2.156
-epoch 9 | loss 2.156
-Saved checkpoint to data/results/checkpoints/checkpoint_epoch_9.pt
-
-epoch 10 [||||||||||||||||||||] 20/6080 | loss 2.134
-...
-```
-
-**Giải thích output:**
-- `epoch X`: Số epoch hiện tại
-- `[||||||||...]`: Progress bar cho batch hiện tại trong epoch
-- `20/6080`: Batch hiện tại / Tổng số batches trong epoch
-- `loss X.XXX`: Loss của batch hiện tại (sau khi scale lại)
-- `epoch X | loss X.XXX`: Average loss của toàn bộ epoch
-- `Saved checkpoint to ...`: Đường dẫn checkpoint vừa lưu
-
-**Lưu ý:** 
-- Progress được log mỗi `log_interval` batches (mặc định: 20)
-- Checkpoint được lưu sau mỗi epoch
-- Nếu resume từ checkpoint, sẽ hiển thị "Resuming from epoch X"
-
 ### Training trực tiếp
 
 ```bash
@@ -263,7 +224,8 @@ File `config/train_merged.json` đã được tối ưu cho Ryzen 9 9900X + RTX 
   "num_workers": 8,
   "epochs": 20,
   "log_interval": 20,
-  "lr": 0.001
+  "lr": 0.001,
+  "log_dir": "runs/asr_ctc"
 }
 ```
 
@@ -292,62 +254,63 @@ File `config/train_merged.json` đã được tối ưu cho Ryzen 9 9900X + RTX 
 5. Mỗi 5 batches: gradient clipping → optimizer step → zero gradients
 6. Empty CUDA cache sau mỗi batch (nếu enabled)
 7. Log progress mỗi 20 batches
-8. Save checkpoint sau mỗi epoch
+8. **TensorBoard logging** mỗi log_interval batches và mỗi epoch
+9. Save checkpoint sau mỗi epoch
 
-### 📊 Xem tiến độ training (Training Progress Monitoring)
+### TensorBoard Logging
+
+Training tự động log vào TensorBoard:
+
+```bash
+# Xem TensorBoard trong khi training
+tensorboard --logdir=runs
+```
+
+**Metrics được log:**
+- `Loss/Train_step` - Loss mỗi log_interval batches
+- `Loss/Train_epoch` - Average loss mỗi epoch
+
+**Logs được lưu tại:** `runs/asr_ctc/run_YYYYMMDD-HHMMSS/`
+
+### Training Progress Monitoring
 
 Có nhiều cách để theo dõi tiến độ training real-time:
 
-#### 1. Monitor đẹp nhất (Khuyến nghị) ⭐
+#### 1. TensorBoard (Khuyến nghị) ⭐
+```bash
+tensorboard --logdir=runs
+```
+Xem biểu đồ loss real-time trên web interface.
+
+#### 2. Monitor đẹp nhất
 ```bash
 python scripts/training_progress_bar.py
 ```
 **Tính năng:**
 - Progress bars màu sắc cho epoch, GPU memory, GPU utilization
 - Hiển thị loss từ checkpoint
-- Ước tính thời gian còn lại dựa trên checkpoint thực tế
-- Auto-refresh mỗi 2 giây
-- Hiển thị PID process, elapsed time, config
-
-#### 2. Monitor chi tiết
-```bash
-python scripts/training_progress.py
-```
-**Tính năng:**
-- Progress bars cho epoch và GPU
 - Ước tính thời gian còn lại
-- Auto-refresh mỗi 3 giây
+- Auto-refresh mỗi 2 giây
 
-#### 3. Monitor cơ bản
+#### 3. Monitor chi tiết
 ```bash
 python scripts/monitor_training.py
 ```
-**Tính năng:**
-- Thông tin cơ bản về process, GPU, checkpoint
-- Auto-refresh mỗi 5 giây
 
 #### 4. Bash script đơn giản
 ```bash
 ./scripts/watch_training.sh
 ```
-**Tính năng:**
-- Script bash đơn giản, không cần Python
-- Hiển thị epoch hiện tại, GPU info
-- Auto-refresh mỗi 5 giây
-
-#### Thông tin hiển thị:
-- ✅ **Training Process**: PID, thời gian đã chạy
-- 📊 **GPU Status**: Memory usage, utilization với progress bar
-- 📁 **Training Progress**: Epoch hiện tại/tổng số, progress bar, loss
-- ⏱️ **Time Estimates**: Thời gian mỗi epoch, thời gian còn lại, tổng thời gian
-- ⚙️ **Configuration**: Batch size, gradient accumulation, workers, AMP
-
-**Lưu ý:** Các script này sẽ tự động detect training process đang chạy và hiển thị thông tin real-time. Nhấn `Ctrl+C` để dừng monitoring.
 
 ### Checkpoints
 
 - Checkpoints được lưu tại: `data/results/checkpoints/checkpoint_epoch_X.pt`
-- Model cuối cùng: `data/results/asr_ctc.pt`
+- Mỗi checkpoint chứa:
+  - `epoch`: Số epoch
+  - `model_state_dict`: Model weights
+  - `optimizer_state_dict`: Optimizer state
+  - `loss`: Average loss của epoch
+  - `scaler_state_dict`: AMP scaler state (nếu có)
 
 ### Resume training
 
@@ -358,6 +321,97 @@ python scripts/monitor_training.py
 # Hoặc dùng script
 ./scripts/resume_training.sh
 ```
+
+## 📈 Evaluation & Metrics
+
+### Test trên Full Dataset
+
+Chạy evaluation trên toàn bộ test set:
+
+```bash
+python scripts/test_full_dataset.py \
+  --checkpoint data/results/checkpoints/checkpoint_epoch_12.pt \
+  --vocab data/processed/vocab.json \
+  --test_manifest data/processed/test/manifest.csv \
+  --audio_root data/processed/test \
+  --batch_size 16 \
+  --output experiments/reports/all_predictions_epoch12.json
+```
+
+### Metrics được tính toán
+
+Script tự động tính toán và lưu các metrics sau:
+
+#### Accuracy Metrics
+- **WER (Word Error Rate)**: Tỷ lệ lỗi từ - chỉ số quan trọng nhất
+- **CER (Character Error Rate)**: Tỷ lệ lỗi ký tự - quan trọng cho Tiếng Việt
+- **SER (Sentence Error Rate)**: Tỷ lệ câu có lỗi
+- **Exact Match Accuracy**: Tỷ lệ câu hoàn toàn đúng
+- **Word-level Accuracy**: Tỷ lệ câu đúng từng từ
+
+#### Performance Metrics
+- **RTF (Real-Time Factor)**: Tốc độ xử lý so với độ dài audio
+  - RTF < 1: Nhanh hơn thời gian thực ✅
+  - RTF = 1: Bằng thời gian thực
+  - RTF > 1: Chậm hơn thời gian thực
+- **Total Audio Duration**: Tổng thời lượng audio (giây)
+- **Total Inference Time**: Tổng thời gian inference (giây)
+
+### Kết quả Test hiện tại (Epoch 12)
+
+```
+Model Epoch: 12
+Total samples tested: 32,818
+
+Metrics:
+  Word Error Rate (WER):     47.37%
+  Character Error Rate (CER): 21.04%
+  Exact Match Accuracy:       0.41% (134/32818)
+  Word-level Accuracy:        0.39% (128/32818)
+  Sentence Error Rate (SER): 99.61% (32690/32818)
+  Real-Time Factor (RTF):     0.0007 (1440.9x real-time)
+    Total audio seconds:      227,287.43
+    Total inference seconds:  157.74
+```
+
+**Files được tạo:**
+- `experiments/reports/all_predictions_epoch12.json` - Tất cả predictions
+- `experiments/reports/metrics.json` - Metrics summary
+
+## 📊 Visualization
+
+### Tạo Biểu Đồ Training Report
+
+```bash
+# Biểu đồ tổng hợp (linear scale)
+python scripts/visualize_training_report.py
+
+# Biểu đồ log scale (3 subplots riêng)
+python scripts/plot_log_scale_metrics.py
+
+# Biểu đồ kết hợp log scale (Loss, WER, CER cùng biểu đồ)
+python scripts/plot_combined_log_metrics.py
+```
+
+**Output files:**
+- `experiments/reports/training_report.png` - Báo cáo tổng hợp
+- `experiments/reports/log_scale_metrics.png` - Loss, WER, CER với log scale
+- `experiments/reports/combined_log_metrics.png` - Kết hợp cả 3 metrics
+
+### Tạo Báo Cáo Đánh Giá
+
+```bash
+python scripts/generate_evaluation_report.py
+```
+
+**Output file:**
+- `experiments/reports/evaluation_report.md` - Báo cáo markdown chi tiết
+
+Báo cáo bao gồm:
+- Tóm tắt metrics
+- Phân tích điểm mạnh/yếu
+- Khuyến nghị cải thiện
+- So sánh với tiêu chuẩn ngành
 
 ## 🔧 Sử dụng Model
 
@@ -377,34 +431,34 @@ import json
 vocab_path = "data/processed/vocab.json"
 vocab = json.load(open(vocab_path, encoding="utf-8"))
 itos = {i: c for i, c in enumerate(vocab)}
-print(f"Vocabulary size: {len(vocab)}")
 
 # Load model
-model_path = "data/results/asr_ctc.pt"
+model_path = "data/results/checkpoints/checkpoint_epoch_12.pt"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = CRNNCTC(n_mels=80, vocab_size=len(vocab))
-model.load_state_dict(torch.load(model_path, map_location=device))
+
+checkpoint = torch.load(model_path, map_location=device)
+if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+    model.load_state_dict(checkpoint['model_state_dict'])
+else:
+    model.load_state_dict(checkpoint)
+
 model.to(device).eval()
-print(f"Model loaded on {device}")
 
 # Load audio
 audio_path = "audio.wav"
 wav, sr = torchaudio.load(audio_path)
-print(f"Original: {sr}Hz, {wav.shape}")
 
 # Preprocess audio
 wav, sr = ensure_mono16k(wav, sr)  # Ensure 16kHz mono
-print(f"After preprocessing: {sr}Hz, {wav.shape}")
 
 # Extract features
 feats = wav_to_logmelspec(wav, sr)  # (T, 80)
 feats = feats.unsqueeze(0).to(device)  # (1, T, 80)
-print(f"Features shape: {feats.shape}")
 
 # Transcribe
 with torch.no_grad():
     logits, lens = model(feats, torch.tensor([feats.shape[1]], device=device))
-    # logits: (T, B, V), lens: (B,)
     text = greedy_decode(logits.cpu(), itos)[0]
 
 print(f"Transcription: {text}")
@@ -424,14 +478,20 @@ import json
 vocab = json.load(open("data/processed/vocab.json"))
 itos = {i: c for i, c in enumerate(vocab)}
 model = CRNNCTC(n_mels=80, vocab_size=len(vocab))
-model.load_state_dict(torch.load("data/results/asr_ctc.pt"))
+
+checkpoint = torch.load("data/results/checkpoints/checkpoint_epoch_12.pt", map_location='cpu')
+if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+    model.load_state_dict(checkpoint['model_state_dict'])
+else:
+    model.load_state_dict(checkpoint)
+
 model.eval()
 
 # Create dataset
 dataset = ManifestDataset(
-    manifest_path="data/processed/full_merged_dataset/test/manifest.csv",
+    manifest_path="data/processed/test/manifest.csv",
     vocab_path="data/processed/vocab.json",
-    audio_root="data/processed/full_merged_dataset/test"
+    audio_root="data/processed/test"
 )
 
 # Create dataloader
@@ -457,8 +517,6 @@ for X, Xlen, Y, Ylen in dataloader:
     
     for pred, gt in zip(texts, ground_truths):
         results.append({"prediction": pred, "ground_truth": gt})
-        print(f"Pred: {pred}")
-        print(f"GT:   {gt}\n")
 ```
 
 ### CTC Decoding
@@ -552,653 +610,161 @@ python scripts/estimate_training_time.py config/train_merged.json
 ```
 ai-llm-ss/
 ├── config/                         # Configuration files
+│   └── train_merged.json          # Training config
 ├── data/                           # Data directory
 │   ├── raw/                        # Raw datasets
 │   ├── processed/                  # Processed datasets
+│   │   ├── vocab.json             # Vocabulary file
+│   │   └── test/                   # Test dataset
 │   └── results/                    # Training results
+│       └── checkpoints/            # Model checkpoints
 ├── docs/                           # Documentation
 ├── experiments/                    # Experiment results
+│   └── reports/                    # Evaluation reports & plots
 ├── notebooks/                       # Jupyter notebooks
 ├── scripts/                        # Utility scripts
+│   ├── train_asr.py               # Training wrapper
+│   ├── train_from_config.py       # Training from config
+│   ├── test_full_dataset.py       # Full dataset evaluation
+│   ├── visualize_training_report.py # Training visualization
+│   ├── plot_log_scale_metrics.py   # Log scale plots
+│   ├── plot_combined_log_metrics.py # Combined metrics plot
+│   ├── generate_evaluation_report.py # Evaluation report
+│   ├── serve_asr.py               # API server
+│   └── ...                        # Other utilities
 ├── src/                            # Source code
 │   └── asr/                        # ASR module
+│       ├── model.py               # CRNNCTC model
+│       ├── features.py            # Audio feature extraction
+│       ├── dataset.py              # Dataset classes
+│       ├── decode.py               # CTC decoding
+│       ├── train_ctc.py            # Training loop
+│       ├── tokenizer.py            # Tokenizer utilities
+│       └── api.py                  # FastAPI endpoints
 ├── tests/                          # Unit tests
 ├── requirements.txt                # Python dependencies
 ├── pyproject.toml                  # Project metadata
 └── README.md                       # This file
 ```
 
-### Chi tiết từng file và thư mục
+### Chi tiết Modules
 
-#### 📂 Root Directory
+#### `src/asr/model.py`
+- **CRNNCTC**: Model chính với CNN encoder + Bidirectional LSTM + Linear head
 
-| File/Directory | Mô tả |
-|---------------|-------|
-| `README.md` | Tài liệu chính của project (file này) |
-| `requirements.txt` | Danh sách Python dependencies cần thiết |
-| `pyproject.toml` | Project metadata và package configuration |
+#### `src/asr/features.py`
+- **wav_to_logmelspec**: Extract log mel-spectrogram từ audio
+- **ensure_mono16k**: Resample và convert về mono 16kHz
 
-#### 📂 config/
+#### `src/asr/dataset.py`
+- **ManifestDataset**: Dataset từ manifest.csv (khuyến nghị)
+- **ASRDataset**: Dataset từ audio_dir và text_dir
+- **collate_batch**: Batch collation function
 
-| File | Mô tả | Nội dung |
-|------|-------|----------|
-| `train_merged.json` | **Config file chính cho training** | Chứa tất cả hyperparameters: batch_size, learning_rate, epochs, paths, etc. Được sử dụng bởi `train_from_config.py` |
+#### `src/asr/decode.py`
+- **greedy_decode**: Greedy CTC decoding
 
-**Ví dụ nội dung:**
-```json
-{
-  "manifest": "data/processed/full_merged_dataset/train/manifest.csv",
-  "audio_root": "data/processed/full_merged_dataset/train",
-  "vocab": "data/processed/vocab.json",
-  "batch_size": 32,
-  "epochs": 20,
-  "lr": 0.001,
-  ...
-}
-```
+#### `src/asr/train_ctc.py`
+- **main**: Training loop với CTC loss
+- Hỗ trợ: AMP, gradient accumulation, checkpointing, TensorBoard logging
 
-#### 📂 src/
+#### `src/asr/api.py`
+- FastAPI endpoints cho ASR service
 
-##### `src/__init__.py`
-- File khởi tạo package root
-- Hiện tại trống, có thể thêm package-level imports
-
-##### `src/asr/` - ASR Module
-
-| File | Dòng code | Chức năng chính | Chi tiết |
-|------|-----------|-----------------|----------|
-| `__init__.py` | - | Package initialization | Khởi tạo ASR module |
-| `model.py` | 26 | **CRNNCTC Model** | Định nghĩa kiến trúc model:<br>- CNN encoder (2 Conv1d layers)<br>- Bidirectional LSTM (3 layers)<br>- Linear classification head<br>- Forward pass logic |
-| `features.py` | 20 | **Audio Feature Extraction** | Hàm xử lý audio:<br>- `ensure_mono16k()`: Resample và convert to mono<br>- `wav_to_logmelspec()`: Extract log mel-spectrogram (80 bins) |
-| `dataset.py` | 96 | **Dataset Classes** | 2 dataset classes:<br>- `ASRDataset`: Đọc từ audio_dir + text_dir<br>- `ManifestDataset`: Đọc từ manifest.csv (khuyến nghị)<br>- `collate_batch()`: Batch collation với padding |
-| `train_ctc.py` | 175 | **Training Loop** | Training script chính:<br>- Parse arguments<br>- Setup DataLoader<br>- Initialize model, loss, optimizer<br>- Training loop với gradient accumulation<br>- Checkpoint saving<br>- Mixed precision training (AMP) |
-| `decode.py` | 15 | **CTC Decoding** | `greedy_decode()`:<br>- Greedy decoding từ CTC logits<br>- Loại bỏ blank tokens<br>- Loại bỏ duplicate tokens |
-| `tokenizer.py` | 28 | **Text Tokenization** | Vocabulary management:<br>- `build_char_vocab()`: Build vocabulary từ transcripts<br>- `encode()`: Encode text to indices<br>- `save_vocab()`: Save vocabulary to JSON |
-| `api.py` | 193 | **FastAPI Server** | REST API cho ASR:<br>- `/health`: Health check<br>- `/model/info`: Model information<br>- `/transcribe`: Transcribe audio file<br>- Auto preprocessing support<br>- CORS enabled |
-
-#### 📂 scripts/
-
-| File | Loại | Dòng code | Chức năng |
-|------|------|-----------|-----------|
-| `train_from_config.py` | Python | 32 | **Training với config file**<br>- Đọc JSON config<br>- Parse và convert sang command-line args<br>- Gọi `train_ctc.py` với args |
-| `train_asr.py` | Python | 23 | **Training script đơn giản**<br>- Default settings<br>- Wrapper cho `train_ctc.py`<br>- Tự động detect CUDA |
-| `serve_asr.py` | Python | 44 | **API Server Launcher**<br>- Start FastAPI server với uvicorn<br>- Configurable host/port<br>- Support reload mode |
-| `prepare_data.py` | Python | 21 | **Dataset Preparation**<br>- Build vocabulary từ transcripts<br>- Save vocab.json<br>- Process raw data |
-| `monitor_training.py` | Python | 193 | **Real-time Training Monitor**<br>- Monitor process status<br>- GPU memory/usage<br>- Checkpoint progress<br>- Time estimates<br>- Auto-refresh mỗi 5s |
-| `watch_training.sh` | Bash | ~40 | **Simple Training Monitor**<br>- Bash version của monitor<br>- Hiển thị process, GPU, checkpoints |
-| `estimate_training_time.py` | Python | ~60 | **Training Time Estimator**<br>- Tính toán thời gian training<br>- Dựa trên dataset size và config<br>- Hiển thị estimates chi tiết |
-| `test_api.py` | Python | 108 | **API Testing Script**<br>- Test `/health` endpoint<br>- Test `/model/info` endpoint<br>- Test `/transcribe` endpoint<br>- Comprehensive error handling |
-| `resume_training.sh` | Bash | - | **Resume Training Helper**<br>- Script để resume từ checkpoint |
-
-#### 📂 data/
-
-##### `data/raw/` - Raw Datasets
-
-| Directory | Mô tả |
-|-----------|-------|
-| `librispeech_alignments/` | LibriSpeech English dataset với alignments:<br>- `train/`, `val/`, `test/` splits<br>- `manifest.csv`: Metadata<br>- `timestamps.json`: Word/phoneme alignments<br>- `README.md`: Dataset documentation |
-| `VietSpeech/` | Vietnamese VietSpeech dataset:<br>- `train/`, `val/`, `test/` splits<br>- `manifest.csv`: Metadata<br>- `timestamps.json`: Word alignments<br>- `README.md`: Dataset documentation |
-| `DATASETS_README.md` | Tài liệu về datasets |
-
-##### `data/processed/` - Processed Datasets
-
-| File/Directory | Mô tả |
-|----------------|-------|
-| `vocab.json` | **Vocabulary file** (107 tokens):<br>- JSON array của characters<br>- Index 0: `<blank>`<br>- Index 1: `<unk>`<br>- Còn lại: a-z, 0-9, Vietnamese chars |
-| `merged_dataset/` | Merged dataset (cũ):<br>- `train/`, `val/`, `test/`<br>- `manifest.csv`<br>- `timestamps.json` |
-| `full_merged_dataset/` | **Full merged dataset (chính)**:<br>- `train/`: 194,451 samples<br>  - `audio/`: WAV files<br>  - `manifest.csv`: Training manifest<br>  - `manifest.csv.backup`: Backup<br>- `val/`: Validation set<br>- `test/`: Test set |
-
-##### `data/results/` - Training Results
-
-| File/Directory | Mô tả |
-|----------------|-------|
-| `asr_ctc.pt` | **Final trained model**<br>- Model state dict<br>- Load với `torch.load()`<br>- ~48MB |
-| `checkpoints/` | Training checkpoints:<br>- `checkpoint_epoch_1.pt`<br>- `checkpoint_epoch_2.pt`<br>- `checkpoint_epoch_3.pt`<br>- ...<br>Mỗi checkpoint chứa:<br>- `epoch`: Epoch number<br>- `model_state_dict`<br>- `optimizer_state_dict`<br>- `loss`: Average loss<br>- `scaler_state_dict` (nếu AMP) |
-
-#### 📂 tests/
-
-| File | Mô tả |
-|------|-------|
-| `test_decode.py` | Unit test cho `greedy_decode()`:<br>- Test output shapes<br>- Test với dummy logits |
-
-#### 📂 docs/
-
-- Thư mục cho documentation (hiện tại trống)
-- Có thể thêm design docs, evaluation protocols, etc.
-
-#### 📂 experiments/
-
-- `reports/`: Experiment reports và results
-- Lưu kết quả experiments, metrics, comparisons
-
-#### 📂 notebooks/
-
-- Jupyter notebooks cho exploration và analysis
-- Data visualization, model analysis, etc.
-
-### File Dependencies Flow
-
-```
-User Input
-    ↓
-scripts/train_from_config.py
-    ↓ (reads)
-config/train_merged.json
-    ↓ (calls)
-src/asr/train_ctc.py
-    ↓ (uses)
-src/asr/dataset.py → data/processed/full_merged_dataset/
-src/asr/model.py
-src/asr/features.py
-    ↓ (saves)
-data/results/checkpoints/checkpoint_epoch_X.pt
-    ↓ (final)
-data/results/asr_ctc.pt
-```
-
-### API Flow
-
-```
-User Request
-    ↓
-scripts/serve_asr.py
-    ↓ (starts)
-src/asr/api.py (FastAPI)
-    ↓ (uses)
-src/asr/model.py
-src/asr/features.py
-src/asr/decode.py
-    ↓ (loads)
-data/results/asr_ctc.pt
-data/processed/vocab.json
-    ↓ (returns)
-Transcription Result
-```
-
-### Data Flow trong Training
-
-```
-Audio Files (WAV)
-    ↓
-src/asr/dataset.py (ManifestDataset)
-    ↓ (loads)
-src/asr/features.py (wav_to_logmelspec)
-    ↓ (extracts)
-Log Mel-Spectrogram (T, 80)
-    ↓
-src/asr/model.py (CRNNCTC)
-    ↓ (forward)
-CTC Logits (T, B, V)
-    ↓
-torch.nn.CTCLoss
-    ↓
-Loss Value
-    ↓
-Backward Pass
-    ↓
-Optimizer Step
-    ↓
-Checkpoint Save
-```
-
-## 🛠️ Scripts
+## 📜 Scripts
 
 ### Training Scripts
 
-- **`train_from_config.py`**: Training với config file (khuyến nghị)
-- **`train_asr.py`**: Training với default settings
+| Script | Mô tả |
+|--------|-------|
+| `train_asr.py` | Wrapper script cho training với defaults |
+| `train_from_config.py` | Training từ config file (khuyến nghị) |
+| `resume_training.sh` | Resume training từ checkpoint |
+
+### Evaluation Scripts
+
+| Script | Mô tả |
+|--------|-------|
+| `test_full_dataset.py` | Test trên full dataset với WER/CER/SER/RTF |
+| `test_model.py` | Test model cơ bản |
+| `test_model_detailed.py` | Test với phân tích chi tiết |
+
+### Visualization Scripts
+
+| Script | Mô tả |
+|--------|-------|
+| `visualize_training_report.py` | Tạo biểu đồ training report tổng hợp |
+| `plot_log_scale_metrics.py` | Vẽ Loss, WER, CER với log scale (3 subplots) |
+| `plot_combined_log_metrics.py` | Vẽ kết hợp Loss, WER, CER với log scale |
+| `generate_evaluation_report.py` | Tạo báo cáo đánh giá markdown |
 
 ### Monitoring Scripts
 
-- **`monitor_training.py`**: Python monitor với thông tin chi tiết
-- **`watch_training.sh`**: Bash script đơn giản
-- **`estimate_training_time.py`**: Ước tính thời gian training
+| Script | Mô tả |
+|--------|-------|
+| `training_progress_bar.py` | Monitor training với progress bars đẹp |
+| `monitor_training.py` | Monitor training cơ bản |
+| `watch_training.sh` | Bash script monitor đơn giản |
 
 ### Utility Scripts
 
-- **`prepare_data.py`**: Chuẩn bị và merge datasets
-- **`serve_asr.py`**: Khởi động API server
-- **`test_api.py`**: Test API endpoints
-- **`resume_training.sh`**: Resume training từ checkpoint
-
-## 📈 Performance
-
-### Model Performance
-
-- **Architecture**: CRNN-CTC
-- **Total Parameters**: 4,132,715 (~4.1M)
-- **Trainable Parameters**: 4,132,715
-- **Model Size**: ~48MB (checkpoint file)
-- **Input**: 16kHz mono audio
-- **Features**: 80 mel-spectrogram bins
-- **Training**: Mixed precision (bfloat16) với AMP
-- **Inference Speed**: 
-  - GPU: ~10-50x real-time (tùy audio length)
-  - CPU: ~1-5x real-time
-
-### Training Performance
-
-Với cấu hình tối ưu (Ryzen 9 9900X + RTX 5060 Ti 16GB):
-- **Dataset**: 194,451 training samples
-- **Batches per epoch**: 6,077 (batch_size=32)
-- **Effective batch size**: 160 (với gradient accumulation)
-- **GPU Utilization**: 30-50%
-- **GPU Memory Usage**: ~13-14GB / 16GB (83-87%)
-- **CPU Utilization**: ~30-40% (8 workers)
-- **Time per epoch**: ~29-42 phút
-- **Total training time (20 epochs)**: ~9-14 giờ
-- **Throughput**: ~150-200 samples/second
-
-### Memory Breakdown
-
-- **Model parameters**: ~16MB (fp32) / ~8MB (fp16/bf16)
-- **Optimizer states**: ~32MB (AdamW với 2x momentum buffers)
-- **Gradients**: ~16MB
-- **Activations**: ~2-4GB (tùy batch size và sequence length)
-- **DataLoader buffers**: ~500MB-1GB (8 workers)
-- **PyTorch overhead**: ~1-2GB
-
-### Inference Performance
-
-```python
-# Benchmark inference speed
-import time
-import torch
-
-# Single sample
-audio_length_seconds = 5.0
-feats_length = int(audio_length_seconds * 16000 / 160)  # ~500 frames
-
-model.eval()
-with torch.no_grad():
-    # Warmup
-    dummy_input = torch.randn(1, feats_length, 80).to(device)
-    _ = model(dummy_input, torch.tensor([feats_length], device=device))
-    
-    # Benchmark
-    start = time.time()
-    for _ in range(100):
-        _ = model(dummy_input, torch.tensor([feats_length], device=device))
-    elapsed = time.time() - start
-    
-    avg_time = elapsed / 100
-    real_time_factor = audio_length_seconds / avg_time
-    print(f"Average inference time: {avg_time*1000:.2f}ms")
-    print(f"Real-time factor: {real_time_factor:.2f}x")
-```
-
-## 🐛 Troubleshooting
-
-### Out of Memory (OOM)
-
-**Triệu chứng**: `torch.OutOfMemoryError: CUDA out of memory`
-
-**Giải pháp**:
-1. Giảm `batch_size` trong config:
-```json
-{
-  "batch_size": 24,  // Giảm từ 32
-  "gradient_accumulation_steps": 7  // Tăng để giữ effective batch ~160
-}
-```
-
-2. Giảm `num_workers`:
-```json
-{
-  "num_workers": 4  // Giảm từ 8
-}
-```
-
-3. Enable `empty_cache`:
-```json
-{
-  "empty_cache": true
-}
-```
-
-4. Set environment variable:
-```bash
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-```
-
-5. Kiểm tra GPU memory:
-```bash
-nvidia-smi
-# Nếu có process khác đang dùng GPU, kill chúng
-```
-
-### Training chậm
-
-**Triệu chứng**: Training mất quá nhiều thời gian, GPU utilization thấp
-
-**Giải pháp**:
-1. Kiểm tra `num_workers`:
-   - Nên = số CPU cores / 3
-   - Với Ryzen 9 9900X (24 threads): 8 workers là tối ưu
-   - Quá nhiều workers có thể gây overhead
-
-2. Kiểm tra `pin_memory`:
-   - Tự động enable nếu batch_size <= 128
-   - Đảm bảo GPU có đủ memory cho pin_memory
-
-3. Kiểm tra GPU utilization:
-```bash
-watch -n 1 nvidia-smi
-# GPU utilization nên > 30%
-```
-
-4. Kiểm tra I/O bottleneck:
-```bash
-# Nếu disk I/O chậm, dataset nên ở SSD
-# Hoặc giảm num_workers để giảm I/O load
-```
-
-5. Kiểm tra AMP:
-```bash
-# Đảm bảo AMP enabled và GPU hỗ trợ bf16
-python -c "import torch; print(torch.cuda.is_bf16_supported())"
-```
-
-### Model không load
-
-**Triệu chứng**: `FileNotFoundError` hoặc `KeyError` khi load model
-
-**Giải pháp**:
-1. Kiểm tra model path:
-```python
-import os
-model_path = "data/results/asr_ctc.pt"
-print(f"Model exists: {os.path.exists(model_path)}")
-print(f"Model size: {os.path.getsize(model_path) / 1024 / 1024:.2f} MB")
-```
-
-2. Kiểm tra vocab path:
-```python
-import json
-vocab_path = "data/processed/vocab.json"
-vocab = json.load(open(vocab_path))
-print(f"Vocab size: {len(vocab)}")
-```
-
-3. Kiểm tra model architecture match:
-```python
-# Vocab size phải khớp với model
-vocab = json.load(open("data/processed/vocab.json"))
-model = CRNNCTC(n_mels=80, vocab_size=len(vocab))
-# Nếu vocab size khác, model sẽ không load được
-```
-
-### Loss không giảm / Training không hội tụ
-
-**Triệu chứng**: Loss cao và không giảm sau nhiều epochs
-
-**Giải pháp**:
-1. Kiểm tra learning rate:
-   - LR = 0.001 là hợp lý
-   - Có thể thử learning rate schedule (cosine, step decay)
-
-2. Kiểm tra gradient:
-```python
-# Thêm vào training loop để debug
-for name, param in model.named_parameters():
-    if param.grad is not None:
-        print(f"{name}: grad_norm = {param.grad.norm().item()}")
-```
-
-3. Kiểm tra data quality:
-   - Đảm bảo audio và transcript khớp
-   - Kiểm tra có samples bị corrupt không
-
-4. Kiểm tra CTC loss:
-   - CTC loss có thể rất cao ở đầu training (normal)
-   - Nếu loss = inf, kiểm tra `zero_infinity=True` trong CTCLoss
-
-### Audio loading errors
-
-**Triệu chứng**: `RuntimeError` khi load audio
-
-**Giải pháp**:
-1. Install soundfile (fallback):
-```bash
-pip install soundfile
-```
-
-2. Kiểm tra audio format:
-   - Hỗ trợ: WAV, MP3, FLAC, OGG
-   - Nên dùng WAV 16kHz mono để tối ưu
-
-3. Kiểm tra corrupted files:
-```python
-import torchaudio
-try:
-    wav, sr = torchaudio.load("problematic_audio.wav")
-except Exception as e:
-    print(f"Error: {e}")
-```
-
-### Checkpoint không resume được
-
-**Triệu chứng**: Training không resume từ checkpoint
-
-**Giải pháp**:
-1. Kiểm tra checkpoint format:
-```python
-checkpoint = torch.load("checkpoint_epoch_X.pt")
-print(checkpoint.keys())
-# Should have: 'epoch', 'model_state_dict', 'optimizer_state_dict', 'loss'
-```
-
-2. Đảm bảo config match:
-   - Model architecture phải giống nhau
-   - Vocab size phải giống nhau
-
-3. Load checkpoint manually:
-```python
-checkpoint = torch.load("checkpoint_epoch_X.pt", map_location=device)
-model.load_state_dict(checkpoint['model_state_dict'])
-optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-start_epoch = checkpoint['epoch'] + 1
-```
-
-## 📝 License
-
-[Thêm license của bạn]
-
-## 👥 Contributors
-
-[Thêm contributors]
+| Script | Mô tả |
+|--------|-------|
+| `prepare_data.py` | Chuẩn bị và xử lý dataset |
+| `serve_asr.py` | Khởi động API server |
+| `test_api.py` | Test API endpoints |
+| `estimate_training_time.py` | Ước tính thời gian training |
 
 ## 🔬 Chi tiết kỹ thuật
 
 ### CTC Loss
 
-Connectionist Temporal Classification (CTC) là loss function đặc biệt cho sequence-to-sequence tasks:
-- **Không cần alignment**: CTC tự động học alignment giữa input frames và output tokens
-- **Blank token**: Sử dụng `<blank>` (index 0) để handle:
-  - Silence/no speech
-  - Repetitions (cần blank giữa các ký tự giống nhau)
-- **Forward-backward algorithm**: CTC sử dụng dynamic programming để tính loss hiệu quả
-- **Zero infinity**: `zero_infinity=True` để tránh NaN khi alignment không khả thi
+CTC (Connectionist Temporal Classification) loss cho phép:
+- Không cần forced alignment giữa audio và text
+- Model tự học mapping từ audio frames → text tokens
+- Xử lý được các từ có độ dài khác nhau
 
-### Mel-Spectrogram Features
+### Feature Extraction
 
-- **Sample rate**: 16kHz (industry standard cho speech)
-- **Frame size**: 400 samples (25ms) với n_fft=400
-- **Hop size**: 160 samples (10ms) → 100 frames/second
-- **Mel bins**: 80 (tối ưu cho speech recognition)
-- **Log transform**: log(mel + 1e-6) để compress dynamic range
+- **Sample Rate**: 16kHz (mono)
+- **Window**: 400 samples (25ms)
+- **Hop**: 160 samples (10ms)
+- **Mel bins**: 80
+- **Normalization**: Log transform với epsilon=1e-6
 
-### Vocabulary và Tokenization
+### Training Optimizations
 
-- **Character-level**: Mỗi character là một token
-- **Special tokens**:
-  - `<blank>` (index 0): CTC blank token
-  - `<unk>` (index 1): Unknown character
-- **Case handling**: Tất cả text được lowercase trước khi tokenize
-- **Multilingual**: Hỗ trợ English và Vietnamese characters
+1. **Mixed Precision (AMP)**: Giảm memory và tăng tốc độ
+2. **Gradient Accumulation**: Simulate batch size lớn hơn
+3. **Gradient Clipping**: Ổn định training
+4. **Pin Memory**: Tăng tốc GPU transfer
+5. **Multiple Workers**: Parallel data loading
+6. **Empty Cache**: Giải phóng GPU memory
 
-### Data Augmentation
+### Model Performance
 
-Hiện tại chưa có data augmentation, nhưng có thể thêm:
-- Speed perturbation (±10-20%)
-- Volume normalization
-- Noise injection
-- Time masking (SpecAugment)
+**Current Results (Epoch 12):**
+- WER: 47.37%
+- CER: 21.04%
+- RTF: 0.0007 (1440x real-time) ✅
+- Model size: ~47MB
 
-### Model Regularization
+**Điểm mạnh:**
+- Tốc độ xử lý rất nhanh (1440x real-time)
+- Model nhỏ gọn (~4.1M parameters)
+- Phù hợp cho edge deployment
 
-- **Gradient clipping**: max_grad_norm=1.0
-- **Dropout**: Có thể thêm vào LSTM layers
-- **Weight decay**: Có thể thêm vào AdamW optimizer
+**Cần cải thiện:**
+- WER còn cao, cần thêm dữ liệu training
+- CER cần cải thiện cho Tiếng Việt có dấu
 
-## 💡 Examples
+## 📝 License
 
-### Example 1: Transcribe single file
-
-```python
-#!/usr/bin/env python3
-"""Simple transcription example."""
-import torch
-import torchaudio
-from src.asr.model import CRNNCTC
-from src.asr.features import wav_to_logmelspec, ensure_mono16k
-from src.asr.decode import greedy_decode
-import json
-import sys
-
-def transcribe(audio_path, model_path="data/results/asr_ctc.pt"):
-    # Load vocab
-    vocab = json.load(open("data/processed/vocab.json", encoding="utf-8"))
-    itos = {i: c for i, c in enumerate(vocab)}
-    
-    # Load model
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = CRNNCTC(n_mels=80, vocab_size=len(vocab))
-    model.load_state_dict(torch.load(model_path, map_location=device))
-    model.to(device).eval()
-    
-    # Load and preprocess audio
-    wav, sr = torchaudio.load(audio_path)
-    wav, sr = ensure_mono16k(wav, sr)
-    feats = wav_to_logmelspec(wav, sr).unsqueeze(0).to(device)
-    
-    # Transcribe
-    with torch.no_grad():
-        logits, lens = model(feats, torch.tensor([feats.shape[1]], device=device))
-        text = greedy_decode(logits.cpu(), itos)[0]
-    
-    return text
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python transcribe.py <audio_file.wav>")
-        sys.exit(1)
-    
-    audio_path = sys.argv[1]
-    result = transcribe(audio_path)
-    print(f"Transcription: {result}")
-```
-
-### Example 2: Batch evaluation
-
-```python
-#!/usr/bin/env python3
-"""Evaluate model on test set."""
-import torch
-from torch.utils.data import DataLoader
-from src.asr.dataset import ManifestDataset, collate_batch
-from src.asr.model import CRNNCTC
-from src.asr.decode import greedy_decode
-import json
-from jiwer import wer, cer
-
-def evaluate(model_path, test_manifest, audio_root):
-    # Load vocab
-    vocab = json.load(open("data/processed/vocab.json", encoding="utf-8"))
-    itos = {i: c for i, c in enumerate(vocab)}
-    
-    # Load model
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = CRNNCTC(n_mels=80, vocab_size=len(vocab))
-    model.load_state_dict(torch.load(model_path, map_location=device))
-    model.to(device).eval()
-    
-    # Create dataset
-    dataset = ManifestDataset(
-        manifest_path=test_manifest,
-        vocab_path="data/processed/vocab.json",
-        audio_root=audio_root
-    )
-    
-    # Create dataloader
-    dataloader = DataLoader(dataset, batch_size=16, collate_fn=collate_batch)
-    
-    # Evaluate
-    predictions = []
-    references = []
-    
-    for X, Xlen, Y, Ylen in dataloader:
-        X, Xlen = X.to(device), Xlen.to(device)
-        
-        with torch.no_grad():
-            logits, out_lens = model(X, Xlen)
-            texts = greedy_decode(logits.cpu(), itos)
-        
-        # Decode ground truth
-        for y, ylen in zip(Y, Ylen):
-            gt = "".join([itos.get(int(idx), "") for idx in y[:ylen] if int(idx) != 0])
-            references.append(gt)
-        
-        predictions.extend(texts)
-    
-    # Calculate metrics
-    word_error_rate = wer(references, predictions)
-    char_error_rate = cer(references, predictions)
-    
-    print(f"Word Error Rate (WER): {word_error_rate:.4f}")
-    print(f"Character Error Rate (CER): {char_error_rate:.4f}")
-    
-    return word_error_rate, char_error_rate
-
-if __name__ == "__main__":
-    evaluate(
-        "data/results/asr_ctc.pt",
-        "data/processed/full_merged_dataset/test/manifest.csv",
-        "data/processed/full_merged_dataset/test"
-    )
-```
-
-### Example 3: Custom training loop
-
-```python
-#!/usr/bin/env python3
-"""Custom training loop với validation."""
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-from src.asr.dataset import ManifestDataset, collate_batch
-from src.asr.model import CRNNCTC
-from src.asr.train_ctc import main as train_main
-# ... (chi tiết trong train_ctc.py)
-```
+[Thêm license của bạn]
 
 ## 🙏 Acknowledgments
 
-- **LibriSpeech dataset**: Open-source English speech dataset
-- **VietSpeech dataset**: Vietnamese speech dataset
-- **PyTorch team**: Deep learning framework
-- **CTC algorithm**: Connectionist Temporal Classification paper
-
-## 📚 References
-
-- [CTC Paper](https://www.cs.toronto.edu/~graves/icml_2006.pdf): Connectionist Temporal Classification
-- [LibriSpeech](https://www.openslr.org/12/): Speech recognition dataset
-- [PyTorch CTC Loss](https://pytorch.org/docs/stable/generated/torch.nn.CTCLoss.html)
-
----
-
-**Lưu ý**: README này được tạo tự động dựa trên codebase hiện tại. Cập nhật khi có thay đổi trong project.
-
-**Version**: 1.0.0  
-**Last Updated**: 2024-12-07
-
+- LibriSpeech dataset
+- VietSpeech dataset
+- PyTorch team
+- CTC algorithm inventors

@@ -24,31 +24,12 @@
                 <div class="form-group">
                     <label for="apiSelect">Select API</label>
                     <select id="apiSelect" class="form-control">
-                        <option value="server">Server API (Port 8000) - Whisper/Vosk/Tesseract/EasyOCR</option>
-                        <option value="ai2text">AI2Text API (Port 8002) - Trained Models</option>
+                        <option value="server">Server API (Port 8000) - Legacy convert</option>
+                        <option value="ai2text-transformer">AI2Text Transformer (Port 8000) - /transcribe</option>
+                        <option value="whisper-ct2">Whisper Finetune CT2 (Port 8002)</option>
+                        <option value="whisper-ctc">CTC ASR API (Port 8001) - CRNN-CTC</option>
+                        <option value="whisper-base">Whisper Original (Port 8003) - HF</option>
                     </select>
-                </div>
-            </section>
-
-            <!-- Model Management Section (for AI2Text API) -->
-            <section class="card model-section" id="modelSection" style="display: none;">
-                <h2>📦 Model Management</h2>
-                <div class="model-controls">
-                    <button class="btn btn-primary" id="refreshModelsBtn">Refresh Model List</button>
-                    <button class="btn btn-secondary" id="checkHealthBtn">Check Service Status</button>
-                </div>
-                <div class="model-info" id="modelInfo" style="display: none;">
-                    <div class="info-item">
-                        <label>Trained Models:</label>
-                        <span id="trainedModelsCount">0</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Loaded Models:</label>
-                        <span id="loadedModelsCount">0</span>
-                    </div>
-                </div>
-                <div class="model-list" id="modelList">
-                    <p class="loading-text">Select AI2Text API to load models</p>
                 </div>
             </section>
 
@@ -60,9 +41,7 @@
                     <div class="form-group">
                         <label for="modeSelect">Conversion Mode</label>
                         <select id="modeSelect" class="form-control">
-                            <option value="auto">Auto Detect</option>
                             <option value="audio">Audio to Text (STT)</option>
-                            <option value="image">Image to Text (OCR)</option>
                         </select>
                     </div>
 
@@ -70,13 +49,12 @@
                     <div class="form-group">
                         <label for="fileInput">Select File</label>
                         <div class="file-input-wrapper" id="fileInputWrapper">
-                            <input type="file" id="fileInput" accept="audio/*,image/*" required>
+                            <input type="file" id="fileInput" accept="audio/*" required>
                             <span class="file-input-label" id="fileLabel">Click to select or drag and drop file here</span>
                         </div>
                         <!-- Audio Preview -->
                         <audio id="audioPreview" controls style="display: none; width: 100%; margin-top: 10px;"></audio>
-                        <!-- Image Preview -->
-                        <img id="imagePreview" style="display: none; max-width: 100%; max-height: 300px; margin-top: 10px; border-radius: 8px;"></img>
+                        <!-- Image Preview (removed for audio-only) -->
                     </div>
 
                     <!-- Audio STT Options -->
@@ -166,23 +144,7 @@
                         </div>
                     </div>
 
-                    <!-- Image OCR Options -->
-                    <div id="imageOptions" style="display: none;">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="ocrBackend">OCR Backend</label>
-                                <select id="ocrBackend" class="form-control">
-                                    <option value="">Default (Tesseract)</option>
-                                    <option value="tesseract">Tesseract</option>
-                                    <option value="easyocr">EasyOCR</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="imageLanguage">Language</label>
-                                <input type="text" id="imageLanguage" class="form-control" placeholder="auto (auto detect)" />
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Image OCR Options removed -->
 
                     <button type="submit" class="btn btn-primary btn-large" id="convertBtn">
                         <span class="btn-text">Start Conversion</span>

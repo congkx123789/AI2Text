@@ -30,19 +30,19 @@ def setup_logger(name: str, log_file: str = None, level=logging.INFO) -> logging
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     
-    # Console handler
+    # Console handler - DISABLED INFO level (only show WARNING and ERROR)
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(level)
+    console_handler.setLevel(logging.WARNING)  # Only show WARNING and ERROR, hide INFO
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
-    # File handler
+    # File handler - ENABLE INFO level (log everything to file)
     if log_file:
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         
         file_handler = logging.FileHandler(log_file, encoding='utf-8')
-        file_handler.setLevel(level)
+        file_handler.setLevel(logging.INFO)  # Log INFO, WARNING, and ERROR to file
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     

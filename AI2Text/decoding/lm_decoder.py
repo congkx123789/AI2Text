@@ -1,7 +1,7 @@
 """
 Language Model decoder with KenLM integration.
 
-Integrates KenLM language model with CTC decoding for significant WER improvement.
+Integrates KenLM language model with seq2seq decoding for significant WER improvement.
 This is the highest-impact improvement from the roadmap.
 """
 
@@ -12,11 +12,10 @@ import numpy as np
 from pathlib import Path
 
 try:
-    from pyctcdecode import build_ctcdecoder
-    PYCTCDECODE_AVAILABLE = True
+    # pyctcdecode is for CTC decoding, not needed for seq2seq
+    PYCTCDECODE_AVAILABLE = False
 except ImportError:
     PYCTCDECODE_AVAILABLE = False
-    print("Warning: pyctcdecode not available. Install with: pip install pyctcdecode")
 
 try:
     import kenlm
@@ -30,7 +29,7 @@ class LMBeamSearchDecoder:
     """
     Beam search decoder with KenLM language model integration.
     
-    Uses KenLM for language model scoring combined with CTC acoustic scores.
+    Uses KenLM for language model scoring combined with seq2seq acoustic scores.
     Provides significant WER improvement (typically 10-30%).
     """
     
@@ -53,7 +52,7 @@ class LMBeamSearchDecoder:
             alpha: LM weight (default: 0.5)
             beta: Word bonus (default: 1.5)
             beam_width: Beam search width (default: 128)
-            blank_token_id: ID of blank token for CTC
+            blank_token_id: ID of padding token (for compatibility, not used in seq2seq)
             vocab_size: Vocabulary size (inferred from vocab if None)
         """
         self.vocab = vocab
@@ -61,7 +60,7 @@ class LMBeamSearchDecoder:
         self.blank_token_id = blank_token_id
         self.vocab_size = vocab_size or len(vocab)
         
-        # Build CTC decoder with LM if available
+        # Build decoder with LM if available (note: pyctcdecode is for CTC, may need alternative for seq2seq)
         if PYCTCDECODE_AVAILABLE:
             if lm_path and Path(lm_path).exists():
                 try:

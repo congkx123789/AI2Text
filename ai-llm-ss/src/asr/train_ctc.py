@@ -4,6 +4,11 @@ from torch.amp import GradScaler, autocast
 from contextlib import nullcontext
 from torch.utils.data import DataLoader
 from pathlib import Path
+import datetime
+try:
+    from torch.utils.tensorboard import SummaryWriter
+except Exception:
+    SummaryWriter = None
 from .dataset import ASRDataset, ManifestDataset, collate_batch
 from .model import CRNNCTC
 
@@ -29,6 +34,7 @@ def main():
     ap.add_argument("--out", default="data/results/asr_ctc.pt", help="Final model output path")
     ap.add_argument("--checkpoint_dir", default="data/results/checkpoints", help="Directory to save checkpoints")
     ap.add_argument("--resume", default=None, help="Path to checkpoint to resume from")
+    ap.add_argument("--log_dir", default="runs/asr_ctc", help="TensorBoard log directory")
     args = ap.parse_args()
 
     def progress_bar(step, total, width=24):
@@ -103,6 +109,18 @@ def main():
     if args.gradient_accumulation_steps > 1:
         print(f"Gradient accumulation: {args.gradient_accumulation_steps} steps (effective batch size: {args.batch_size * args.gradient_accumulation_steps})")
     
+    # TensorBoard writer (optional)
+    writer = None
+    if SummaryWriter is not None:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        log_dir = Path(args.log_dir) / f"run_{timestamp}"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        writer = SummaryWriter(log_dir=str(log_dir))
+        print(f"TensorBoard logging to {log_dir}")
+    else:
+        print("TensorBoard not available (SummaryWriter import failed). Install with: pip install tensorboard")
+
+    global_step = 0
     for ep in range(start_epoch, args.epochs+1):
         model.train(); total = 0.0
         opt.zero_grad()  # Zero gradients at start of epoch
@@ -151,8 +169,12 @@ def main():
                 bar = progress_bar(i, len(dl))
                 current_loss = loss.item() * args.gradient_accumulation_steps
                 print(f"epoch {ep} [{bar}] {i}/{len(dl)} | loss {current_loss:.3f}")
+                if writer is not None:
+                    writer.add_scalar("Loss/Train_step", current_loss, global_step)
         avg_loss = total/len(dl)
         print(f"epoch {ep} | loss {avg_loss:.3f}")
+        if writer is not None:
+            writer.add_scalar("Loss/Train_epoch", avg_loss, ep)
 
         # Save checkpoint after each epoch
         checkpoint_path = checkpoint_dir / f"checkpoint_epoch_{ep}.pt"
@@ -171,6 +193,9 @@ def main():
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), args.out)
     print(f"Saved final model to {args.out}")
+
+    if writer is not None:
+        writer.close()
 
 if __name__ == "__main__":
     main()

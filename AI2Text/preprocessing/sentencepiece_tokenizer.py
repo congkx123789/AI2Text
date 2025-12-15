@@ -34,7 +34,6 @@ class SentencePieceTokenizer:
         # Special tokens (mapping to SentencePiece IDs)
         self.unk_token = '<unk>'
         self.pad_token = '<pad>'
-        self.blank_token = '<blank>'  # For CTC (same as pad in SentencePiece)
         self.sos_token = '<s>'
         self.eos_token = '</s>'
         
@@ -57,8 +56,11 @@ class SentencePieceTokenizer:
         
         # Get special token IDs from SentencePiece
         self.unk_token_id = self.sp.unk_id()
-        self.pad_token_id = self.sp.pad_id()
-        self.blank_token_id = self.sp.pad_id()  # Use pad_id for blank (CTC)
+        pad_id = self.sp.pad_id()
+        # SentencePiece may return -1 if pad is not explicitly set
+        # In that case, use UNK token (ID=0) as fallback for padding
+        # This is acceptable for seq2seq training
+        self.pad_token_id = pad_id if pad_id >= 0 else self.unk_token_id
         self.sos_token_id = self.sp.bos_id()
         self.eos_token_id = self.sp.eos_id()
     
@@ -76,8 +78,9 @@ class SentencePieceTokenizer:
             raise ValueError("Tokenizer not loaded. Call load() first.")
         
         # SentencePiece tự động normalize và tokenize
-        # add_bos=False, add_eos=False: Không thêm BOS/EOS tokens (cho ASR)
-        token_ids = self.sp.encode(text, out_type=int, add_bos=False, add_eos=False)
+        # add_bos=False: Không thêm BOS (SOS sẽ được thêm trong training)
+        # add_eos=True: THÊM EOS token để model học cách dừng (QUAN TRỌNG cho Seq2Seq)
+        token_ids = self.sp.encode(text, out_type=int, add_bos=False, add_eos=True)
         return token_ids
     
     def decode(self, token_ids: List[int], skip_special_tokens: bool = True) -> str:
@@ -98,8 +101,8 @@ class SentencePieceTokenizer:
         if skip_special_tokens:
             filtered_ids = [
                 tid for tid in token_ids
-                if tid not in [self.pad_token_id, self.blank_token_id, 
-                               self.unk_token_id, self.sos_token_id, self.eos_token_id]
+                if tid not in [self.pad_token_id, self.unk_token_id, 
+                               self.sos_token_id, self.eos_token_id]
             ]
         else:
             filtered_ids = token_ids

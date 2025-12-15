@@ -32,3 +32,10 @@ GEN_MAX_TOKENS = int(os.getenv("GEN_MAX_TOKENS", "512"))
 # Use fine-tuned LLM if available
 if GEN_FINETUNED_MODEL and Path(GEN_FINETUNED_MODEL).exists():
     GEN_MODEL = GEN_FINETUNED_MODEL
+
+# Gemini API Configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", None)
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")  # gemini-2.5-flash (fast) or gemini-2.5-pro (better quality)
+
+# LLM Provider Selection
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "qwen")  # "qwen" (local) or "gemini" (API)

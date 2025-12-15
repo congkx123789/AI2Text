@@ -269,11 +269,10 @@ class Tokenizer:
         self.unk_token = '<unk>'
         self.sos_token = '<sos>'
         self.eos_token = '<eos>'
-        self.blank_token = '<blank>'  # For CTC loss
         
         self.pad_token_id = self.char_to_idx.get(self.pad_token, 0)
         self.unk_token_id = self.char_to_idx.get(self.unk_token, 1)
-        self.blank_token_id = self.char_to_idx.get(self.blank_token, 0)
+        # blank_token_id removed (not needed for seq2seq)
     
         # Space handling: support either real space " " or "|" as space token
         if "|" in self.char_to_idx:

@@ -84,10 +84,10 @@ def load_llm(name: str | None = None):
     else:
         # Regular model (not LoRA adapter)
         print(f"[LLM] Loading model: {name}")
-    tok = AutoTokenizer.from_pretrained(name)
-    model = AutoModelForCausalLM.from_pretrained(
-        name,
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-        device_map="auto"
-    )
-    return tok, model
+        tok = AutoTokenizer.from_pretrained(name)
+        model = AutoModelForCausalLM.from_pretrained(
+            name,
+            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            device_map="auto"
+        )
+        return tok, model

@@ -1,6 +1,6 @@
 """
 ASR Service for loading and running inference with trained models.
-Supports ASRModelWithTimestamps and BPE tokenizer.
+Supports ASRModel (seq2seq) and BPE tokenizer.
 """
 
 import torch
@@ -75,23 +75,21 @@ class ASRService:
         num_heads = self.config.get('num_heads', 4)
         d_ff = self.config.get('d_ff', 1280)
         dropout = self.config.get('dropout', 0.1)
-        use_timestamps = self.config.get('use_timestamps', True)
-        
         logger.info(f"Creating model: vocab_size={vocab_size}, input_dim={input_dim}, d_model={d_model}")
         
         # Import model class
-        from models.asr_with_timestamps import ASRModelWithTimestamps
+        from models.asr_base import ASRModel
         
         # Create model with detected vocab_size
-        self.model = ASRModelWithTimestamps(
+        self.model = ASRModel(
             input_dim=input_dim,
             vocab_size=vocab_size,
             d_model=d_model,
             num_encoder_layers=num_encoder_layers,
+            num_decoder_layers=self.config.get('num_decoder_layers', 6),
             num_heads=num_heads,
             d_ff=d_ff,
-            dropout=dropout,
-            predict_timestamps=use_timestamps
+            dropout=dropout
         )
         
         # Load weights (state_dict already extracted above)
@@ -184,19 +182,16 @@ class ASRService:
     @torch.no_grad()
     def transcribe(self, 
                    audio_path: str,
-                   return_timestamps: bool = False,
                    language_id: Optional[int] = None) -> Dict[str, Any]:
-        """Transcribe audio file.
+        """Transcribe audio file using seq2seq generation.
         
         Args:
             audio_path: Path to audio file
-            return_timestamps: If True, return word-level timestamps
             language_id: Language ID (0=Vietnamese, 1=English), None for auto-detect
             
         Returns:
             Dictionary with:
                 - text: Transcribed text
-                - timestamps: Optional word-level timestamps (if return_timestamps=True)
                 - confidence: Optional confidence score
         """
         # Load and process audio
@@ -214,90 +209,40 @@ class ASRService:
         if language_id is not None:
             language_ids = torch.tensor([language_id]).to(self.device)
         
-        # Forward pass
-        logits, output_lengths, timestamps = self.model(
+        # Generate transcription using seq2seq autoregressive generation
+        sos_token_id = getattr(self.tokenizer, 'sos_token_id', 2)
+        eos_token_id = getattr(self.tokenizer, 'eos_token_id', 3)
+        pad_token_id = getattr(self.tokenizer, 'pad_token_id', 0)
+        
+        generated_tokens = self.model.generate(
             features,
-            lengths,
-            return_timestamps=return_timestamps,
-            language_ids=language_ids
+            lengths=lengths,
+            language_ids=language_ids,
+            max_len=512,
+            sos_token_id=sos_token_id,
+            eos_token_id=eos_token_id,
+            pad_token_id=pad_token_id,
+            temperature=1.0
         )
         
-        # Decode text
-        predictions = torch.argmax(logits, dim=-1)
-        pred_tokens = predictions[0, :output_lengths[0]].cpu().tolist()
-        
-        # CTC decode: remove blanks and duplicates
-        collapsed = []
-        prev = None
-        for token in pred_tokens:
-            if token != prev and token != self.tokenizer.blank_token_id:
-                collapsed.append(token)
-            prev = token
+        # Decode generated tokens
+        gen_seq = generated_tokens[0].cpu().tolist()
+        decoded_tokens = []
+        for token in gen_seq:
+            if token == eos_token_id:
+                break
+            if token != sos_token_id and token != pad_token_id:
+                decoded_tokens.append(token)
         
         # Decode to text
-        text = self.tokenizer.decode(collapsed)
+        text = self.tokenizer.decode(decoded_tokens)
         
         result = {
             'text': text,
             'confidence': None  # Can add confidence scoring if needed
         }
         
-        # Add timestamps if requested and available
-        if return_timestamps and timestamps is not None:
-            word_timestamps = self._extract_word_timestamps(
-                logits, timestamps, collapsed, output_lengths[0].item()
-            )
-            result['timestamps'] = word_timestamps
-        
         return result
-    
-    def _extract_word_timestamps(self,
-                                 logits: torch.Tensor,
-                                 timestamps: torch.Tensor,
-                                 tokens: List[int],
-                                 output_length: int) -> List[Dict[str, Any]]:
-        """Extract word-level timestamps.
-        
-        Args:
-            logits: Model logits (1, time, vocab_size)
-            timestamps: Frame-level timestamps (1, time, 2)
-            tokens: Decoded token IDs
-            output_length: Output sequence length
-            
-        Returns:
-            List of dicts with 'word', 'start', 'end'
-        """
-        # Get frame-level timestamps
-        frame_timestamps = timestamps[0, :output_length, :].cpu().numpy()  # (time, 2)
-        
-        # Map tokens to frames (simplified - assumes each token corresponds to a frame)
-        # In practice, you'd need to align tokens to frames using CTC alignment
-        word_timestamps = []
-        
-        # Simple approach: distribute timestamps evenly across tokens
-        # For production, use proper CTC alignment
-        if len(tokens) > 0:
-            frames_per_token = max(1, output_length // len(tokens))
-            
-            for i, token_id in enumerate(tokens):
-                start_frame = min(i * frames_per_token, output_length - 1)
-                end_frame = min((i + 1) * frames_per_token, output_length)
-                
-                if start_frame < len(frame_timestamps) and end_frame <= len(frame_timestamps):
-                    start_time = float(frame_timestamps[start_frame, 0])
-                    end_time = float(frame_timestamps[end_frame - 1, 1])
-                    
-                    # Decode token to text
-                    token_text = self.tokenizer.decode([token_id])
-                    
-                    if token_text.strip():  # Only add non-empty tokens
-                        word_timestamps.append({
-                            'word': token_text,
-                            'start': start_time,
-                            'end': end_time
-                        })
-        
-        return word_timestamps
     
     def transcribe_batch(self, audio_paths: List[str]) -> List[Dict[str, Any]]:
         """Transcribe multiple audio files.

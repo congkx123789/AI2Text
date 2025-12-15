@@ -1,6 +1,9 @@
 // API Configuration
 let API_BASE_URL = 'http://localhost:8000';
-const AI2TEXT_API_URL = 'http://localhost:8002';
+const AI2TEXT_TRANSFORMER_URL = 'http://localhost:8000'; // /transcribe (field: audio)
+const WHISPER_CT2_URL = 'http://localhost:8002';         // /transcribe/upload (field: file)
+const CTC_API_URL = 'http://localhost:8001';             // /transcribe (field: file)
+const WHISPER_BASE_URL = 'http://localhost:8003';        // /transcribe/upload (field: file)
 let currentAPI = 'server';
 
 // DOM Elements
@@ -119,13 +122,17 @@ async function checkHealth() {
 
 // Model Management (for AI2Text API)
 async function fetchModels() {
+    // Only call when backend supports /models (ai2text-transformer legacy list, whisper-ct2 currently no-op)
+    if (currentAPI !== 'ai2text-transformer') {
+        return { models: [], loaded: [] };
+    }
     try {
         if (modelsFetchController) {
             modelsFetchController.abort();
         }
         modelsFetchController = new AbortController();
 
-        const response = await fetch(`${AI2TEXT_API_URL}/models`, {
+        const response = await fetch(`${API_BASE_URL}/models`, {
             signal: modelsFetchController.signal
         });
         if (!response.ok) throw new Error('Failed to fetch model list');
@@ -250,19 +257,31 @@ function updateAPISelection() {
     const api = elements.apiSelect?.value || 'server';
     currentAPI = api;
     
-    if (api === 'ai2text') {
-        API_BASE_URL = AI2TEXT_API_URL;
+    // Default hide sections
+    if (elements.modelSection) elements.modelSection.style.display = 'none';
+    if (elements.modelSelectionGroup) elements.modelSelectionGroup.style.display = 'none';
+    if (elements.backendSelectionGroup) elements.backendSelectionGroup.style.display = 'block';
+    if (elements.beamSearchOptions) elements.beamSearchOptions.style.display = 'none';
+    
+    if (api === 'ai2text-transformer') {
+        API_BASE_URL = AI2TEXT_TRANSFORMER_URL;
+        // Transformer: no model list UI
+        if (elements.backendSelectionGroup) elements.backendSelectionGroup.style.display = 'none';
+    } else if (api === 'whisper-ct2') {
+        API_BASE_URL = WHISPER_CT2_URL;
         if (elements.modelSection) elements.modelSection.style.display = 'block';
         if (elements.modelSelectionGroup) elements.modelSelectionGroup.style.display = 'block';
         if (elements.backendSelectionGroup) elements.backendSelectionGroup.style.display = 'none';
         if (elements.beamSearchOptions) elements.beamSearchOptions.style.display = 'block';
-        loadModels();
+        loadModels(); // reuse model list UI for CT2
+    } else if (api === 'whisper-ctc') {
+        API_BASE_URL = CTC_API_URL;
+        // CTC: no model list, no beam options
+    } else if (api === 'whisper-base') {
+        API_BASE_URL = WHISPER_BASE_URL;
+        // Base Whisper: use /transcribe
     } else {
-        API_BASE_URL = 'http://localhost:8000';
-        if (elements.modelSection) elements.modelSection.style.display = 'none';
-        if (elements.modelSelectionGroup) elements.modelSelectionGroup.style.display = 'none';
-        if (elements.backendSelectionGroup) elements.backendSelectionGroup.style.display = 'block';
-        if (elements.beamSearchOptions) elements.beamSearchOptions.style.display = 'none';
+        API_BASE_URL = 'http://localhost:8000'; // legacy server api /api/convert
     }
     
     // Recheck health
@@ -271,27 +290,19 @@ function updateAPISelection() {
 
 // Update UI Based on Mode Selection
 function updateModeUI() {
-    const mode = elements.modeSelect?.value || 'auto';
+    const mode = elements.modeSelect?.value || 'audio';
     const file = elements.fileInput?.files?.[0];
     
     // Hide all options
     if (elements.audioOptions) elements.audioOptions.style.display = 'none';
-    if (elements.imageOptions) elements.imageOptions.style.display = 'none';
     
-    // Show options based on mode or file type
-    let fileType = mode;
-    if (mode === 'auto' && file) {
-        fileType = detectFileType(file);
-    }
-    
-    if (fileType === 'audio' && elements.audioOptions) {
+    // Audio-only: always show audio options
+    if (elements.audioOptions) {
         elements.audioOptions.style.display = 'block';
-    } else if (fileType === 'image' && elements.imageOptions) {
-        elements.imageOptions.style.display = 'block';
     }
 }
 
-// Convert File (Server API)
+// Convert File (Server API - legacy, audio only here)
 async function convertFile(formData) {
     try {
         const response = await fetch(`${API_BASE_URL}/api/convert`, {
@@ -311,10 +322,30 @@ async function convertFile(formData) {
     }
 }
 
-// Transcribe Audio (AI2Text API)
-async function transcribeAudio(formData) {
+// Transcribe Audio via /transcribe (generic)
+async function transcribeServer(formData) {
     try {
-        const response = await fetch(`${AI2TEXT_API_URL}/transcribe`, {
+        const response = await fetch(`${API_BASE_URL}/transcribe`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: 'Transcription failed' }));
+            throw new Error(errorData.detail || 'Transcription failed');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Transcription error (server):', error);
+        throw error;
+    }
+}
+
+// Transcribe Audio via /transcribe/upload (Whisper-style upload)
+async function transcribeUpload(formData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/transcribe/upload`, {
             method: 'POST',
             body: formData
         });
@@ -519,42 +550,74 @@ function setupEventListeners() {
             if (elements.modelUsedMetric) elements.modelUsedMetric.style.display = 'none';
 
             try {
-                const mode = elements.modeSelect?.value || 'auto';
-                const fileType = detectFileType(file) || mode;
+                const mode = elements.modeSelect?.value || 'audio';
+                const fileType = 'audio';
                 
-                if (currentAPI === 'ai2text' && fileType === 'audio') {
-                    // Use AI2Text API
+                // Only audio supported in this UI
+                if (fileType !== 'audio' && mode !== 'audio') {
+                    showError('Hiện chỉ hỗ trợ audio. Vui lòng chọn file audio.');
+                    return;
+                }
+
+                // Whisper CT2 (8002) with model select -> /transcribe/upload, field "file"
+                if (currentAPI === 'whisper-ct2') {
                     const formData = new FormData();
-                    formData.append('audio', file);
+                    formData.append('file', file);
                     formData.append('model_name', elements.modelSelect?.value || 'default');
                     formData.append('use_beam_search', elements.useBeamSearch?.checked || false);
                     formData.append('beam_width', elements.beamWidth?.value || '5');
                     formData.append('use_lm', elements.useLM?.checked || false);
                     
-                    const result = await transcribeAudio(formData);
+                    const result = await transcribeUpload(formData);
                     displayResult(result);
-                } else {
-                    // Use Server API
+                    return;
+                }
+
+                const audioLanguage = elements.audioLanguage?.value || '';
+
+                // Whisper Base (8003) -> /transcribe/upload, field "file"
+                if (currentAPI === 'whisper-base') {
                     const formData = new FormData();
                     formData.append('file', file);
-                    formData.append('mode', mode);
-                    
-                    if (fileType === 'audio' || mode === 'audio') {
-                        const sttBackend = elements.sttBackend?.value || '';
-                        const audioLanguage = elements.audioLanguage?.value || '';
-                        if (sttBackend) formData.append('stt_backend', sttBackend);
-                        if (audioLanguage) formData.append('language', audioLanguage);
-                    }
-                    
-                    if (fileType === 'image' || mode === 'image') {
-                        const ocrBackend = elements.ocrBackend?.value || '';
-                        const imageLanguage = elements.imageLanguage?.value || '';
-                        if (ocrBackend) formData.append('ocr_backend', ocrBackend);
-                        if (imageLanguage) formData.append('language', imageLanguage);
-                    }
-
-                    const result = await convertFile(formData);
+                    if (audioLanguage) formData.append('language', audioLanguage);
+                    const result = await transcribeUpload(formData);
                     displayResult(result);
+                    return;
+                }
+
+                // CTC (8001) -> /transcribe, field "file"
+                if (currentAPI === 'whisper-ctc') {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    if (audioLanguage) formData.append('language', audioLanguage);
+                    const result = await transcribeServer(formData);
+                    displayResult(result);
+                    return;
+                }
+
+                // AI2Text Transformer (8000 /transcribe, field "audio")
+                if (currentAPI === 'ai2text-transformer') {
+                    const formData = new FormData();
+                    formData.append('audio', file);
+                    if (audioLanguage) formData.append('language', audioLanguage);
+                    const result = await transcribeServer(formData);
+                    displayResult(result);
+                    return;
+                }
+
+                // Legacy server (8000 /api/convert) fallback
+                if (currentAPI === 'server') {
+                    try {
+                        const fallback = new FormData();
+                        fallback.append('file', file);
+                        fallback.append('mode', 'audio');
+                        const result = await convertFile(fallback);
+                        displayResult(result);
+                        return;
+                    } catch (err2) {
+                        showError('Conversion failed: ' + (err2.message));
+                        return;
+                    }
                 }
             } catch (error) {
                 showError('Conversion failed: ' + error.message);

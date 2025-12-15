@@ -3,13 +3,14 @@
 # Optimized for full_merged_dataset with bilingual support
 # Dataset: ~194k training samples (77% Vietnamese, 23% English)
 
-# Model architecture - Transformer ASR with Language Embedding
-# OPTIMIZED FOR BILINGUAL (Vietnamese + English) - ~36M parameters
-model_name: "VietnameseASR_Transformer_Bilingual_36M"
-d_model: 320               # Model dimension
-num_encoder_layers: 14     # Number of encoder layers
-num_heads: 8                # Number of attention heads
-d_ff: 3120                 # Feed-forward dimension (tuned to achieve ~36M parameters)
+# Model architecture - Transformer Seq2Seq ASR with Language Embedding
+# OPTIMIZED FOR BILINGUAL (Vietnamese + English) - ~30M parameters
+model_name: "VietnameseASR_Transformer_Bilingual_30M"
+d_model: 256               # Model dimension (reduced from 320)
+num_encoder_layers: 14     # Number of encoder layers (kept same)
+num_decoder_layers: 6      # Number of decoder layers (kept same)
+num_heads: 8               # Number of attention heads (kept same)
+d_ff: 2048                 # Feed-forward dimension (reduced from 3120)
 dropout: 0.2               # Dropout rate
 
 # Audio processing
@@ -25,21 +26,23 @@ bpe_vocab_path: "models/tokenizer_vi_en_3500.model"  # SentencePiece .model file
 vocab_size: 3500
 
 # Training hyperparameters
-batch_size: 16
-val_batch_size: 32  # Validation batch size (tăng lên để validation nhanh hơn)
+batch_size: 32  # Giảm xuống 32 để tránh OOM với CTC loss - effective batch size: 128 (32 * 4)
+val_batch_size: 64  # Validation batch size (reduced proportionally)
 # Tăng tổng số epoch để resume vượt mốc 20
 num_epochs: 50
 learning_rate: 0.0003
 weight_decay: 0.0001
 grad_clip: 0.5
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 4  # Kept same - effective batch size: 256 (64 * 4)
 warmup_pct: 0.03  # Giảm từ 10% xuống 3% để model học nhanh hơn
 use_constant_lr_on_resume: false
 
 # Optimization
-use_amp: true
-num_workers: 12
+use_amp: true   # Bật mixed precision
+use_bf16: true   # Sử dụng bfloat16 (tốt hơn float16 về numerical stability, RTX 5060TI hỗ trợ)
+num_workers: 2   # Giảm từ 12 xuống 2 để tránh BrokenPipeError (như đã thấy ở Epoch 6, 18)
 pin_memory: true
+use_gradient_checkpointing: false  # Tắt tạm thời vì có conflict với CTC output
 prefetch_factor: 4
 persistent_workers: true
 sort_by_length: true
@@ -50,22 +53,27 @@ use_bucketing: false
 dataset_root: "data/processed/full_merged_dataset"
 language_filter: null
 
-# Timestamp training
-use_timestamps: true
-timestamp_loss_weight: 0.01
+# Decoding - Seq2Seq Autoregressive Generation
+# Using autoregressive generation with teacher forcing during training
 
-# Decoding - Greedy Decode (beam search removed for speed)
-# Using greedy CTC decode for fast and efficient decoding
+# Hybrid CTC/Attention Training (FIXES: Forces encoder to learn alignment)
+use_ctc_loss: true          # Enable CTC loss to help encoder learn audio-text alignment
+ctc_weight: 0.2              # Weight for CTC loss (0.2 = 20% CTC, 80% Attention) - Giảm để tiết kiệm memory
+
+# Scheduled Sampling (FIXES: Reduces teacher forcing, forces model to use encoder)
+use_scheduled_sampling: true  # Enable scheduled sampling to reduce teacher forcing
+teacher_forcing_initial: 1.0  # Start with 100% teacher forcing
+teacher_forcing_final: 0.5     # End with 50% teacher forcing (gradual decay)
 
 # Checkpointing
 checkpoint_dir: "checkpoints"
-save_every: 5
+save_every: 1  # Save checkpoint after every epoch
 
 # Logging
 log_file: "logs/training.log"
 
 # Training run
-run_name: "vietnamese_asr_transformer_bilingual_36m"
+run_name: "vietnamese_asr_transformer_bilingual_30m"
 
 # Auto-Rollback
 auto_rollback:
@@ -76,9 +84,21 @@ auto_rollback:
 # Curriculum Learning
 curriculum_learning:
   enabled: true
-  start_timestamp_epoch: 5
   required_wer: 0.70
   initial_ts_weight: 0.01
   short_sentence_epochs: 3
   max_duration_seconds: 4.0
+
+# Validation decoding controls
+# Limit decode length to speed up validation (prevents infinite loops)
+val_max_len: 128
+# Validate on a subset of validation batches (set null to disable)
+val_subset_pct: null
+# Hard-cap number of validation batches (set null to validate on full val set)
+val_max_batches: null
+# Use autoregressive generation for validation (slower but more accurate)
+# If false, uses greedy decoding from logits (faster, ~2x speedup, avoids second forward pass)
+use_autoregressive_validation: false
+# Calculate WER/CER during validation (set to false to skip prediction and speed up validation)
+calculate_val_wer: false  # Tắt tính WER để validation nhanh hơn (chỉ tính loss)
 

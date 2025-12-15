@@ -371,17 +371,8 @@ class ASRDataset(Dataset):
             text_tokens = text_tokens[:self.max_text_len]
             text_length = self.max_text_len
         
-        # Load word timestamps if available
-        word_timestamps = None
-        row = self.data_df.iloc[idx]
-        if 'words_json' in row and pd.notna(row['words_json']):
-            try:
-                import json
-                word_timestamps = json.loads(row['words_json'])
-            except (json.JSONDecodeError, TypeError):
-                word_timestamps = None
-        
         # Get language ID: 'vi' -> 0, 'en' -> 1, default -> 0 (Vietnamese)
+        row = self.data_df.iloc[idx]
         language = row['language'] if 'language' in row and pd.notna(row['language']) else 'vi'
         language_id = 0 if language == 'vi' else 1  # 0=Vietnamese, 1=English
         
@@ -393,10 +384,6 @@ class ASRDataset(Dataset):
             'transcript': normalized_text,
             'language_id': language_id  # Add language ID for language embedding
         }
-        
-        # Add timestamps if available
-        if word_timestamps is not None:
-            result['word_timestamps'] = word_timestamps
         
         return result
 
@@ -445,7 +432,6 @@ def collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
     text_lengths = torch.zeros(batch_size, dtype=torch.long)
     
     transcripts = []
-    word_timestamps = []
     language_ids = []
     
     # Fill tensors
@@ -463,12 +449,6 @@ def collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
         language_id = item.get('language_id', 0)
         language_ids.append(language_id)
     
-        # Add word timestamps if available
-        if 'word_timestamps' in item and item['word_timestamps'] is not None:
-            word_timestamps.append(item['word_timestamps'])
-        else:
-            word_timestamps.append(None)
-    
     result = {
         'audio_features': audio_features,
         'audio_lengths': audio_lengths,
@@ -477,10 +457,6 @@ def collate_fn(batch: List[Dict]) -> Dict[str, torch.Tensor]:
         'transcripts': transcripts,
         'language_ids': torch.tensor(language_ids, dtype=torch.long)  # Add language IDs
     }
-    
-    # Add word timestamps if any sample has them
-    if any(ts is not None for ts in word_timestamps):
-        result['word_timestamps'] = word_timestamps
     
     return result
 

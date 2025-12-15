@@ -82,52 +82,87 @@ class CheckpointCallback(Callback):
     
     def on_epoch_end(self, trainer, epoch: int, metrics: Dict[str, float]):
         """Save checkpoint at end of epoch."""
-        current_value = metrics.get(self.monitor_metric, None)
-        
-        if current_value is None:
-            return
-        
-        # Check if this is the best model
-        is_best = False
-        if self.mode == "min":
-            is_best = current_value < self.best_value
-        else:
-            is_best = current_value > self.best_value
-        
-        if is_best:
-            self.best_value = current_value
-            self.best_epoch = epoch
+        try:
+            trainer.logger.debug(f"CheckpointCallback.on_epoch_end called for epoch {epoch}")
+            current_value = metrics.get(self.monitor_metric, None)
             
-            if self.save_best:
-                self._save_checkpoint(trainer, epoch, metrics, "best_model.pt")
-        
-        # Save periodic checkpoint
-        if self.save_every_n_epochs > 0 and epoch % self.save_every_n_epochs == 0:
-            self._save_checkpoint(
-                trainer, epoch, metrics, 
-                f"checkpoint_epoch_{epoch}.pt"
-            )
+            # Check if this is the best model (only if monitor_metric exists)
+            if current_value is not None:
+                is_best = False
+                if self.mode == "min":
+                    is_best = current_value < self.best_value
+                else:
+                    is_best = current_value > self.best_value
+                
+                if is_best:
+                    self.best_value = current_value
+                    self.best_epoch = epoch
+                    
+                    if self.save_best:
+                        trainer.logger.info(f"🏆 New best {self.monitor_metric}: {current_value:.6f} (epoch {epoch})")
+                        self._save_checkpoint(trainer, epoch, metrics, "best_model.pt")
+            else:
+                # Warn if monitor_metric is missing (but still save periodic checkpoints)
+                trainer.logger.warning(
+                    f"⚠️  {self.monitor_metric} not found in metrics. "
+                    f"Best model tracking disabled, but periodic checkpoints will still be saved."
+                )
+            
+            # Save checkpoint every epoch (if save_every_n_epochs = 1) or periodically
+            # Always save periodic checkpoints even if monitor_metric is missing
+            if self.save_every_n_epochs > 0:
+                if epoch % self.save_every_n_epochs == 0:
+                    trainer.logger.info(f"💾 Saving periodic checkpoint for epoch {epoch} (save_every={self.save_every_n_epochs})...")
+                    self._save_checkpoint(
+                        trainer, epoch, metrics, 
+                        f"checkpoint_epoch_{epoch}.pt"
+                    )
+                else:
+                    trainer.logger.debug(f"Skipping checkpoint for epoch {epoch} (not a multiple of {self.save_every_n_epochs})")
+            else:
+                trainer.logger.warning(f"⚠️  Checkpoint saving disabled (save_every_n_epochs={self.save_every_n_epochs})")
+        except Exception as e:
+            trainer.logger.error(f"❌ Error in CheckpointCallback.on_epoch_end for epoch {epoch}: {e}", exc_info=True)
+            raise
     
     def _save_checkpoint(self, trainer, epoch: int, metrics: Dict[str, float], filename: str):
         """Save checkpoint to disk."""
-        checkpoint = {
-            'epoch': epoch,
-            'model_state_dict': trainer.model.state_dict(),
-            'optimizer_state_dict': trainer.optimizer.state_dict(),
-            'best_val_loss': metrics.get('val_loss', float('inf')),
-            'best_wer': metrics.get('wer', float('inf')),
-            'config': trainer.config,
-            'metrics': metrics
-        }
-        
-        # Save scheduler state if exists
-        if hasattr(trainer, 'scheduler') and trainer.scheduler is not None:
-            checkpoint['scheduler_state_dict'] = trainer.scheduler.state_dict()
-        
-        checkpoint_path = self.checkpoint_dir / filename
-        torch.save(checkpoint, checkpoint_path)
-        
-        trainer.logger.info(f"Saved checkpoint: {checkpoint_path}")
+        try:
+            # Ensure directory exists
+            self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+            
+            checkpoint = {
+                'epoch': epoch,
+                'model_state_dict': trainer.model.state_dict(),
+                'optimizer_state_dict': trainer.optimizer.state_dict(),
+                'best_val_loss': metrics.get('val_loss', float('inf')),
+                'best_wer': metrics.get('wer', float('inf')),
+                'best_cer': metrics.get('cer', float('inf')) if 'cer' in metrics else float('inf'),
+                'config': trainer.config,
+                'metrics': metrics,
+                'learning_rate': trainer.optimizer.param_groups[0]['lr'],
+                'global_step': getattr(trainer, 'global_step', epoch * len(trainer.train_loader))
+            }
+            
+            # Save scheduler state if exists
+            if hasattr(trainer, 'scheduler') and trainer.scheduler is not None:
+                checkpoint['scheduler_state_dict'] = trainer.scheduler.state_dict()
+            
+            checkpoint_path = self.checkpoint_dir / filename
+            
+            # Save checkpoint with error handling
+            torch.save(checkpoint, checkpoint_path)
+            
+            # Verify file was actually saved
+            if checkpoint_path.exists():
+                file_size = checkpoint_path.stat().st_size / (1024**2)  # MB
+                trainer.logger.info(f"✅ Saved checkpoint: {checkpoint_path} ({file_size:.1f} MB)")
+            else:
+                trainer.logger.error(f"❌ Failed to save checkpoint: {checkpoint_path} (file not found after save)")
+                
+        except Exception as e:
+            trainer.logger.error(f"❌ Error saving checkpoint {filename}: {e}", exc_info=True)
+            raise
 
 
 class EarlyStoppingCallback(Callback):
@@ -236,7 +271,13 @@ class LoggingCallback(Callback):
         """Log epoch results."""
         trainer.logger.info(f"\nEpoch {epoch} Results:")
         for metric_name, value in metrics.items():
-            trainer.logger.info(f"  {metric_name}: {value:.4f}")
+            if value is not None:
+                if isinstance(value, (int, float)):
+                    trainer.logger.info(f"  {metric_name}: {value:.4f}")
+                else:
+                    trainer.logger.info(f"  {metric_name}: {value}")
+            else:
+                trainer.logger.info(f"  {metric_name}: N/A")
 
 
 class MetricsCallback(Callback):

@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from src.tools.ai2text_bridge import transcribe
-from src.config import EMBEDDING_MODEL, RERANKER_MODEL, VECTOR_DIR, GEN_MAX_TOKENS
+from src.config import EMBEDDING_MODEL, RERANKER_MODEL, VECTOR_DIR, GEN_MAX_TOKENS, LLM_PROVIDER
 from src.rag.indexer import HybridIndex
 from src.rag.pipeline import RAGPipeline
 from src.llm.infer import generate_text
@@ -38,6 +38,7 @@ class AudioToAnswerRequest(BaseModel):
     audio_path: str = Field(..., description="Path to audio file on server")
     task: Optional[str] = Field("summarize", description="Task type: summarize, answer, translate, analyze, extract")
     question: Optional[str] = Field(None, description="Optional question if task is 'answer'")
+    llm_provider: Optional[str] = Field(None, description="LLM provider: 'qwen' (local) or 'gemini' (API). Default: from config")
 
 class AudioToAnswerResponse(BaseModel):
     transcription: str = Field(..., description="Transcribed text from audio")
@@ -103,7 +104,7 @@ def _ensure_pipeline():
         if not vecdir.exists():
             raise HTTPException(status_code=500, detail=f"Vector store not found at {vecdir}")
         _index = HybridIndex.load(vecdir, EMBEDDING_MODEL)
-        _pipe = RAGPipeline(_index, EMBEDDING_MODEL, RERANKER_MODEL)
+        _pipe = RAGPipeline(_index, EMBEDDING_MODEL, RERANKER_MODEL, llm_provider=LLM_PROVIDER)
     return _pipe
 
 def _check_pipeline_status():
@@ -249,7 +250,7 @@ def api_audio_to_answer(req: AudioToAnswerRequest):
             raise HTTPException(status_code=400, detail=f"Audio file not found: {p}")
         
         # Use unified model manager
-        manager = get_unified_manager()
+        manager = get_unified_manager(llm_provider=req.llm_provider)
         result = manager.process_audio(
             audio_path=str(p),
             task=req.task or "summarize",
@@ -277,7 +278,8 @@ async def api_audio_to_answer_upload(
     task: Optional[str] = Form("summarize"),
     question: Optional[str] = Form(None),
     language: Optional[str] = Form(None),
-    model_size: Optional[str] = Form("small")
+    model_size: Optional[str] = Form("small"),
+    llm_provider: Optional[str] = Form(None)
 ):
     """
     Kết hợp Whisper + Qwen: Upload audio, transcribe và xử lý bằng Qwen LLM.
@@ -314,7 +316,7 @@ async def api_audio_to_answer_upload(
             print(f"[audio-to-answer] Warning: Auto preprocessing failed: {e}")
         
         # Use unified model manager
-        manager = get_unified_manager(asr_model=model_size)
+        manager = get_unified_manager(asr_model=model_size, llm_provider=llm_provider)
         result = manager.process_audio(
             audio_path=tmp_path,
             task=task or "summarize",

@@ -257,7 +257,7 @@ curl -X POST "http://localhost:8000/transcribe/upload" \
 **Response:** Giống endpoint `/transcribe`
 
 #### 4. Audio to Answer (File Path)
-Kết hợp Whisper + Qwen: Transcribe và xử lý
+Kết hợp Whisper + LLM (Qwen hoặc Gemini): Transcribe và xử lý
 
 ```bash
 curl -X POST "http://localhost:8000/audio-to-answer" \
@@ -265,7 +265,8 @@ curl -X POST "http://localhost:8000/audio-to-answer" \
   -d '{
     "audio_path": "data/raw/audio/example.wav",
     "task": "summarize",
-    "question": null
+    "question": null,
+    "llm_provider": "gemini"
   }'
 ```
 
@@ -273,6 +274,7 @@ curl -X POST "http://localhost:8000/audio-to-answer" \
 - `audio_path` (required): Path to audio file
 - `task` (optional): `summarize`, `answer`, `translate`, `analyze`, `extract` (default: `summarize`)
 - `question` (optional): Question nếu `task="answer"`
+- `llm_provider` (optional): `"qwen"` (local) or `"gemini"` (API). Default: từ config
 
 **Response:**
 ```json
@@ -285,13 +287,14 @@ curl -X POST "http://localhost:8000/audio-to-answer" \
 ```
 
 #### 5. Audio to Answer (Upload)
-Upload audio và xử lý với Whisper + Qwen
+Upload audio và xử lý với Whisper + LLM (Qwen hoặc Gemini)
 
 ```bash
 curl -X POST "http://localhost:8000/audio-to-answer/upload" \
   -F "file=@audio.wav" \
   -F "task=summarize" \
-  -F "question=What is the main topic?"
+  -F "question=What is the main topic?" \
+  -F "llm_provider=gemini"
 ```
 
 **Parameters:**
@@ -300,6 +303,7 @@ curl -X POST "http://localhost:8000/audio-to-answer/upload" \
 - `question` (optional): Question nếu `task="answer"`
 - `language` (optional): Language code
 - `model_size` (optional): Whisper model size
+- `llm_provider` (optional): `"qwen"` (local) or `"gemini"` (API). Default: từ config
 
 **Response:** Giống endpoint `/audio-to-answer`
 
@@ -356,28 +360,38 @@ print(f"Language: {result['language']}")
 result = client.transcribe_file("data/raw/audio/example.wav")
 ```
 
-**2. Audio to Answer (Whisper + Qwen):**
+**2. Audio to Answer (Whisper + LLM):**
 ```python
-# Summarize
+# Summarize với Qwen (local)
 result = client.audio_to_answer_upload(
     file_path="audio.wav",
-    task="summarize"
+    task="summarize",
+    llm_provider="qwen"
 )
 print(f"Transcription: {result['transcription']}")
 print(f"Summary: {result['response']}")
 
-# Answer question
+# Summarize với Gemini API (nhanh hơn)
+result = client.audio_to_answer_upload(
+    file_path="audio.wav",
+    task="summarize",
+    llm_provider="gemini"
+)
+
+# Answer question với Gemini
 result = client.audio_to_answer_upload(
     file_path="audio.wav",
     task="answer",
-    question="What is the main topic?"
+    question="What is the main topic?",
+    llm_provider="gemini"
 )
 print(f"Answer: {result['response']}")
 
 # Analyze
 result = client.audio_to_answer_upload(
     file_path="audio.wav",
-    task="analyze"
+    task="analyze",
+    llm_provider="gemini"
 )
 ```
 
@@ -398,27 +412,37 @@ Sử dụng trực tiếp không qua API:
 ```python
 from src.models.unified import get_unified_manager
 
-# Tạo manager
-manager = get_unified_manager()
+# Tạo manager với Qwen (local)
+manager = get_unified_manager(llm_provider="qwen")
 
-# Process audio qua Whisper + Qwen
-result = manager.process_audio(
+# Hoặc với Gemini API
+manager_gemini = get_unified_manager(llm_provider="gemini")
+
+# Process audio qua Whisper + LLM
+result = manager_gemini.process_audio(
     audio_path="audio.wav",
     task="summarize"
 )
 
 print(result['transcription'])  # Text từ Whisper
-print(result['response'])       # Response từ Qwen
+print(result['response'])       # Response từ LLM (Qwen hoặc Gemini)
 print(result['language'])       # Detected language
 
-# Chỉ transcribe (không qua Qwen)
+# Chỉ transcribe (không qua LLM)
 transcription = manager.transcribe_only("audio.wav")
 print(transcription['text'])
 
-# Chỉ generate (không cần audio)
-summary = manager.generate_only(
+# Chỉ generate với Gemini (không cần audio)
+summary = manager_gemini.generate_only(
     text="Long text here...",
     task="summarize"
+)
+
+# Generate với question
+answer = manager_gemini.generate_only(
+    text="Long text here...",
+    task="answer",
+    question="What is the main topic?"
 )
 ```
 
@@ -448,6 +472,13 @@ ASR_COMPUTE=float16      # float16, int8_float16, int8
 # Generation Configuration
 GEN_MAX_TOKENS=512
 
+# LLM Provider Selection
+LLM_PROVIDER=qwen        # "qwen" (local) or "gemini" (API)
+
+# Gemini API Configuration (nếu dùng LLM_PROVIDER=gemini)
+GEMINI_API_KEY=AIzaSyD5PIGiLrSQIFLBfIbdA3a32JHlVcT4jK8
+GEMINI_MODEL=gemini-1.5-flash  # gemini-1.5-flash (fast) or gemini-1.5-pro (better quality)
+
 # RAG Configuration
 EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 RERANKER_MODEL=cross-encoder/ms-marco-MiniLM-L-6-v2
@@ -458,6 +489,21 @@ DATA_DIR=./data
 MODELS_DIR=./models
 ```
 
+### LLM Provider Options
+
+#### Option 1: Qwen (Local Model) - Default
+- **Pros**: Không cần internet, privacy tốt, không tốn API cost
+- **Cons**: Cần GPU/RAM, tốc độ chậm hơn Gemini API
+- **Setup**: Chỉ cần `GEN_FINETUNED_MODEL` path
+
+#### Option 2: Gemini API
+- **Pros**: Nhanh, chất lượng cao, không cần GPU, dễ scale
+- **Cons**: Cần internet, có API cost, phụ thuộc Google
+- **Setup**: 
+  1. Set `LLM_PROVIDER=gemini`
+  2. Set `GEMINI_API_KEY` (lấy từ [Google AI Studio](https://makersuite.google.com/app/apikey))
+  3. (Optional) Set `GEMINI_MODEL` (default: `gemini-1.5-flash`)
+
 ## 📊 Performance
 
 ### Whisper ASR
@@ -466,11 +512,22 @@ MODELS_DIR=./models
 - **CPU**: ~0.3 samples/second
 - **Model size**: 463MB (float16)
 
-### Qwen LLM
+### LLM Performance
+
+#### Qwen (Local)
 - **Merged model**: Không cần PEFT, inference nhanh hơn
 - **GPU**: ~50-100 tokens/second
 - **CPU**: ~10-20 tokens/second
 - **Model size**: 513MB
+- **Pros**: Privacy tốt, không cần internet, không tốn API cost
+
+#### Gemini API
+- **Speed**: ~200-500 tokens/second (tùy model)
+- **Models**: 
+  - `gemini-1.5-flash`: Nhanh, phù hợp cho real-time
+  - `gemini-1.5-pro`: Chất lượng cao hơn, phù hợp cho complex tasks
+- **Pros**: Nhanh, chất lượng cao, không cần GPU, dễ scale
+- **Cons**: Cần internet, có API cost (free tier available)
 
 ## 🐛 Troubleshooting
 

@@ -114,24 +114,31 @@ def test_model_detailed(model_path, test_dataset_path, base_audio_dir, output_lo
     wer_metric = evaluate.load("wer")
     cer_metric = evaluate.load("cer")
     
-    # Prepare log file
-    log_data = {
-        "model_path": model_path,
-        "test_dataset": test_dataset_path,
-        "timestamp": datetime.now().isoformat(),
-        "total_samples": len(dataset),
-        "device": device,
-        "results": []
-    }
+    # Prepare log file - lưu từng dòng JSON để tránh mất dữ liệu
+    log_file_jsonl = output_log.replace(".json", ".jsonl")
+    summary_file = output_log.replace(".json", "_summary.json")
+    
+    # Check if resume from checkpoint
+    start_idx = 0
+    if Path(log_file_jsonl).exists():
+        print(f"📂 Tìm thấy file log cũ: {log_file_jsonl}")
+        # Count existing results
+        with open(log_file_jsonl, "r", encoding="utf-8") as f:
+            start_idx = sum(1 for _ in f)
+        print(f"   Resume từ sample {start_idx}")
+    
+    # Open file for appending
+    log_f = open(log_file_jsonl, "a", encoding="utf-8")
     
     print("\n📊 Bắt đầu test từng câu...")
     print("="*80)
     
     all_predictions = []
     all_references = []
+    batch_results = []  # Lưu batch để tính metrics
     
     # Process từng sample một
-    for idx in tqdm(range(len(dataset)), desc="Testing"):
+    for idx in tqdm(range(start_idx, len(dataset)), desc="Testing", initial=start_idx, total=len(dataset)):
         sample = dataset[idx]
         
         # Prepare audio
@@ -164,6 +171,10 @@ def test_model_detailed(model_path, test_dataset_path, base_audio_dir, output_lo
                 generated_ids,
                 skip_special_tokens=True
             )[0]
+            
+            # Clear GPU cache
+            del input_features, generated_ids
+            torch.cuda.empty_cache() if torch.cuda.is_available() else None
             
         except Exception as e:
             prediction = f"[ERROR: {str(e)}]"
@@ -202,50 +213,89 @@ def test_model_detailed(model_path, test_dataset_path, base_audio_dir, output_lo
             "match": prediction.strip().lower() == reference_text.strip().lower()
         }
         
-        log_data["results"].append(result_entry)
+        batch_results.append(result_entry)
         
-        # Print progress every 10 samples
-        if (idx + 1) % 10 == 0:
-            avg_wer = sum(r["wer"] for r in log_data["results"]) / len(log_data["results"])
-            avg_cer = sum(r["cer"] for r in log_data["results"]) / len(log_data["results"])
+        # Lưu ngay vào file JSONL (từng dòng)
+        log_f.write(json.dumps(result_entry, ensure_ascii=False) + "\n")
+        log_f.flush()  # Force write to disk
+        
+        # Print progress và save summary mỗi 100 samples
+        if (idx + 1) % 100 == 0:
+            avg_wer = sum(r["wer"] for r in batch_results) / len(batch_results)
+            avg_cer = sum(r["cer"] for r in batch_results) / len(batch_results)
             print(f"\n📊 Progress: {idx+1}/{len(dataset)} | Avg WER: {avg_wer:.4f} | Avg CER: {avg_cer:.4f}")
+            
+            # Save intermediate summary
+            intermediate_summary = {
+                "last_sample": idx,
+                "total_processed": len(batch_results),
+                "avg_wer": float(avg_wer),
+                "avg_cer": float(avg_cer),
+                "timestamp": datetime.now().isoformat()
+            }
+            with open(summary_file, "w", encoding="utf-8") as f:
+                json.dump(intermediate_summary, f, indent=2, ensure_ascii=False)
+        
+        # Clear batch để giảm RAM (giữ lại để tính tổng thể)
+        if len(batch_results) > 1000:
+            batch_results = batch_results[-500:]  # Giữ 500 mẫu gần nhất
     
-    # Compute overall metrics
+    log_f.close()
+    
+    # Compute overall metrics từ file JSONL
     print("\n" + "="*80)
     print("📊 TÍNH TOÁN METRICS TỔNG THỂ...")
     print("="*80)
     
+    # Đọc lại tất cả kết quả từ JSONL
+    print("📖 Đang đọc kết quả từ file...")
+    all_results = []
+    all_predictions_final = []
+    all_references_final = []
+    
+    with open(log_file_jsonl, "r", encoding="utf-8") as f:
+        for line in f:
+            result = json.loads(line.strip())
+            all_results.append(result)
+            all_predictions_final.append(result["prediction"])
+            all_references_final.append(result["reference"])
+    
+    print(f"   Đã đọc {len(all_results)} kết quả")
+    
+    # Compute overall metrics
     overall_wer = wer_metric.compute(
-        predictions=all_predictions,
-        references=all_references
+        predictions=all_predictions_final,
+        references=all_references_final
     )
     
     overall_cer = cer_metric.compute(
-        predictions=all_predictions,
-        references=all_references
+        predictions=all_predictions_final,
+        references=all_references_final
     )
     
     # Statistics
-    perfect_matches = sum(1 for r in log_data["results"] if r["match"])
-    perfect_match_rate = perfect_matches / len(log_data["results"]) if log_data["results"] else 0
+    perfect_matches = sum(1 for r in all_results if r["match"])
+    perfect_match_rate = perfect_matches / len(all_results) if all_results else 0
     
-    avg_wer = sum(r["wer"] for r in log_data["results"]) / len(log_data["results"]) if log_data["results"] else 0
-    avg_cer = sum(r["cer"] for r in log_data["results"]) / len(log_data["results"]) if log_data["results"] else 0
+    avg_wer = sum(r["wer"] for r in all_results) / len(all_results) if all_results else 0
+    avg_cer = sum(r["cer"] for r in all_results) / len(all_results) if all_results else 0
     
     # Summary
     summary = {
-        "total_samples": len(dataset),
+        "model_path": model_path,
+        "test_dataset": test_dataset_path,
+        "timestamp": datetime.now().isoformat(),
+        "total_samples": len(all_results),
+        "device": device,
         "overall_wer": float(overall_wer),
         "overall_cer": float(overall_cer),
         "average_wer": float(avg_wer),
         "average_cer": float(avg_cer),
         "perfect_matches": perfect_matches,
         "perfect_match_rate": float(perfect_match_rate),
-        "worst_samples": sorted(log_data["results"], key=lambda x: x["wer"], reverse=True)[:10],
-        "best_samples": sorted(log_data["results"], key=lambda x: x["wer"])[:10]
+        "worst_samples": sorted(all_results, key=lambda x: x["wer"], reverse=True)[:10],
+        "best_samples": sorted(all_results, key=lambda x: x["wer"])[:10]
     }
-    
-    log_data["summary"] = summary
     
     # Print summary
     print("\n" + "="*80)
@@ -259,18 +309,34 @@ def test_model_detailed(model_path, test_dataset_path, base_audio_dir, output_lo
     print(f"Perfect matches: {summary['perfect_matches']}/{summary['total_samples']} ({summary['perfect_match_rate']*100:.2f}%)")
     print("="*80)
     
-    # Save log file
-    print(f"\n💾 Đang lưu log vào: {output_log}")
+    # Save summary file
+    print(f"\n💾 Đang lưu summary vào: {summary_file}")
+    with open(summary_file, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+    
+    # Save full JSON (optional, có thể rất lớn)
+    print(f"💾 Đang lưu full log JSON vào: {output_log}")
+    log_data = {
+        "model_path": model_path,
+        "test_dataset": test_dataset_path,
+        "timestamp": datetime.now().isoformat(),
+        "total_samples": len(all_results),
+        "device": device,
+        "summary": summary,
+        "results": all_results  # Có thể rất lớn
+    }
     with open(output_log, "w", encoding="utf-8") as f:
         json.dump(log_data, f, indent=2, ensure_ascii=False)
     
     print("✅ Hoàn thành!")
-    print(f"   Log file: {output_log}")
-    print(f"   Tổng số samples: {len(dataset)}")
+    print(f"   JSONL log (từng dòng): {log_file_jsonl}")
+    print(f"   Summary file: {summary_file}")
+    print(f"   Full JSON log: {output_log}")
+    print(f"   Tổng số samples: {len(all_results)}")
     print(f"   Overall WER: {overall_wer:.4f} ({overall_wer*100:.2f}%)")
     print(f"   Overall CER: {overall_cer:.4f} ({overall_cer*100:.2f}%)")
     
-    return log_data
+    return summary
 
 
 def main():
@@ -316,6 +382,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
 
 

@@ -25,15 +25,23 @@ sys.path.append(str(Path(__file__).parent.parent))
 from models.asr_base import ASRModel
 from preprocessing.audio_processing import AudioProcessor
 from preprocessing.text_cleaning import Tokenizer, VietnameseTextNormalizer
-from database.db_utils import ASRDatabase
-from decoding.beam_search import BeamSearchDecoder
-from decoding.lm_decoder import LMBeamSearchDecoder
-from decoding.confidence import ConfidenceScorer
-from utils.metrics import calculate_wer, calculate_cer
+from preprocessing.sentencepiece_tokenizer import SentencePieceTokenizer
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Database is optional; API can run inference without it
+try:
+    from database.db_utils import ASRDatabase  # type: ignore
+except Exception as e:
+    ASRDatabase = None  # Fallback if module not available
+    logger.warning(f"database.db_utils not available, skipping DB features: {e}")
+
+from decoding.beam_search import BeamSearchDecoder
+from decoding.lm_decoder import LMBeamSearchDecoder
+from decoding.confidence import ConfidenceScorer
+from utils.metrics import calculate_wer, calculate_cer
 
 app = FastAPI(
     title="Vietnamese ASR API",
@@ -89,8 +97,13 @@ async def startup_event():
     
     logger.info("Initializing ASR API...")
     
-    # Initialize tokenizer
-    tokenizer_cache = Tokenizer()
+    # Initialize tokenizer (use SentencePiece to match training)
+    sp_path = Path("models/tokenizer_vi_en_3500.model")
+    if not sp_path.exists():
+        logger.warning(f"SentencePiece model not found at {sp_path}, falling back to char Tokenizer")
+        tokenizer_cache = Tokenizer()
+    else:
+        tokenizer_cache = SentencePieceTokenizer(str(sp_path))
     logger.info(f"Tokenizer initialized with vocab size: {len(tokenizer_cache)}")
     
     # Initialize audio processor
@@ -135,6 +148,12 @@ def load_model(model_path: str, model_type: str = "transformer"):
     # 从config或checkpoint中获取参数
     input_dim = config.get('n_mels', 80)
     d_model = config.get('d_model', 1024)
+    num_encoder_layers = config.get('num_encoder_layers', 24)
+    num_decoder_layers = config.get('num_decoder_layers', 6)
+    num_heads = config.get('num_heads', 16)
+    d_ff = config.get('d_ff', 4096)
+    dropout = config.get('dropout', 0.1)
+    use_gc = config.get('use_gradient_checkpointing', True)
     
     # 尝试从checkpoint获取vocab_size，否则使用tokenizer的大小
     if 'vocab_size' in checkpoint:
@@ -150,7 +169,17 @@ def load_model(model_path: str, model_type: str = "transformer"):
     logger.info(f"加载模型: type={model_type}, input_dim={input_dim}, vocab_size={vocab_size}, d_model={d_model}")
     
     # Create Transformer model
-        model = ASRModel(input_dim=input_dim, vocab_size=vocab_size, d_model=d_model)
+    model = ASRModel(
+        input_dim=input_dim,
+        vocab_size=vocab_size,
+        d_model=d_model,
+        num_encoder_layers=num_encoder_layers,
+        num_decoder_layers=num_decoder_layers,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        dropout=dropout,
+        use_gradient_checkpointing=use_gc
+    )
     
     # 加载模型权重
     state_dict = checkpoint.get('model_state_dict', checkpoint.get('state_dict', {}))
@@ -234,36 +263,36 @@ async def transcribe_audio(
             checkpoint_dir = project_root / "checkpoints"
             checkpoint_path = None
             
-            # 尝试多种路径查找模型
-            search_paths = [
-                checkpoint_dir / "best_model.pt",  # ưu tiên best_model ở root
-                checkpoint_dir / f"{model_name}.pt",  # 直接路径
-                checkpoint_dir / model_name / "best_model.pt",  # 训练目录下的best_model
-                checkpoint_dir / model_name / f"{model_name}.pt",  # 训练目录下的同名文件
-                checkpoint_dir / "test_run" / "best_model.pt" if model_name == "default" else None,  # 默认模型
-                checkpoint_dir / "training_20251111-014704" / "best_model.pt" if model_name == "training_20251111-014704" else None,  # 最新训练模型
-            ]
+            # 优先使用全局 best_model.pt（best checkpoint hiện tại）
+            default_best = checkpoint_dir / "best_model.pt"
+            if default_best.exists():
+                checkpoint_path = default_best
+                logger.info(f"优先使用全局 best checkpoint: {checkpoint_path}")
             
             # 如果model_name包含路径分隔符，直接使用
-            if "/" in model_name or "\\" in model_name:
+            if checkpoint_path is None and ("/" in model_name or "\\" in model_name):
                 checkpoint_path = checkpoint_dir / model_name.replace("/", "\\")
                 if not checkpoint_path.exists():
                     checkpoint_path = checkpoint_dir / model_name.replace("/", "\\") / "best_model.pt"
             
-            # 尝试所有搜索路径
+            # 如果还未找到，尝试多种路径
             if checkpoint_path is None or not checkpoint_path.exists():
+                search_paths = [
+                    checkpoint_dir / f"{model_name}.pt",
+                    checkpoint_dir / model_name / "best_model.pt",
+                    checkpoint_dir / model_name / f"{model_name}.pt",
+                ]
                 for path in search_paths:
                     if path is not None and path.exists():
                         checkpoint_path = path
                         break
             
-            # 如果还是找不到，尝试查找最新的best_model
+            # 最后兜底：选择 checkpoints/ 下最新的 best_model.pt
             if checkpoint_path is None or not checkpoint_path.exists():
                 best_models = list(checkpoint_dir.rglob("best_model.pt"))
                 if best_models:
-                    # 选择最新的
                     checkpoint_path = max(best_models, key=lambda p: p.stat().st_mtime)
-                    logger.info(f"使用找到的最新模型: {checkpoint_path}")
+                    logger.info(f"兜底使用最新的 best_model: {checkpoint_path}")
             
             if checkpoint_path and checkpoint_path.exists():
                 try:
@@ -299,150 +328,37 @@ async def transcribe_audio(
         
         model = models_cache[model_name]
         
-        # Run inference
-        with torch.no_grad():
-            logits, output_lengths = model(features_tensor, lengths)
         
-        # Decode
-        if use_lm and lm_path and Path(lm_path).exists():
-            # LM decoding
-            vocab = [tokenizer_cache.id_to_token.get(i, "") for i in range(len(tokenizer_cache))]
-            lm_decoder = LMBeamSearchDecoder(vocab=vocab, lm_path=lm_path)
-            results = lm_decoder.decode(logits, output_lengths)
-            if results:
-                text = results[0]["text"]
-                confidence = results[0].get("score", 0.0)
-            else:
-                text = ""
-                confidence = 0.0
-        elif use_beam_search:
-            # Beam search decoding
-            decoder = BeamSearchDecoder(
-                vocab_size=len(tokenizer_cache),
-                blank_token_id=tokenizer_cache.blank_token_id,
-                beam_width=beam_width
+        # Run inference using autoregressive generation
+        with torch.no_grad():
+            generated = model.generate(
+                features_tensor,
+                lengths=lengths,
+                language_ids=None,
+                max_len=512,
+                sos_token_id=getattr(tokenizer_cache, 'sos_token_id', 2),
+                eos_token_id=getattr(tokenizer_cache, 'eos_token_id', 3),
+                pad_token_id=getattr(tokenizer_cache, 'pad_token_id', 0),
+                temperature=1.0
             )
-            results = decoder.decode_batch(logits, output_lengths, tokenizer_cache)
-            if results:
-                text = results[0].get("text_decoded", "")
-                confidence = results[0].get("confidence", 0.0)
-                logger.info(f"Beam search解码结果: '{text[:50]}...' (前50字符)")
-                
-                # 如果文本为空，显示token信息
-                if not text or text.strip() == '':
-                    # 获取预测的tokens
-                    predictions = torch.argmax(logits, dim=-1)
-                    pred_tokens = predictions[0, :output_lengths[0]].cpu().tolist()
-                    
-                    # 统计token分布
-                    from collections import Counter
-                    token_counts = Counter(pred_tokens)
-                    top_tokens = token_counts.most_common(10)
-                    
-                    # 尝试解码每个token ID对应的字符
-                    token_chars = []
-                    for token_id in pred_tokens[:50]:
-                        if token_id in tokenizer_cache.idx_to_char:
-                            char = tokenizer_cache.idx_to_char[token_id]
-                            token_chars.append(f"{token_id}('{char}')")
-                        else:
-                            token_chars.append(f"{token_id}(<unk>)")
-                    
-                    text = f"[Beam Search输出分析]\n"
-                    text += f"Token数量: {len(pred_tokens)}\n"
-                    top_tokens_str = ', '.join([f'ID {tid}({tokenizer_cache.idx_to_char.get(tid, "<unk>")}) x {count}' for tid, count in top_tokens])
-                    text += f"前10个最常见的token: {top_tokens_str}\n"
-                    text += f"前50个token详情: {', '.join(token_chars[:50])}"
-                    if len(pred_tokens) > 50:
-                        text += f"\n... (共{len(pred_tokens)}个tokens)"
-                    
-                    logger.info(f"Beam search解码为空，显示token IDs和字符: {text[:200]}")
-            else:
-                # 获取预测的tokens
-                predictions = torch.argmax(logits, dim=-1)
-                pred_tokens = predictions[0, :output_lengths[0]].cpu().tolist()
-                
-                # 统计token分布
-                from collections import Counter
-                token_counts = Counter(pred_tokens)
-                top_tokens = token_counts.most_common(10)
-                
-                # 尝试解码每个token ID对应的字符
-                token_chars = []
-                for token_id in pred_tokens[:50]:
-                    if token_id in tokenizer_cache.idx_to_char:
-                        char = tokenizer_cache.idx_to_char[token_id]
-                        token_chars.append(f"{token_id}('{char}')")
-                    else:
-                        token_chars.append(f"{token_id}(<unk>)")
-                
-                text = f"[Beam Search输出分析]\n"
-                text += f"Token数量: {len(pred_tokens)}\n"
-                top_tokens_str = ', '.join([f'ID {tid}({tokenizer_cache.idx_to_char.get(tid, "<unk>")}) x {count}' for tid, count in top_tokens])
-                text += f"前10个最常见的token: {top_tokens_str}\n"
-                text += f"前50个token详情: {', '.join(token_chars[:50])}"
-                if len(pred_tokens) > 50:
-                    text += f"\n... (共{len(pred_tokens)}个tokens)"
-                
-                confidence = 0.0
-                logger.warning(f"Beam search解码结果为空，显示token IDs和字符: {text[:200]}")
-        else:
-            # Greedy decoding
-            predictions = torch.argmax(logits, dim=-1)
-            pred_tokens = predictions[0, :output_lengths[0]].cpu().tolist()
-            
-            # 调试信息：检查token输出
-            logger.info(f"预测的token数量: {len(pred_tokens)}")
-            logger.info(f"所有token IDs: {pred_tokens}")
-            
-            # 获取logits的最大值（置信度）
-            max_logits = torch.max(logits, dim=-1)[0]
-            max_logits_values = max_logits[0, :output_lengths[0]].cpu().tolist()
-            logger.info(f"前10个token的最大logits值: {max_logits_values[:10]}")
-            
-            # 解码
-            text = tokenizer_cache.decode(pred_tokens)
-            
-            # 调试信息：检查解码结果
-            logger.info(f"解码后的文本长度: {len(text)}")
-            logger.info(f"解码后的文本: '{text[:50]}...' (前50字符)")
-            
-            # 如果文本为空或只有空白，显示token IDs作为输出
-            if not text or text.strip() == '':
-                logger.warning("解码结果为空，显示token IDs和详细信息")
-                
-                # 统计token分布
-                from collections import Counter
-                token_counts = Counter(pred_tokens)
-                top_tokens = token_counts.most_common(10)
-                
-                # 尝试解码每个token ID对应的字符
-                token_chars = []
-                for token_id in pred_tokens[:50]:  # 只显示前50个
-                    if token_id in tokenizer_cache.idx_to_char:
-                        char = tokenizer_cache.idx_to_char[token_id]
-                        token_chars.append(f"{token_id}('{char}')")
-                    else:
-                        token_chars.append(f"{token_id}(<unk>)")
-                
-                # 显示详细信息
-                text = f"[模型输出分析]\n"
-                text += f"Token数量: {len(pred_tokens)}\n"
-                top_tokens_str = ', '.join([f'ID {tid}({tokenizer_cache.idx_to_char.get(tid, "<unk>")}) x {count}' for tid, count in top_tokens])
-                text += f"前10个最常见的token: {top_tokens_str}\n"
-                text += f"前50个token详情: {', '.join(token_chars[:50])}"
-                if len(pred_tokens) > 50:
-                    text += f"\n... (共{len(pred_tokens)}个tokens)"
-                
-                logger.info(f"显示token IDs和字符映射: {text[:200]}")
-            
-            # Compute confidence
-            scorer = ConfidenceScorer()
-            confidence = scorer.compute(logits, None, output_lengths)[0].item()
+        
+        # Decode generated tokens
+        gen_seq = generated[0].cpu().tolist()
+        decoded_tokens = []
+        sos_id = getattr(tokenizer_cache, 'sos_token_id', 2)
+        eos_id = getattr(tokenizer_cache, 'eos_token_id', 3)
+        pad_id = getattr(tokenizer_cache, 'pad_token_id', 0)
+        for t in gen_seq:
+            if t == eos_id:
+                break
+            if t not in (sos_id, pad_id):
+                decoded_tokens.append(t)
+        text = tokenizer_cache.decode(decoded_tokens)
+        confidence = 0.0
         
         # Filter by confidence if requested
         if min_confidence is not None and confidence < min_confidence:
-            text = ""  # Reject low-confidence predictions
+            text = ""
         
         processing_time = time.time() - start_time
         

@@ -1,7 +1,7 @@
 """
 Beam search decoding for ASR.
 
-Implements beam search decoding with CTC to find the best transcription
+Implements beam search decoding for seq2seq models
 by exploring multiple hypotheses simultaneously.
 
 OPTIMIZED FOR RTX 5060TI 16GB:
@@ -17,7 +17,7 @@ import numpy as np
 
 class BeamSearchDecoder:
     """
-    Beam search decoder for CTC-based ASR.
+    Beam search decoder for seq2seq ASR.
     
     Explores multiple hypotheses simultaneously to find the best transcription,
     better than greedy decoding for handling ambiguous cases.
@@ -25,7 +25,9 @@ class BeamSearchDecoder:
     
     def __init__(self,
                  vocab_size: int,
-                 blank_token_id: int,
+                 pad_token_id: int,
+                 sos_token_id: int,
+                 eos_token_id: int,
                  beam_width: int = 5,
                  length_penalty: float = 0.6,
                  log_probs: bool = True):
@@ -34,39 +36,20 @@ class BeamSearchDecoder:
         
         Args:
             vocab_size: Vocabulary size
-            blank_token_id: ID of blank token for CTC
+            pad_token_id: ID of padding token
+            sos_token_id: ID of start-of-sequence token
+            eos_token_id: ID of end-of-sequence token
             beam_width: Number of hypotheses to keep (default: 5)
             length_penalty: Length penalty factor (default: 0.6)
             log_probs: Whether input is log probabilities (default: True)
         """
         self.vocab_size = vocab_size
-        self.blank_token_id = blank_token_id
+        self.pad_token_id = pad_token_id
+        self.sos_token_id = sos_token_id
+        self.eos_token_id = eos_token_id
         self.beam_width = beam_width
         self.length_penalty = length_penalty
         self.log_probs = log_probs
-    
-    def _ctc_collapse(self, tokens: List[int]) -> List[int]:
-        """
-        CTC collapse: remove consecutive duplicates and blanks.
-        
-        Args:
-            tokens: Sequence of token IDs
-            
-        Returns:
-            Collapsed sequence
-        """
-        # Remove consecutive duplicates
-        collapsed = []
-        prev = None
-        for token in tokens:
-            if token != prev:
-                collapsed.append(token)
-                prev = token
-        
-        # Remove blank tokens
-        filtered = [t for t in collapsed if t != self.blank_token_id]
-        
-        return filtered
     
     def decode(self, logits: torch.Tensor, lengths: Optional[torch.Tensor] = None) -> List[Dict]:
         """
@@ -127,12 +110,9 @@ class BeamSearchDecoder:
                         new_score = score + token_log_prob
                         
                         # Create new prefix
-                        if token_id == last_token:
-                            # Same token - CTC collapse, don't add
+                        if token_id == self.pad_token_id or token_id == self.eos_token_id:
+                            # Skip padding and EOS tokens during generation
                             continue
-                        elif token_id == self.blank_token_id:
-                            # Blank token - keep prefix unchanged
-                            new_prefix = prefix
                         else:
                             # New token - append to prefix
                             new_prefix = prefix + [token_id]
@@ -143,16 +123,17 @@ class BeamSearchDecoder:
                 candidates.sort(key=lambda x: x[1], reverse=True)
                 beam = candidates[:self.beam_width]
             
-            # Collapse CTC and prepare results
+            # Prepare results
             beam_results = []
             for prefix, score, _ in beam:
-                collapsed = self._ctc_collapse(prefix)
+                # Remove SOS token if present
+                filtered_prefix = [t for t in prefix if t != self.sos_token_id]
                 
                 # Apply length penalty
-                length_penalty_score = score / ((len(collapsed) + 1) ** self.length_penalty)
+                length_penalty_score = score / ((len(filtered_prefix) + 1) ** self.length_penalty)
                 
                 beam_results.append({
-                    'text': collapsed,
+                    'text': filtered_prefix,
                     'score': score,
                     'length_penalty_score': length_penalty_score
                 })

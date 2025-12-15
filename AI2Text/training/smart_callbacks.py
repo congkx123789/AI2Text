@@ -3,7 +3,7 @@ Smart callbacks for automatic training recovery and curriculum learning.
 
 This module implements advanced callbacks that enable "auto-run" capabilities:
 - AutoRollbackCallback: Detects model collapse and automatically rolls back to best checkpoint
-- CurriculumLearningCallback: Gradually introduces harder tasks (timestamps) when model is ready
+- CurriculumLearningCallback: Gradually introduces harder tasks when model is ready
 """
 
 import torch
@@ -18,7 +18,7 @@ class AutoRollbackCallback(Callback):
     This callback monitors validation loss and automatically:
     1. Detects when loss spikes significantly (>threshold_ratio)
     2. Reloads the best checkpoint
-    3. Applies safety measures (disables timestamps, reduces learning rate)
+    3. Applies safety measures (reduces learning rate)
     """
     
     def __init__(self, threshold_ratio=1.5, patience=1):
@@ -105,11 +105,7 @@ class AutoRollbackCallback(Callback):
         # 3. Apply Countermeasures (The Fix)
         trainer.logger.info("🛡️ Applying active countermeasures:")
         
-        # Action A: Kill the Timestamp Head (Primary suspect for instability)
-        if trainer.use_timestamps:
-            trainer.logger.info("   👉 Disabling Timestamp Training (Weight 0.0)")
-            trainer.use_timestamps = False  # This flag controls the model forward pass
-            trainer.timestamp_loss_weight = 0.0  # This ensures 0 gradient from TS head
+        # Action A: Reduce learning rate (primary countermeasure for instability)
             
         # Action B: Emergency LR Cut
         # We manually slash the LR in the optimizer, overriding the scheduler for now
@@ -126,12 +122,11 @@ class AutoRollbackCallback(Callback):
 
 class CurriculumLearningCallback(Callback):
     """
-    Smart scheduler that only enables complex tasks (Timestamps) when the model is ready.
+    Smart scheduler for curriculum learning.
     
     This callback implements curriculum learning:
-    1. Starts with timestamps disabled (pure ASR training)
-    2. Enables timestamps only when WER is below threshold and minimum epochs passed
-    3. Gradually increases timestamp loss weight
+    1. Starts with easier samples (shorter duration)
+    2. Gradually introduces harder samples as model improves
     """
     
     def __init__(self, start_timestamp_epoch=5, required_wer=0.6, initial_ts_weight=0.01):
@@ -139,59 +134,19 @@ class CurriculumLearningCallback(Callback):
         Initialize curriculum learning callback.
         
         Args:
-            start_timestamp_epoch: Minimum epoch before enabling timestamps
-            required_wer: Maximum WER threshold to enable timestamps
-            initial_ts_weight: Starting weight for timestamp loss when enabled
+            start_timestamp_epoch: Minimum epoch (kept for compatibility, not used)
+            required_wer: Maximum WER threshold (kept for compatibility, not used)
+            initial_ts_weight: Not used (kept for compatibility)
         """
         self.start_epoch = start_timestamp_epoch
         self.required_wer = required_wer
-        self.target_ts_weight = initial_ts_weight
-        self.timestamps_enabled = False
-        self.original_ts_weight = None  # Store original weight from config
 
     def on_train_begin(self, trainer):
-        """Force disable timestamps at start for stability."""
-        # Store original weight from config
-        self.original_ts_weight = trainer.config.get('timestamp_loss_weight', 0.1)
-        
-        # Always start with timestamps OFF to ensure ASR convergence first
-        if trainer.use_timestamps:
-            trainer.logger.info("🎓 Curriculum: Starting with Timestamps DISABLED (Stability Mode)")
-            trainer.use_timestamps = False
-            self.timestamps_enabled = False
-            # Store the intended weight to restore later
-            self.target_ts_weight = self.original_ts_weight
-            trainer.timestamp_loss_weight = 0.0
-        else:
-            # If timestamps were already disabled, respect that
-            trainer.logger.info("🎓 Curriculum: Timestamps already disabled, will enable when ready")
-            self.target_ts_weight = self.original_ts_weight
+        """Initialize curriculum learning."""
+        trainer.logger.info("🎓 Curriculum Learning: Ready")
 
     def on_epoch_end(self, trainer, epoch: int, metrics: dict):
-        """Check if ready to enable timestamps and gradually increase weight."""
+        """Monitor training progress for curriculum learning."""
         current_wer = metrics.get('wer', 1.0)
-        
-        # Phase 1: Check if ready to enable
-        if not self.timestamps_enabled:
-            # Criteria: Minimum epochs passed AND WER is decent (< required_wer)
-            if epoch >= self.start_epoch and current_wer < self.required_wer:
-                trainer.logger.info(
-                    f"🎓 Curriculum: Level Up! Enabling Timestamps "
-                    f"(Epoch {epoch}, WER {current_wer:.2f} < {self.required_wer})"
-                )
-                trainer.use_timestamps = True
-                trainer.timestamp_loss_weight = 0.01  # Start gentle
-                self.timestamps_enabled = True
-                
-        # Phase 2: Gradually ramp up difficulty
-        elif self.timestamps_enabled:
-            # Slowly increase TS weight back to target
-            if trainer.timestamp_loss_weight < self.target_ts_weight:
-                new_weight = min(self.target_ts_weight, trainer.timestamp_loss_weight * 1.5)
-                if new_weight > trainer.timestamp_loss_weight:
-                    trainer.logger.info(
-                        f"🎓 Curriculum: Increasing Timestamp Weight "
-                        f"{trainer.timestamp_loss_weight:.4f} -> {new_weight:.4f}"
-                    )
-                    trainer.timestamp_loss_weight = new_weight
+        # Curriculum learning logic can be added here if needed
 
