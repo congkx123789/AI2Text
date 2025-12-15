@@ -95,7 +95,6 @@ cache/
 .cache/
 *.cache
 dataset_cache/
-vectorstore/
 # Note: *.faiss already in ML Models section
 *.ids
 *.jsonl
