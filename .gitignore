@@ -364,3 +364,10 @@ frontend/build/
 # Project-specific extras
 # ==============================
 ai-llm/unsloth_compiled_cache/
+
+# ==============================
+# Cursor IDE
+# ==============================
+.cursor/
+
+ai-llm/unsloth_compiled_cache/
