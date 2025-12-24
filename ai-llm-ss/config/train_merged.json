@@ -12,5 +12,5 @@
   "epochs": 20,
   "log_interval": 20,
   "lr": 0.001,
-  "resume": "data/results/checkpoints/checkpoint_epoch_8.pt"
+  "resume": "data/results/checkpoints/checkpoint_epoch_12.pt"
 }

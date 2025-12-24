@@ -1,65 +1,89 @@
 # ==============================
+# AI2Text - Unified Requirements
+# For: AI2Text, ai-llm, ai-llm-ss, audio_processing
+# ==============================
+
+# ==============================
 # Core Machine Learning
 # ==============================
-torch
-torchvision
-torchaudio
-tensorflow
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
 
 # ==============================
 # Audio Processing / Speech
 # ==============================
-librosa
-pyaudio
-speechrecognition
-vosk==0.3.45
-openai-whisper==20231117
-soundfile==0.12.1
-ffmpeg-python==0.2.0
+librosa>=0.10.0
+soundfile>=0.12.0
+pydub>=0.25.0
+noisereduce>=3.0.0
+ffmpeg-python>=0.2.0
 
 # ==============================
-# Image Processing / OCR
+# Whisper / ASR
 # ==============================
-Pillow==10.4.0
-pytesseract==0.3.10
-easyocr==1.7.1
+openai-whisper>=20231117
+faster-whisper>=1.0.0
+ctranslate2>=4.0.0
 
 # ==============================
-# NLP / Translation / Evaluation
+# NLP / Transformers / LLM
 # ==============================
-transformers==4.44.2
-sentencepiece==0.2.0
-sacremoses==0.1.1
-sacrebleu==2.4.3
-nltk
-scikit-learn==1.5.2
+transformers>=4.40.0
+sentencepiece>=0.2.0
+sentence-transformers>=2.2.0
+huggingface-hub>=0.20.0
+accelerate>=0.25.0
+bitsandbytes>=0.42.0
+
+# ==============================
+# Evaluation Metrics
+# ==============================
+jiwer>=3.0.0
+sacrebleu>=2.4.0
+nltk>=3.8.0
+
+# ==============================
+# RAG / Vector Store
+# ==============================
+faiss-cpu>=1.7.0
+langchain>=0.1.0
+langchain-community>=0.0.20
+
+# ==============================
+# API / Web Framework
+# ==============================
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.9
+pydantic>=2.5.0
+requests>=2.31.0
 
 # ==============================
 # Utilities
 # ==============================
-numpy==1.26.4
-scipy
-matplotlib
-tqdm==4.66.5
-joblib==1.4.2
-pipdeptree
-python-docx==1.1.2
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+tqdm>=4.65.0
+joblib>=1.3.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
 
 # ==============================
-# API / Web
+# Document Processing
 # ==============================
-fastapi==0.112.2
-uvicorn==0.30.6
-python-multipart==0.0.9
-pydantic==2.9.2
+python-docx>=1.1.0
 
-faster-whisper
-ffmpeg 
-pydub
-# Needed by make_manifests (reads audio headers)
-soundfile
+# ==============================
+# Development / Testing
+# ==============================
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
 
-
-huggingface-hub
-python-dotenv
-sentence-transformers
+# ==============================
+# Optional: GPU Acceleration
+# ==============================
+# Uncomment if using NVIDIA GPU:
+# nvidia-cublas-cu12
+# nvidia-cudnn-cu12

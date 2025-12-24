@@ -1,0 +1,27 @@
+# AI2Text Demo Package Requirements
+# Python 3.8+ required
+
+# Core ML/DL
+torch>=2.0.0
+torchaudio>=2.0.0
+numpy>=1.21.0
+
+# Audio processing
+librosa>=0.9.0
+soundfile>=0.12.0
+
+# Tokenization
+sentencepiece>=0.1.99
+
+# API (if running server)
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
+
+# Utilities
+pyyaml>=6.0
+requests>=2.31.0
+
+# Optional but recommended
+pydantic>=2.0.0
+

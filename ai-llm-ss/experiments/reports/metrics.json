@@ -1,7 +1,7 @@
 {
   "checkpoint": "data/results/checkpoints/checkpoint_epoch_12.pt",
-  "epoch": 12,
-  "loss": 0.5933220026089268,
+  "epoch": null,
+  "loss": null,
   "metrics": {
     "wer": 0.4737216320341715,
     "cer": 0.2104438972788726,
@@ -12,8 +12,8 @@
     "total_samples": 32818,
     "sentence_error_rate": 99.60997013833872,
     "sentence_errors": 32690,
-    "rtf": 0.0006939971897388996,
+    "rtf": 0.00037793559136107424,
     "total_audio_seconds": 227287.43000000052,
-    "total_inference_seconds": 157.73683768297724
+    "total_inference_seconds": 85.90000926598896
   }
 }

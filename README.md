@@ -190,13 +190,22 @@ AI2Text/
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### 1. Create & activate virtual environment (recommended)
 
 ```bash
+cd AI2Text
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Install dependencies
+
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 2. Start API Servers
+### 3. Start API Servers
 
 #### Option A: Start All Services
 ```bash
@@ -235,7 +244,7 @@ cd ai-llm-ss
 python scripts/serve_asr.py --host 0.0.0.0 --port 8001
 ```
 
-### 3. Start Frontend
+### 4. Start Frontend
 
 ```bash
 cd frontend
@@ -398,5 +407,5 @@ SOFTWARE.
 
 ---
 
-**Last Updated**: 2024-12-09
+**Last Updated**: 2025-12-17
 

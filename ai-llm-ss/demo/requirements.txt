@@ -1,0 +1,14 @@
+# Core dependencies for ASR model demo
+torch>=2.0.0
+torchaudio>=2.0.0
+numpy>=1.21.0
+
+# Language detection (optional but recommended)
+langdetect>=1.0.9
+langid>=1.1.6
+soundfile>=0.12.0
+
+# Note: torchaudio requires compatible torch version
+# For CPU-only: pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+# For CUDA: pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+

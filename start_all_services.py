@@ -50,7 +50,7 @@ SERVICES = {
         'name': 'ai2text',
         'port': 8002,
         'path': PROJECT_ROOT / 'AI2Text',
-        'start_cmd': [sys.executable, '-m', 'uvicorn', 'api.app_v2:app', '--host', '0.0.0.0', '--port', '8002'],
+        'start_cmd': [sys.executable, '-m', 'uvicorn', 'api.app:app', '--host', '0.0.0.0', '--port', '8002'],
         'health_url': 'http://localhost:8002/health',
         'description': 'Bilingual ASR Model (Port 8002)'
     },
